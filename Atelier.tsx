@@ -10,7 +10,6 @@ import { IMAGE_ACCEPT, prepareImage } from './images';
 import { useScopedState, useStudio, type PageProps } from './studio';
 import {
   editorial,
-  hairNames,
   initialFigure,
   matchReference,
   matchWardrobe,
@@ -20,7 +19,7 @@ import {
   type Figure,
   type Product,
 } from './atelierData';
-import { FigurePreview } from './FigurePreview';
+import MeasureMirror from './MeasureMirror';
 import { sampleOutfits } from './sample';
 import { searchRetail, type RetailOffer } from './retail';
 import { OfferConditions, PriceAlerts } from './ShopConditions';
@@ -119,41 +118,6 @@ function Blank({ title, children }: { title: string; children?: ReactNode }) {
     </div>
   );
 }
-function Measure({
-  title,
-  value,
-  min,
-  max,
-  suffix,
-  onChange,
-}: {
-  title: string;
-  value: number;
-  min: number;
-  max: number;
-  suffix: string;
-  onChange: (x: number) => void;
-}) {
-  return (
-    <label className="at-measure">
-      <span>
-        {title}
-        <output>
-          {value}
-          <small>{suffix}</small>
-        </output>
-      </span>
-      <input
-        aria-label={title}
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(+e.target.value)}
-      />
-    </label>
-  );
-}
 async function smallPhoto(preview: Blob) {
   const bitmap = await createImageBitmap(preview);
   const canvas = document.createElement('canvas'),
@@ -215,267 +179,76 @@ function ModelRoom({ go }: Nav) {
     }
   }
   return (
-    <>
-      <Heading
-        title="개인 모델"
-        aside={
-          <button className="at-arrowlink" onClick={() => go('fitting')}>
-            피팅룸 <Icon name="right" size={16} />
-          </button>
-        }
-      >
-        내 옷을 입혀 볼 모델의 기준을 정해요.
-      </Heading>
-      <div className="at-model-layout">
-        <section
-          className={'at-model-stage ' + (view === 'diagram' ? 'diagram' : '')}
-          aria-label="모델 미리보기"
-        >
-          {view === 'diagram' ? (
-            <FigurePreview figure={figure} angle={angle} turn={setAngle} />
-          ) : (
-            <img
-              className={'at-model-photo ' + (view === 'own' ? 'own' : '')}
-              src={view === 'own' ? ownPhoto : modelSrc(figure.base)}
-              alt={
-                view === 'own'
-                  ? '직접 선택한 참고 사진'
-                  : (figure.base === 'f' ? '여성형' : '남성형') +
-                    ' 기본 모델 착장 예시'
-              }
-            />
-          )}
-          <span className="at-stage-label">
-            {view === 'diagram'
-              ? '신체 비율 도식'
-              : view === 'own'
-                ? '내 참고 사진'
-                : '실사 착장 예시'}
-          </span>
-          <div className="at-stage-picker">
-            <Tab chosen={view === 'photo'} onClick={() => setView('photo')}>
-              실사 예시
-            </Tab>
-            <Tab chosen={view === 'diagram'} onClick={() => setView('diagram')}>
-              비율 도식
-            </Tab>
-            {ownPhoto && (
-              <Tab chosen={view === 'own'} onClick={() => setView('own')}>
-                내 사진
-              </Tab>
-            )}
+    <MeasureMirror
+      figure={figure}
+      view={view}
+      ownPhoto={ownPhoto}
+      angle={angle}
+      turn={setAngle}
+      setView={setView}
+      tweak={tweak}
+      fitting={() => go('fitting')}
+    >
+      <div className="at-source-grid">
+        {[
+          {
+            name: '얼굴',
+            src: face,
+            ref: faceRef,
+            clear: () => setFace(''),
+          },
+          {
+            name: '전신',
+            src: ownPhoto,
+            ref: fileRef,
+            clear: () => {
+              setOwnPhoto('');
+              setView('photo');
+            },
+          },
+        ].map((r) => (
+          <div key={r.name}>
+            {r.src && <img src={r.src} alt={r.name + ' 참고 사진'} />}
+            <button disabled={busy} onClick={() => r.ref.current?.click()}>
+              <Icon name="photo" size={16} />
+              {r.name} 사진 {r.src ? '변경' : '선택'}
+            </button>
+            {r.src && <button onClick={r.clear}>{r.name} 사진 삭제</button>}
           </div>
-        </section>
-        <section className="at-controls">
-          <h2>모델 설정</h2>
-          <div className="at-line">
-            <strong>기본 모델</strong>
-            <div className="at-segment">
-              <Tab
-                chosen={figure.base === 'f'}
-                onClick={() => tweak('base', 'f')}
-              >
-                여성형
-              </Tab>
-              <Tab
-                chosen={figure.base === 'm'}
-                onClick={() => tweak('base', 'm')}
-              >
-                남성형
-              </Tab>
-            </div>
-          </div>
-          {view === 'diagram' && (
-            <div className="at-angle">
-              <label>
-                회전 각도 <output>{angle}°</output>
-                <input
-                  aria-label="모델 회전 각도"
-                  type="range"
-                  min="0"
-                  max="359"
-                  value={angle}
-                  onChange={(e) => setAngle(+e.target.value)}
-                />
-              </label>
-              <div className="at-segment">
-                {[
-                  [0, '정면'],
-                  [90, '측면'],
-                  [180, '후면'],
-                ].map(([v, t]) => (
-                  <Tab
-                    key={v}
-                    chosen={angle === v}
-                    onClick={() => setAngle(Number(v))}
-                  >
-                    {t}
-                  </Tab>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="at-measures">
-            <Measure
-              title="키"
-              min={140}
-              max={205}
-              value={figure.height}
-              suffix="cm"
-              onChange={(v) => tweak('height', v)}
-            />
-            <Measure
-              title="몸무게"
-              min={35}
-              max={140}
-              value={figure.weight}
-              suffix="kg"
-              onChange={(v) => tweak('weight', v)}
-            />
-            <Measure
-              title="어깨 너비"
-              min={30}
-              max={70}
-              value={figure.shoulder}
-              suffix="/ 100"
-              onChange={(v) => tweak('shoulder', v)}
-            />
-            <Measure
-              title="다리 비율"
-              min={43}
-              max={58}
-              value={figure.leg}
-              suffix="%"
-              onChange={(v) => tweak('leg', v)}
-            />
-            <Measure
-              title="허리 너비"
-              min={30}
-              max={70}
-              value={figure.waist ?? 50}
-              suffix="/ 100"
-              onChange={(v) => tweak('waist', v)}
-            />
-            <Measure
-              title="골반 너비"
-              min={30}
-              max={70}
-              value={figure.hip ?? 50}
-              suffix="/ 100"
-              onChange={(v) => tweak('hip', v)}
-            />
-            <Measure
-              title="상체 길이"
-              min={85}
-              max={115}
-              value={figure.torso ?? 100}
-              suffix="%"
-              onChange={(v) => tweak('torso', v)}
-            />
-          </div>
-          <div className="at-line">
-            <strong>헤어</strong>
-            <div className="at-segment">
-              {(Object.keys(hairNames) as Figure['hair'][]).map((h) => (
-                <Tab
-                  key={h}
-                  chosen={figure.hair === h}
-                  onClick={() => tweak('hair', h)}
-                >
-                  {hairNames[h]}
-                </Tab>
-              ))}
-            </div>
-          </div>
-          <div className="at-line">
-            <strong>헤어 색상</strong>
-            <div className="at-swatch">
-              {[
-                ['#272525', '블랙'],
-                ['#3f302b', '다크 브라운'],
-                ['#8c6045', '체스트넛'],
-                ['#b6a079', '애쉬 블론드'],
-              ].map(([color, label]) => (
-                <button
-                  key={color}
-                  aria-label={label}
-                  aria-pressed={(figure.hairColor ?? '#3f302b') === color}
-                  style={{ '--hair': color } as CSSProperties}
-                  onClick={() => tweak('hairColor', color)}
-                />
-              ))}
-            </div>
-          </div>
-          <p className="at-note">
-            조절값은 회전 가능한 비율 도식에 반영돼요. 실사 사진은 고정
-            예시이며, 개인 이미지 생성은 API 연결이 필요해요.
-          </p>
-          <h3>
-            참고 사진 <small>선택</small>
-          </h3>
-          <div className="at-source-grid">
-            {[
-              {
-                name: '얼굴',
-                src: face,
-                ref: faceRef,
-                clear: () => setFace(''),
-              },
-              {
-                name: '전신',
-                src: ownPhoto,
-                ref: fileRef,
-                clear: () => {
-                  setOwnPhoto('');
-                  setView('photo');
-                },
-              },
-            ].map((r) => (
-              <div key={r.name}>
-                {r.src && <img src={r.src} alt={r.name + ' 참고 사진'} />}
-                <button disabled={busy} onClick={() => r.ref.current?.click()}>
-                  <Icon name="photo" size={16} />
-                  {r.name} 사진 {r.src ? '변경' : '선택'}
-                </button>
-                {r.src && <button onClick={r.clear}>{r.name} 사진 삭제</button>}
-              </div>
-            ))}
-          </div>
-          <p className="at-footnote">
-            참고 사진은 이 기기의 {mode === 'sample' ? '샘플' : '개인'} 공간에만
-            저장돼요.
-          </p>
-          <input
-            ref={faceRef}
-            type="file"
-            aria-label="얼굴 사진 파일"
-            accept={IMAGE_ACCEPT}
-            hidden
-            onChange={(e) => {
-              void accept(e.target.files?.[0], 'face');
-              e.target.value = '';
-            }}
-          />
-          <input
-            ref={fileRef}
-            type="file"
-            aria-label="전신 사진 파일"
-            accept={IMAGE_ACCEPT}
-            hidden
-            onChange={(e) => {
-              void accept(e.target.files?.[0]);
-              e.target.value = '';
-            }}
-          />
-          {error && (
-            <p role="alert" className="at-error">
-              {error}
-            </p>
-          )}
-          <Next onClick={() => go('fitting')}>이 모델로 피팅 준비</Next>
-        </section>
+        ))}
       </div>
-    </>
+      <p className="at-footnote">
+        참고 사진은 이 기기의 {mode === 'sample' ? '샘플' : '개인'} 공간에만
+        저장돼요.
+      </p>
+      <input
+        ref={faceRef}
+        type="file"
+        aria-label="얼굴 사진 파일"
+        accept={IMAGE_ACCEPT}
+        hidden
+        onChange={(e) => {
+          void accept(e.target.files?.[0], 'face');
+          e.target.value = '';
+        }}
+      />
+      <input
+        ref={fileRef}
+        type="file"
+        aria-label="전신 사진 파일"
+        accept={IMAGE_ACCEPT}
+        hidden
+        onChange={(e) => {
+          void accept(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
+      {error && (
+        <p role="alert" className="at-error">
+          {error}
+        </p>
+      )}
+    </MeasureMirror>
   );
 }
 function FitRoom({ page, go }: PageProps) {
@@ -734,7 +507,7 @@ function FitRoom({ page, go }: PageProps) {
                 aria-label={g.name + ' 선택 해제'}
                 onClick={() => toggle(g.id)}
               >
-                <GarmentPhoto item={g} />
+                <GarmentPhoto item={g} shared />
               </button>
             ))}
             {!selected.length && !candidate && (

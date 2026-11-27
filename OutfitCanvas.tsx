@@ -385,7 +385,7 @@ export default function OutfitCanvas({ go }: PageProps) {
                       }
                     }}
                   >
-                    <GarmentPhoto item={g} />
+                    <GarmentPhoto item={g} shared />
                   </button>
                 );
               })

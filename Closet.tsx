@@ -7,7 +7,7 @@ import { useStudio, type PageProps } from './studio';
 import Capture from './Capture';
 import PurchaseIntake from './PurchaseIntake';
 import OutfitCanvas, { SavedOutfits } from './OutfitCanvas';
-import { WardrobeGrid } from './WardrobeGrid';
+import ClosetRail from './ClosetRail';
 import './closet.css';
 
 function Row({
@@ -405,78 +405,6 @@ function GarmentDetail({ go }: PageProps) {
     </div>
   );
 }
-function Shelf({ page, go }: PageProps) {
-  const { garments, mode, setMode, setActiveGarmentId } = useStudio();
-  const empty = page === 'closet-empty' || !garments.length;
-  return (
-    <div className="wc">
-      <div className="wc-title">
-        <div>
-          <h1>내 옷장</h1>
-          <p>
-            {mode === 'sample' ? '샘플 컬렉션' : '나의 컬렉션'} <span>/</span>{' '}
-            {empty ? 0 : garments.length}벌
-          </p>
-        </div>
-        <button className="wc-solid" onClick={() => go('register')}>
-          <Icon name="plus" size={17} />옷 등록
-        </button>
-      </div>
-      <div className="wc-switch" aria-label="옷장 선택">
-        {(['sample', 'personal'] as const).map((m) => (
-          <button
-            key={m}
-            aria-pressed={m === mode}
-            onClick={() => {
-              setMode(m);
-              if (page === 'closet-empty') go('closet');
-            }}
-          >
-            {m === 'sample' ? '샘플 옷장' : '개인 옷장'}
-          </button>
-        ))}
-      </div>
-      {empty ? (
-        <div className="wc-empty">
-          <Icon name="closet" size={44} />
-          <h2>아직 등록한 옷이 없어요</h2>
-          <p>첫 옷을 등록하면 이곳에 모여요.</p>
-          <button className="wc-outline" onClick={() => go('register')}>
-            첫 옷 등록하기
-          </button>
-        </div>
-      ) : (
-        <WardrobeGrid
-          key={mode}
-          onPick={(item) => {
-            setActiveGarmentId(item.id);
-            go('garment');
-          }}
-        />
-      )}
-      <div className="wc-list wc-foot">
-        <Row
-          icon="closet"
-          title="공간형 옷장"
-          detail="행거의 옷을 꺼내고 코디로 연결"
-          onClick={() => go('space')}
-        />
-        <Row
-          icon="save"
-          title="구매 내역"
-          detail="구매일·상품 링크 확인"
-          onClick={() => go('purchases')}
-        />
-        <Row
-          icon="outfit"
-          title="직접 코디"
-          detail="옷을 골라 한 벌의 조합으로"
-          onClick={() => go('direct')}
-        />
-      </div>
-    </div>
-  );
-}
 export default function Closet(props: PageProps) {
   const { mode } = useStudio();
   if (props.page === 'direct') return <OutfitCanvas key={mode} {...props} />;
@@ -487,5 +415,5 @@ export default function Closet(props: PageProps) {
   if (props.page === 'purchases' || props.page === 'purchase-link')
     return <PurchaseIntake key={props.page} {...props} />;
   if (scenarios[props.page]) return <Recognition {...props} />;
-  return <Shelf {...props} />;
+  return <ClosetRail {...props} />;
 }

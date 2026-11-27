@@ -4,6 +4,19 @@
 
 [운영 서비스](https://personal-fashion-app.vercel.app/) · [전체 요구사항과 44개 화면 대조](./REQUIREMENTS.md) · [외부 연동과 데이터 범위](./docs/integrations.md) · [샘플 이미지 출처](./docs/sample-visuals.md)
 
+## 드레싱룸 디자인 프리뷰
+
+`design/dressing-room`은 운영 기준 커밋 `a5c3f9b`에서 분기했다. 홈의 옷을 눌러 상세를 열거나 코디·피팅 영역에 끌어 놓을 수 있다. 옷장은 분류별 레일과 검색 목록으로 전환한다. 개인 모델의 부위 표시를 누르면 해당 치수의 눈금자와 회전 가능한 도식이 열린다. 모든 화면의 **공간 이동**에서 여섯 목적지에 접근한다. 모델 생성·피팅 공급자와 로컬 데이터 스키마는 기존 구현을 사용한다. 프리뷰와 운영 주소의 브라우저 저장 공간은 각 출처(origin)에 귀속된다.
+
+| 참고한 표현 | 제품에서 선택한 동작 |
+| --- | --- |
+| [Natural의 모션](https://dribbble.com/shots/15886164), [Quantity Stepper](https://dribbble.com/shots/27849636) | 도크의 두 조작 영역이 곡선을 가진 하나의 공간 선택기로 펼쳐진다. 스프링의 현재 위치와 속도에서 반대 동작을 이어간다. |
+| [Apple HIG 재질](https://developer.apple.com/design/human-interface-guidelines/materials), [Sphere](https://dribbble.com/shots/20096197) | 버튼 경계의 곡면 법선으로 SVG 변위 맵을 만든다. 빛은 포인터 위치를 따르고, 조작부의 글자는 굴절층 바깥에 둔다. 투명도 감소 및 고대비 대체 재질을 제공한다. |
+| [Machines They Style](https://dribbble.com/shots/27056778), [Buildwy](https://dribbble.com/shots/26726129) | 의류를 레일의 실제 객체로 다루고 부위를 고르면 그 위치의 조절 도구가 열린다. 모델은 실사 참고와 조작형 패턴 도식을 분리한다. |
+| [Gleb의 AI 작업](https://dribbble.com/glebich/projects/485474-Artificial-Intelligence), [CopilotKit](https://www.copilotkit.ai/generative-ui) | 홈 도크를 기존 스타일리스트의 실제 요청 화면에 연결했다. AI의 추론 범위나 공급자 상태는 이전 버전과 같다. |
+
+로컬 서버를 실행한 뒤 `APP_TEST_URL=http://127.0.0.1:5188 node interface-check.mjs`로 재단 테이블에서 피팅으로 드래그, 의류 상세·검색, 치수 조절·저장, 도크 키보드 조작, 네 가지 너비의 세 대표 화면을 확인한다. 일반 모션의 390px Chromium에서 도크를 열 때 55개 프레임 간격의 중앙값은 16.7ms, 95백분위는 17.2ms였다. 데스크톱에서 모바일 뷰포트를 이용한 수치다. 실제 iPhone의 GPU 성능은 별도 검수가 필요하다. 같은 위치에서 굴절값 17과 0으로 촬영한 도크 픽셀의 PSNR은 33.08dB로 측정돼 실제 변위 렌더링 차이를 확인했다.
+
 ## 실행
 
 Node 22.12 이상이 필요하다.

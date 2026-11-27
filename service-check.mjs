@@ -59,6 +59,7 @@ export async function verifyService(page, origin) {
     if (category === '아우터') await sheet.getByText(/사진 2 \/ 2/).waitFor();
   }
   await button('검증 재킷').click();
+  await button('상세').click();
   await heading('검증 재킷').waitFor();
   await button('코디에 담기').click();
   await button('검증 셔츠').click();

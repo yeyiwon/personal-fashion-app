@@ -7,6 +7,8 @@ import Looks from './Looks';
 import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
+import { RoomDock, RoomHeader } from './RoomControls';
+import './rooms.css';
 import Space from './Space';
 import Lookbook from './Lookbook';
 import { capabilities } from './featureStatus';
@@ -20,8 +22,6 @@ import {
   closetPages,
   lookPages,
   atelierPages,
-  activeTab,
-  navItems,
 } from './routes';
 function route() {
   return location.hash.replace(/^#\/?/, '').split('?')[0] || 'home';
@@ -132,6 +132,7 @@ function App() {
   const { mode, setMode } = useStudio();
   const [page, setPage] = useState(route),
     [modeOpen, showMode] = useState(false);
+  const transition = useRef<ViewTransition | null>(null);
   const main = useRef<HTMLElement>(null);
   useEffect(() => {
     const update = () => {
@@ -155,6 +156,7 @@ function App() {
       window.scrollTo({ top: 0 });
       return;
     }
+    transition.current?.skipTransition();
     const change = () => {
       history.pushState({ wardrobe: true }, '', '#/' + next);
       flushSync(() => {
@@ -165,44 +167,34 @@ function App() {
       main.current?.focus({ preventScroll: true });
     };
     const objectTransition =
-      ['closet', 'garment', 'direct', 'space'].includes(next) &&
-      ['closet', 'garment', 'direct', 'space'].includes(page);
+      [
+        'home',
+        'closet',
+        'garment',
+        'direct',
+        'space',
+        'fitting',
+        'model',
+      ].includes(next) &&
+      [
+        'home',
+        'closet',
+        'garment',
+        'direct',
+        'space',
+        'fitting',
+        'model',
+      ].includes(page);
     if (
       document.startViewTransition &&
       objectTransition &&
       !matchMedia('(prefers-reduced-motion: reduce)').matches
     )
-      document.startViewTransition(change);
+      transition.current = document.startViewTransition(change);
     else change();
     haptic('selection');
   }
-  const props = { page, go },
-    tab = activeTab(page);
-  function nav(mobile: boolean) {
-    return (
-      <nav
-        className={mobile ? 'dock' : 'top-tabs'}
-        aria-label={mobile ? '모바일 주요 메뉴' : '주요 메뉴'}
-      >
-        {navItems.map(([p, n, icon]) => (
-          <a
-            key={p}
-            href={'#/' + p}
-            aria-current={tab === p ? 'page' : undefined}
-            onClick={(e) => {
-              if (!e.ctrlKey && !e.metaKey) {
-                e.preventDefault();
-                go(p);
-              }
-            }}
-          >
-            {mobile && <Icon name={icon} size={21} />}
-            <span>{n}</span>
-          </a>
-        ))}
-      </nav>
-    );
-  }
+  const props = { page, go };
   let content =
     page === 'home' ? (
       <Home {...props} />
@@ -269,72 +261,25 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      <header className="masthead">
-        <div className="mast-inner">
-          <a
-            href="#/home"
-            className="wordmark"
-            aria-label="Wardrobe 홈"
-            onClick={(e) => {
-              e.preventDefault();
-              go('home');
-            }}
-          >
-            Wardrobe<span>.</span>
-          </a>
-          {nav(false)}
-          <div className="head-actions">
-            <button
-              className="scope-button"
-              onClick={() => showMode(true)}
-              aria-haspopup="dialog"
-            >
-              <i className={mode} />
-              {mode === 'sample' ? '샘플 옷장' : '개인 옷장'}
-              <Icon name="down" size={13} />
-            </button>
-            <button
-              className={'round-btn' + (page === 'tools' ? ' current' : '')}
-              aria-label="전체 메뉴"
-              onClick={() => go('tools')}
-            >
-              <Icon name="grid" size={19} />
-            </button>
-            <button
-              className="round-btn user-button"
-              aria-label="마이페이지"
-              onClick={() => go('account')}
-            >
-              <Icon name="user" size={18} />
-            </button>
-          </div>
-        </div>
-      </header>
+      <RoomHeader
+        page={page}
+        go={go}
+        mode={mode}
+        onMode={() => showMode(true)}
+        back={() => {
+          if (history.state?.wardrobe) history.back();
+          else go('home');
+        }}
+      />
       <main
         id="main-content"
         tabIndex={-1}
         ref={main}
         className={'page-frame page-' + page}
       >
-        {page !== 'home' && (
-          <nav className="crumb" aria-label="페이지 탐색">
-            <button
-              aria-label="뒤로 가기"
-              onClick={() => {
-                if (history.state?.wardrobe) history.back();
-                else go('home');
-              }}
-            >
-              <Icon name="back" size={15} />
-              뒤로
-            </button>
-            <span>/</span>
-            <button onClick={() => go('tools')}>전체 메뉴</button>
-          </nav>
-        )}
         {content}
       </main>
-      {nav(true)}
+      <RoomDock page={page} go={go} />
       {modeOpen && (
         <Sheet title="사용할 옷장" onClose={() => showMode(false)}>
           {(

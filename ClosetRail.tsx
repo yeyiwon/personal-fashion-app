@@ -1,0 +1,379 @@
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
+import { useStudio, type PageProps, type StudioGarment } from './studio';
+import { CATEGORIES } from './domain';
+import { GarmentPhoto, Icon } from './presentation';
+import { GlassSurface } from './RoomControls';
+
+function Hook() {
+  return (
+    <svg
+      className="rail-hanger"
+      viewBox="0 0 160 64"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M75 10c-1-10 12-10 11-1-.4 5-7 5-7 10v5L15 50q-6 5 1 7h128q7-2 0-7L80 24"
+        stroke="#3d302c"
+        strokeWidth="3.8"
+      />
+      <path
+        d="M75 9c-.6-8 10-9 10 0-.3 4-6 4-6 10v5L15 50q-6 5 1 6h127"
+        stroke="#d3bfb0"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+export default function ClosetRail({ page, go }: PageProps) {
+  const {
+    garments,
+    mode,
+    setMode,
+    setActiveGarmentId,
+    setSelectedIds,
+    setEditLookId,
+  } = useStudio();
+  const [query, search] = useState(''),
+    [category, filter] = useState('전체'),
+    [view, setView] = useState<'rack' | 'list'>('rack');
+  const [current, center] = useState<string | null>(null),
+    [open, inspect] = useState(false);
+  const start = useRef<{ x: number; y: number } | null>(null),
+    lastSwipe = useRef(0);
+  const rack = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    search('');
+    filter('전체');
+    center(null);
+    inspect(false);
+  }, [mode]);
+  const list =
+    page === 'closet-empty'
+      ? []
+      : garments.filter(
+          (g) =>
+            (category === '전체' || g.category === category) &&
+            g.name.toLowerCase().includes(query.trim().toLowerCase()),
+        );
+  const index = Math.max(
+      0,
+      list.findIndex((g) => g.id === current),
+    ),
+    selected = list[index];
+  function move(i: number) {
+    const g = list[(i + list.length) % list.length];
+    if (g) {
+      center(g.id);
+      inspect(false);
+    }
+  }
+  function pick(g: StudioGarment) {
+    if (Date.now() - lastSwipe.current < 240) return;
+    if (g.id !== selected?.id) {
+      center(g.id);
+      inspect(true);
+    } else inspect(!open);
+  }
+  function detail(g: StudioGarment) {
+    setActiveGarmentId(g.id);
+    go('garment');
+  }
+  function carry(dest: string) {
+    if (!selected) return;
+    setActiveGarmentId(selected.id);
+    setSelectedIds([selected.id]);
+    setEditLookId(null);
+    go(dest);
+  }
+  function release(e: PointerEvent) {
+    if (!start.current) return;
+    const dx = e.clientX - start.current.x,
+      dy = e.clientY - start.current.y;
+    rack.current?.style.removeProperty('--drag');
+    start.current = null;
+    if (Math.abs(dx) > 38 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+      lastSwipe.current = Date.now();
+      move(index + (dx < 0 ? 1 : -1));
+    }
+  }
+  const empty = page === 'closet-empty' || garments.length === 0;
+  return (
+    <section className="rack-room">
+      <div className="rack-intro">
+        <div>
+          <span className="date-stamp">
+            {mode === 'sample' ? '샘플 컬렉션' : '나의 컬렉션'} ·{' '}
+            {empty ? 0 : garments.length}벌
+          </span>
+          <h1>내 옷장</h1>
+        </div>
+        <button
+          className="add-thread"
+          aria-label="옷 등록"
+          onClick={() => go('register')}
+        >
+          <Icon name="plus" size={17} /> 옷 등록
+        </button>
+      </div>
+      <div className="rack-layout">
+        <div className={'rack-main ' + view}>
+          <div className="rack-filter" aria-label="분류 필터">
+            {[
+              '전체',
+              ...CATEGORIES.filter((c) =>
+                garments.some((g) => g.category === c),
+              ),
+            ].map((c) => (
+              <button
+                key={c}
+                aria-pressed={c === category}
+                onClick={() => {
+                  filter(c);
+                  center(null);
+                  inspect(false);
+                }}
+              >
+                {c === '기타' ? '액세서리' : c}
+              </button>
+            ))}
+          </div>
+          <div className="rack-view-tools">
+            <div className="view-selector">
+              <GlassSurface />
+              {(['rack', 'list'] as const).map((v) => (
+                <button
+                  key={v}
+                  aria-pressed={v === view}
+                  onClick={() => {
+                    setView(v);
+                    inspect(false);
+                  }}
+                >
+                  <Icon name={v === 'rack' ? 'closet' : 'menu'} size={17} />
+                  {v === 'rack' ? '레일' : '목록'}
+                </button>
+              ))}
+            </div>
+            <label className="catalog-search">
+              <Icon name="search" size={16} />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  search(e.target.value);
+                  inspect(false);
+                }}
+                placeholder="옷 이름으로 찾기"
+                aria-label="의류 검색"
+              />
+            </label>
+          </div>
+          <div className="rail-area">
+            {view === 'rack' && selected ? (
+              <>
+                <div
+                  className={'cabinet' + (open ? ' extracted' : '')}
+                  ref={rack}
+                  tabIndex={0}
+                  aria-label="의류 레일. 좌우 화살표로 탐색"
+                  style={{ '--pigment': selected.color } as CSSProperties}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      move(index + (e.key === 'ArrowRight' ? 1 : -1));
+                    } else if (e.key === 'Escape') inspect(false);
+                  }}
+                  onPointerDown={(e) => {
+                    start.current = { x: e.clientX, y: e.clientY };
+                  }}
+                  onPointerMove={(e) => {
+                    if (!start.current) return;
+                    const dx = e.clientX - start.current.x;
+                    if (
+                      Math.abs(dx) > 8 &&
+                      Math.abs(dx) > Math.abs(e.clientY - start.current.y)
+                    ) {
+                      rack.current?.style.setProperty(
+                        '--drag',
+                        Math.max(-32, Math.min(32, dx * 0.28)) + 'px',
+                      );
+                      if (!e.currentTarget.hasPointerCapture(e.pointerId))
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                    }
+                  }}
+                  onPointerUp={release}
+                  onPointerCancel={() => {
+                    start.current = null;
+                    rack.current?.style.removeProperty('--drag');
+                  }}
+                >
+                  <div className="rail-wall" />
+                  <div className="brass-rail" />
+                  <div className="rail-track">
+                    {list.map((g, i) => {
+                      let off = i - index;
+                      if (list.length > 2) {
+                        if (off > list.length / 2) off -= list.length;
+                        else if (off < -list.length / 2) off += list.length;
+                      }
+                      if (Math.abs(off) > 2) return null;
+                      const shelf = ['신발', '기타', '가방'].includes(
+                        g.category,
+                      );
+                      return (
+                        <button
+                          key={g.id}
+                          className={
+                            'hanging-piece' +
+                            (off === 0 ? ' chosen' : '') +
+                            (shelf ? ' on-shelf' : '')
+                          }
+                          aria-label={g.name}
+                          aria-pressed={off === 0 && open}
+                          style={
+                            {
+                              '--offset': off,
+                              '--distance': Math.abs(off),
+                              zIndex: 5 - Math.abs(off),
+                            } as CSSProperties
+                          }
+                          onClick={() => pick(g)}
+                        >
+                          {!shelf && <Hook />}
+                          <GarmentPhoto item={g} shared={off === 0} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="rail-guides">
+                    <button
+                      aria-label="이전 의류"
+                      disabled={list.length < 2}
+                      onClick={() => move(index - 1)}
+                    >
+                      <Icon name="back" size={17} />
+                    </button>
+                    <span>
+                      {index + 1} / {list.length}
+                    </span>
+                    <button
+                      aria-label="다음 의류"
+                      disabled={list.length < 2}
+                      onClick={() => move(index + 1)}
+                    >
+                      <Icon name="right" size={17} />
+                    </button>
+                  </div>
+                </div>
+                <div className={'cloth-tag' + (open ? ' open-tag' : '')}>
+                  <button aria-expanded={open} onClick={() => inspect(!open)}>
+                    <i style={{ background: selected.color }} />
+                    <span>
+                      <small>
+                        {selected.category} ·{' '}
+                        {selected.material || selected.condition}
+                      </small>
+                      <b>{selected.name}</b>
+                    </span>
+                    <span className="tag-handle">
+                      <Icon name={open ? 'close' : 'plus'} size={17} />
+                    </span>
+                  </button>
+                  <div className="tag-fold" inert={!open}>
+                    <div>
+                      <div className="tag-actions">
+                        <button onClick={() => detail(selected)}>상세</button>
+                        <button onClick={() => carry('direct')}>
+                          직접 코디
+                        </button>
+                        <button onClick={() => carry('fitting')}>
+                          피팅 보드
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : list.length ? (
+              <div className="garment-ledger">
+                {list.map((g, i) => (
+                  <button
+                    key={g.id}
+                    aria-label={g.name}
+                    onClick={() => detail(g)}
+                  >
+                    <small>{String(i + 1).padStart(2, '0')}</small>
+                    <span className="ledger-photo">
+                      <GarmentPhoto item={g} />
+                    </span>
+                    <span>
+                      <b>{g.name}</b>
+                      <small>
+                        {g.category} · {g.material || g.condition}
+                      </small>
+                    </span>
+                    <i style={{ background: g.color }} />
+                    <Icon name="right" size={15} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="rail-empty">
+                <Icon name="closet" size={38} />
+                <h2>
+                  {empty
+                    ? '아직 등록한 옷이 없어요'
+                    : '조건에 맞는 옷이 없어요'}
+                </h2>
+                <button
+                  className="woven-btn"
+                  onClick={() =>
+                    empty ? go('register') : (search(''), filter('전체'))
+                  }
+                >
+                  {empty ? '첫 옷 등록하기' : '필터 초기화'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <aside className="catalog-tools">
+          <div className="closet-sources wc-switch">
+            {(['sample', 'personal'] as const).map((m) => (
+              <button
+                aria-pressed={m === mode}
+                key={m}
+                onClick={() => {
+                  setMode(m);
+                  if (page === 'closet-empty') go('closet');
+                }}
+              >
+                {m === 'sample' ? '샘플 옷장' : '개인 옷장'}
+              </button>
+            ))}
+          </div>
+          <div className="bench-index">
+            {[
+              ['space', '공간형 옷장', 'closet'],
+              ['purchases', '구매 내역', 'save'],
+              ['direct', '직접 코디', 'outfit'],
+            ].map(([p, n, ic]) => (
+              <button key={p} onClick={() => go(p)}>
+                <Icon name={ic} />
+                <span>{n}</span>
+                <Icon name="right" size={15} />
+              </button>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
+}

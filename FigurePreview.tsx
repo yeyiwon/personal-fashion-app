@@ -1,152 +1,35 @@
-import { useRef, type PointerEvent } from 'react';
+import { useId, useRef } from 'react';
 import type { Figure } from './atelierData';
 import { hairNames } from './atelierData';
 
-type Vertex = [x: number, y: number, z: number];
-type Ring = [
-  y: number,
-  radiusX: number,
-  radiusZ: number,
-  x?: number,
-  z?: number,
-];
-type Facet = { verts: Vertex[]; rgb: number[]; light: number[] };
-const segments = 16;
-const toRgb = (color: string) =>
-  [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
-function surface(rings: Ring[], color: string, first = 0, last = segments) {
-  const facets: Facet[] = [];
-  const rgb = toRgb(color);
-  const point = ([y, rx, rz, x = 0, z = 0]: Ring, step: number): Vertex => [
-    x + rx * Math.sin((step * 2 * Math.PI) / segments),
-    y,
-    z + rz * Math.cos((step * 2 * Math.PI) / segments),
-  ];
-  for (let r = 1; r < rings.length; r++)
-    for (let j = first; j < last; j++) {
-      const angle = ((j + 0.5) * 2 * Math.PI) / segments;
-      const prev = rings[r - 1],
-        next = rings[r];
-      const slope =
-        (prev[1] + prev[2] - next[1] - next[2]) /
-        (2 * Math.max(1, next[0] - prev[0]));
-      facets.push({
-        verts: [
-          point(prev, j),
-          point(prev, j + 1),
-          point(next, j + 1),
-          point(next, j),
-        ],
-        rgb,
-        light: [Math.sin(angle), slope, Math.cos(angle)],
-      });
-    }
-  return facets;
-}
-function mesh(f: Figure) {
-  const standing = 208 + (f.height - 165) * 0.8,
-    top = 278 - standing;
-  const body = (f.weight - 60) * 0.12;
-  const sh =
-    (f.base === 'm' ? 23.5 : 20.5) + (f.shoulder - 50) * 0.21 + body * 0.4;
-  const hip =
-      (f.base === 'm' ? 16.5 : 18.5) + body + ((f.hip ?? 50) - 50) * 0.18,
-    waist = (f.base === 'm' ? 15 : 12.8) + body + ((f.waist ?? 50) - 50) * 0.18;
-  const leg = (standing * f.leg) / 100;
-  const crotch = 278 - leg,
-    shoulder = top + 32;
-  const mid =
-    shoulder + (crotch - shoulder) * (0.58 + ((f.torso ?? 100) - 100) * 0.006);
-  const facets: Facet[] = [];
-  const add = (rings: Ring[], color: string, start?: number, end?: number) =>
-    facets.push(...surface(rings, color, start, end));
-  add(
-    [
-      [top + 16, 4, 4],
-      [shoulder, 5.5, 5],
-    ],
-    '#aebfc9',
-  );
-  add(
-    [
-      [shoulder - 3, 5, 5],
-      [shoulder + 2, sh, 8],
-      [mid - 13, sh * 0.84, 10],
-      [mid, waist, 9],
-      [crotch - 13, hip, 12],
-      [crotch, hip * 0.88, 9],
-    ],
-    '#bdcdd7',
-  );
-  for (const side of [-1, 1]) {
-    const sx = (x: number) => side * x;
-    add(
+type Ring = [number, number, number, number?, number?];
+type Point = [number, number];
+// A meridian profile gives each part a smooth contour. Elliptical cross sections
+// keep the side and front measurements distinct as the illustration rotates.
+function contour(points: Point[]) {
+  if (!points.length) return '';
+  let d = 'M' + points[0].join(' ');
+  for (let i = 0; i < points.length; i++) {
+    const a = points[(i + points.length - 1) % points.length],
+      b = points[i],
+      c = points[(i + 1) % points.length],
+      e = points[(i + 2) % points.length];
+    d +=
+      ' C' +
       [
-        [crotch - 12, hip * 0.51, 9, sx(hip * 0.52)],
-        [crotch + 7, hip * 0.48, 9, sx(hip * 0.55)],
-        [crotch + leg * 0.49, 5.4 + body * 0.18, 6, sx(11)],
-        [crotch + leg * 0.67, 6.4 + body * 0.25, 7, sx(11.8), -0.8],
-        [275, 3.15, 3.8, sx(13)],
-        [278, 4.2, 7.3, sx(13), 2],
-      ],
-      '#aabecb',
-    );
-    add(
-      [
-        [shoulder + 1, 2, 3, sx(sh - 2)],
-        [shoulder + 6, 5.4 + body * 0.12, 5.7, sx(sh - 1)],
-        [mid - 1, 3.8 + body * 0.08, 4.7, sx(sh + 6)],
-        [mid + 12, 4.3, 4.4, sx(sh + 8), 1],
-        [crotch + 8, 2.6, 3.3, sx(sh + 9), 2],
-        [crotch + 15, 2.1, 2.5, sx(sh + 8), 2],
-      ],
-      '#b7c9d4',
-    );
+        b[0] + (c[0] - a[0]) / 7,
+        b[1] + (c[1] - a[1]) / 7,
+        c[0] - (e[0] - b[0]) / 7,
+        c[1] - (e[1] - b[1]) / 7,
+        ...c,
+      ]
+        .map((n) => n.toFixed(2))
+        .join(' ');
   }
-  add(
-    [
-      [top - 3, 2, 2],
-      [top, 8, 8],
-      [top + 8, 10, 9.5],
-      [top + 14, 8.2, 8],
-      [top + 21, 4.5, 5, 0, 1],
-    ],
-    '#d4dce0',
-  );
-  // The nose, forehead and back hair give side and rear views different silhouettes.
-  add(
-    [
-      [top + 7, 0.8, 1, 0, 8.3],
-      [top + 13, 2, 2.6, 0, 9],
-      [top + 14, 1.4, 1, 0, 8.9],
-    ],
-    '#b9c8cf',
-  );
-  const hair = f.hairColor ?? '#3f302b',
-    bottom = { short: 14, bob: 27, long: 48 }[f.hair];
-  add(
-    [
-      [top - 5, 0.4, 0.4],
-      [top - 2, 7.7, 8.6],
-      [top + 3, 10.5, 10.4],
-      [top + 5, 10.4, 10],
-    ],
-    hair,
-  );
-  add(
-    [
-      [top + 4, 10.4, 10],
-      [top + 10, 10.9, 10.8],
-      [top + bottom, f.hair === 'long' ? 12 : 9, 8.9, 0, -1],
-    ],
-    hair,
-    3,
-    14,
-  );
-  return facets;
+  return d + 'Z';
 }
 export function FigurePreview({
-  figure,
+  figure: f,
   angle,
   turn,
 }: {
@@ -154,55 +37,108 @@ export function FigurePreview({
   angle: number;
   turn: (v: number) => void;
 }) {
-  const drag = useRef<{ x: number; start: number } | null>(null);
-  const rad = (angle * Math.PI) / 180,
-    co = Math.cos(rad),
-    si = Math.sin(rad);
-  const rotate = ([x, y, z]: Vertex): Vertex => [
-    100 + x * co + z * si,
-    y,
-    -x * si + z * co,
-  ];
-  const faces = mesh(figure)
-    .map((face) => {
-      const pts = face.verts.map(rotate),
-        [x, y, z] = face.light;
-      const n = Math.hypot(x, y, z);
-      const light =
-        0.84 +
-        (0.18 *
-          ((x * co + z * si) * -0.45 - y * 0.42 + (-x * si + z * co) * 0.69)) /
-          n;
-      return {
-        pts: pts.map(([a, b]) => a.toFixed(2) + ',' + b.toFixed(2)).join(' '),
-        depth: pts.reduce((t, p) => t + p[2], 0) / 4,
-        color:
-          'rgb(' +
-          face.rgb.map((v) => Math.min(255, Math.round(v * light))).join(',') +
-          ')',
-      };
-    })
-    .sort((a, b) => a.depth - b.depth);
-  function move(e: PointerEvent<SVGSVGElement>) {
-    if (drag.current)
-      turn(
-        Math.round(
-          (drag.current.start + (e.clientX - drag.current.x) * 1.4 + 7200) %
-            360,
-        ),
-      );
+  const drag = useRef<{ x: number; a: number } | null>(null),
+    uid = useId().replace(/[^a-z0-9]/gi, '');
+  const a = (angle * Math.PI) / 180,
+    cs = Math.cos(a),
+    sn = Math.sin(a),
+    mass = 1 + (f.weight - 56) * 0.003,
+    sh = (f.base === 'm' ? 29 : 25) * (1 + (f.shoulder - 50) * 0.012) * mass;
+  const waist =
+      (f.base === 'm' ? 19 : 16) * (1 + ((f.waist ?? 50) - 50) * 0.013) * mass,
+    hip =
+      (f.base === 'm' ? 22 : 24) * (1 + ((f.hip ?? 50) - 50) * 0.012) * mass;
+  const feet = 291,
+    top = feet - (236 + (f.height - 168) * 0.72),
+    pelvis = feet - ((feet - top) * f.leg) / 100,
+    shoulder = top + 45;
+  const belt = shoulder + (pelvis - shoulder) * 0.58 * ((f.torso ?? 100) / 100),
+    hair = f.hairColor ?? '#40312e';
+  function project(r: Ring) {
+    const [y, rx, rz, x = 0, z = 0] = r;
+    return {
+      cx: 100 + x * cs + z * sn,
+      y,
+      w: Math.sqrt((rx * cs) ** 2 + (rz * sn) ** 2),
+    };
   }
+  const profile = (rings: Ring[]) => {
+    const v = rings.map(project);
+    return contour([
+      ...v.map((p) => [p.cx - p.w, p.y] as Point),
+      ...v.reverse().map((p) => [p.cx + p.w, p.y] as Point),
+    ]);
+  };
+  const torso: Ring[] = [
+    [top + 28, 5.5, 5],
+    [top + 36, 6.5, 5.5],
+    [shoulder, sh, 13],
+    [shoulder + 17, sh * 0.85, 15],
+    [belt, waist, 12.5],
+    [pelvis - 12, hip, 16],
+    [pelvis, hip * 0.8, 13],
+    [pelvis + 4, 7, 6],
+  ];
+  const limb = (side: number, arm: boolean): Ring[] =>
+    arm
+      ? [
+          [shoulder + 1, 5.2, 5.4, sh * side],
+          [shoulder + 17, 5.9, 5.5, (sh + 3) * side],
+          [belt + 2, 4.1, 4.2, (sh + 6) * side],
+          [pelvis + 5, 3.2, 3.3, (sh + 8) * side, 1],
+          [pelvis + 13, 2.5, 3, (sh + 8) * side, 1.4],
+        ]
+      : [
+          [pelvis - 9, hip * 0.48, 11.5, hip * 0.46 * side],
+          [pelvis + 13, hip * 0.44, 10.4, hip * 0.51 * side],
+          [pelvis + (feet - pelvis) * 0.48, 5.9, 6.8, 10.4 * side, 1],
+          [pelvis + (feet - pelvis) * 0.65, 6.6, 7.2, 10.7 * side, -0.8],
+          [feet - 7, 3, 3.8, 10.8 * side],
+          [feet - 1, 3.8, 7, 11 * side, 3.1],
+        ];
+  const head: Ring[] = [
+    [top - 1, 3.1, 3.2],
+    [top + 2, 8.6, 8.7],
+    [top + 11, 10.4, 10.3],
+    [top + 21, 8.4, 8.8, 0, 1],
+    [top + 28, 4.3, 5, 0, 2],
+  ];
+  const hairDepth = { short: 12, bob: 26, long: 47 }[f.hair];
+  const parts = [-1, 1]
+    .flatMap((d) => [
+      { key: 'leg' + d, depth: -d * sn * 0.1, r: limb(d, false) },
+      { key: 'arm' + d, depth: -d * sn * 0.9, r: limb(d, true) },
+    ])
+    .concat([{ key: 'torso', depth: 0, r: torso }])
+    .sort((x, y) => x.depth - y.depth);
+  const hairBack = profile([
+    [top - 2, 2.4, 2],
+    [top, 7, 7],
+    [top + 5, 10.6, 10.2, 0, -1],
+    [top + 9, 10, 9.4, 0, -1.5],
+    [top + hairDepth, Math.max(2, 6.8 - 2 * cs), 4.5, 0, -6],
+  ]);
+  const fill = 'url(#cloth' + uid + ')';
   return (
     <svg
-      className="at-figure-svg"
-      viewBox="0 0 200 303"
+      className="dress-form"
+      viewBox="30 28 140 275"
       role="img"
-      aria-label={`비율 모형 ${angle}도. 키 ${figure.height}cm, 다리 ${figure.leg}%, ${hairNames[figure.hair]}`}
+      aria-label={
+        '비율 도식 ' + angle + '도, 키 ' + f.height + 'cm, ' + hairNames[f.hair]
+      }
       onPointerDown={(e) => {
-        drag.current = { x: e.clientX, start: angle };
+        drag.current = { x: e.clientX, a: angle };
         e.currentTarget.setPointerCapture(e.pointerId);
       }}
-      onPointerMove={move}
+      onPointerMove={(e) => {
+        if (drag.current)
+          turn(
+            Math.round(
+              (drag.current.a + (e.clientX - drag.current.x) * 1.5 + 720) % 360,
+            ),
+          );
+      }}
       onPointerUp={() => {
         drag.current = null;
       }}
@@ -210,34 +146,99 @@ export function FigurePreview({
         drag.current = null;
       }}
     >
-      <g
-        fill="none"
-        stroke="#a8b7c6"
-        strokeWidth=".6"
-        strokeDasharray="2.5 2.5"
-      >
-        {[36, 85, 144, 204, 278].map((y) => (
-          <path key={y} d={`M 24 ${y} H 176`} />
-        ))}
-      </g>
-      <ellipse
-        cx="100"
-        cy="280"
-        rx="30"
-        ry="3.3"
-        fill="#9faeb8"
-        opacity=".34"
-      />
-      {faces.map((f, i) => (
-        <polygon
-          key={i}
-          fill={f.color}
-          stroke={f.color}
-          strokeWidth=".45"
-          strokeLinejoin="round"
-          points={f.pts}
-        />
+      <defs>
+        <linearGradient
+          id={'cloth' + uid}
+          x1="0"
+          y1=".2"
+          x2="1"
+          y2=".6"
+          gradientUnits="objectBoundingBox"
+        >
+          <stop stopColor="#999e90" />
+          <stop offset=".25" stopColor="#d5d5c6" />
+          <stop offset=".47" stopColor="#eceade" />
+          <stop offset=".75" stopColor="#c5c7b7" />
+          <stop offset="1" stopColor="#969a8c" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="100" cy="293" rx="29" ry="3" fill="#8a9386" opacity=".27" />
+      {parts.map((p) => (
+        <g key={p.key}>
+          <path
+            d={profile(p.r)}
+            fill={fill}
+            stroke="#787e70"
+            strokeWidth=".6"
+          />
+          {p.key === 'torso' && (
+            <>
+              {[torso[3], torso[4], torso[5]].map((r, i) => {
+                const v = project(r);
+                return (
+                  <path
+                    key={i}
+                    d={
+                      'M' +
+                      (v.cx - v.w) +
+                      ' ' +
+                      v.y +
+                      ' Q' +
+                      v.cx +
+                      ' ' +
+                      (v.y + 4) +
+                      ' ' +
+                      (v.cx + v.w) +
+                      ' ' +
+                      v.y
+                    }
+                    fill="none"
+                    stroke="#847167"
+                    strokeWidth=".7"
+                    strokeDasharray={i === 1 ? '2 1' : undefined}
+                  />
+                );
+              })}
+              <path
+                d={
+                  'M' +
+                  (100 + 5 * sn) +
+                  ' ' +
+                  (top + 36) +
+                  ' C' +
+                  (100 + 16 * sn) +
+                  ' ' +
+                  (shoulder + 9) +
+                  ' ' +
+                  (100 + 12 * sn) +
+                  ' ' +
+                  belt +
+                  ' ' +
+                  (100 + 13 * sn) +
+                  ' ' +
+                  pelvis
+                }
+                fill="none"
+                stroke="#9b8278"
+                strokeWidth=".65"
+              />
+            </>
+          )}
+        </g>
       ))}
+      {cs >= 0 && <path d={hairBack} fill={hair} />}
+      <path d={profile(head)} fill={fill} stroke="#80857b" strokeWidth=".6" />
+      {cs < 0 && <path d={hairBack} fill={hair} />}
+      <path
+        d={profile([
+          [top - 2, 2, 2],
+          [top, 7, 7],
+          [top + 5, 10.6, 10.2],
+          [top + 8, 9.8, 9.1, 0, -0.8],
+          [top + 6, 5, 5, 0, 2.5],
+        ])}
+        fill={hair}
+      />
     </svg>
   );
 }
