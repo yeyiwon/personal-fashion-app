@@ -10,6 +10,64 @@ import type { Garment } from './domain';
 
 export function Icon({ name, size = 21 }: { name: string; size?: number }) {
   const shapes: Record<string, ReactNode> = {
+    home: (
+      <>
+        <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10" />
+        <path d="M9 21v-7h6v7" />
+      </>
+    ),
+    studio: (
+      <>
+        <path d="m12 2 2.2 6.1L20 11l-5.8 2.8L12 20l-2.2-6.2L4 11l5.8-2.9Z" />
+        <path d="m19 3 2 2m-1 12 1.5 1.5" />
+      </>
+    ),
+    model: (
+      <>
+        <circle cx="12" cy="6" r="3" />
+        <path d="m8 11 4 1 4-1 3 9H5l3-9Z" />
+      </>
+    ),
+    shop: (
+      <>
+        <path d="M4 8h16l1 13H3L4 8Z" />
+        <path d="M8 9V7a4 4 0 0 1 8 0v2" />
+      </>
+    ),
+    grid: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </>
+    ),
+    menu: (
+      <>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </>
+    ),
+    user: (
+      <>
+        <circle cx="12" cy="7" r="3.5" />
+        <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+      </>
+    ),
+    arrow: <path d="M3 12h17m-7-7 7 7-7 7" />,
+    diagonal: <path d="M5 19 19 5M7 5h12v12" />,
+    fit: (
+      <>
+        <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
+        <path d="M9 16c0-2 1-3 3-3s3 1 3 3" />
+        <circle cx="12" cy="8.5" r="2.5" />
+      </>
+    ),
+    palette: (
+      <>
+        <path d="M4 19 6 4h5l-2 15a2.5 2.5 0 0 1-5 0Z" />
+        <path d="m12 11 4-5 4 3-9 11M14 16h6v5H8" />
+      </>
+    ),
     closet: (
       <>
         <path d="M10 6a2 2 0 1 1 4 0c0 1.5-2 2.1-2 3.6l8.7 5.9c1 .7.6 2.5-.7 2.5H4c-1.3 0-1.7-1.8-.7-2.5L12 9.6" />
@@ -125,6 +183,37 @@ function releasePhoto(id: string, entry: PhotoEntry) {
   }, 40);
 }
 export function GarmentPhoto({
+  item,
+  shared = false,
+}: {
+  item: Garment & { image?: string };
+  shared?: boolean;
+}) {
+  if (item.image)
+    return (
+      <img
+        src={item.image}
+        alt={item.name}
+        decoding="async"
+        draggable={false}
+        style={
+          shared
+            ? ({ viewTransitionName: 'garment-' + item.id } as CSSProperties)
+            : undefined
+        }
+      />
+    );
+  if (item.photoUnavailable)
+    return (
+      <span className="photoFallback">
+        <Icon name="closet" />
+        사진 없음
+      </span>
+    );
+  return <StoredPhoto item={item} shared={shared} />;
+}
+
+function StoredPhoto({
   item,
   shared = false,
 }: {

@@ -29,7 +29,7 @@ info = {
     "CFBundleDevelopmentRegion":"ko", "CFBundleDisplayName":"내 옷장",
     "CFBundleExecutable":"$(EXECUTABLE_NAME)", "CFBundleIdentifier":"$(PRODUCT_BUNDLE_IDENTIFIER)",
     "CFBundleInfoDictionaryVersion":"6.0", "CFBundleName":"$(PRODUCT_NAME)",
-    "CFBundlePackageType":"APPL", "CFBundleShortVersionString":"0.1.0", "CFBundleVersion":"1",
+    "CFBundlePackageType":"APPL", "CFBundleShortVersionString":"0.2.0", "CFBundleVersion":"2",
     "LSRequiresIPhoneOS":True, "UILaunchScreen":{},
     "UIApplicationSceneManifest":{"UIApplicationSupportsMultipleScenes":False},
     "UISupportedInterfaceOrientations":["UIInterfaceOrientationPortrait","UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"],

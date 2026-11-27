@@ -1,0 +1,262 @@
+.settings-view {
+  color: var(--ink);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px clamp(18px, 4vw, 42px) 48px;
+  line-height: 1.55;
+}
+.settings-heading {
+  margin-bottom: 28px;
+}
+.settings-heading h1 {
+  font-size: clamp(2rem, 7vw, 3.8rem);
+  line-height: 1.18;
+  letter-spacing: -0.065em;
+  margin: 0;
+}
+.settings-heading p,
+.settings-data-block > p,
+.settings-mode p,
+.settings-hint,
+.settings-identity p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.settings-view h2,
+.settings-choices legend {
+  font-size: 1.08rem;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  margin: 0 0 10px;
+}
+.settings-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.settings-identity strong {
+  font-size: 1.35rem;
+}
+.settings-identity p,
+.settings-mode p {
+  margin: 2px 0;
+}
+.settings-monogram {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  background: #dce5f1;
+  color: #294f78;
+  border-radius: 44% 56% 49% 51%;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 1.85rem;
+}
+.settings-name,
+.settings-mode {
+  margin: 24px 0;
+}
+.settings-name label,
+.settings-confirm label {
+  font-size: 0.86rem;
+  font-weight: 650;
+  display: block;
+}
+.settings-name > div,
+.settings-confirm > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-name input,
+.settings-confirm input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 8px 12px;
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.settings-name button {
+  flex: none;
+}
+.settings-segment,
+.settings-choices > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.settings-segment button,
+.settings-choices button:not(.color-pick),
+.settings-custom-color {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 8px 15px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: transparent;
+}
+.settings-segment button[aria-pressed='true'],
+.settings-choices button[aria-pressed='true']:not(.color-pick) {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.settings-menu,
+.settings-data-block,
+.settings-choices {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0 0;
+  padding: 17px 0 0;
+}
+.settings-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0 14px;
+  text-align: left;
+  font: inherit;
+  font-weight: 650;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+.settings-link small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+.settings-swatch {
+  height: 120px;
+  border-radius: 6px;
+  position: relative;
+  transition: background-color 0.25s ease;
+}
+.settings-swatch span {
+  background: var(--paper);
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  border-radius: 3px;
+  padding: 5px 10px;
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+.settings-swatch small {
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.settings-choices {
+  padding: 0;
+  margin: 23px 0;
+  border: 0;
+}
+.settings-choices legend {
+  padding: 0;
+}
+.settings-colors {
+  align-items: center;
+}
+.settings-choices .color-pick {
+  background: var(--swatch);
+  border: 4px solid var(--paper);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  box-shadow: inset 0 0 0 1px #0001;
+}
+.settings-choices .color-pick[aria-pressed='true'] {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.settings-custom-color {
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.settings-custom-color input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.settings-custom-color:focus-within {
+  outline: 2px solid var(--accent);
+}
+.settings-data-block > button {
+  margin: 4px 8px 2px 0;
+}
+.settings-hint {
+  margin: 12px 0;
+  font-size: 0.82rem;
+}
+.settings-danger {
+  border: 1px solid #9b4f4e;
+  color: #863734;
+  background: var(--paper);
+  border-radius: 6px;
+  padding: 10px 14px;
+  min-height: 44px;
+  font: inherit;
+}
+.settings-view button {
+  cursor: pointer;
+}
+.settings-view button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.settings-confirm input {
+  margin: 5px 0 10px;
+}
+.settings-feedback:not(:empty),
+.settings-error {
+  padding: 12px 0;
+  font-weight: 600;
+}
+.settings-error {
+  color: #90352b;
+}
+.settings-privacy {
+  margin: 0;
+}
+.settings-privacy dt {
+  font-weight: 650;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.settings-privacy dd {
+  margin: 7px 0 22px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+@media (min-width: 740px) {
+  .settings-view {
+    padding-top: 40px;
+  }
+  .settings-swatch {
+    height: 160px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-swatch {
+    transition: none;
+  }
+}

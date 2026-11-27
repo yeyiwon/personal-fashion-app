@@ -1,4 +1,9 @@
-import { garmentFields, itemName, outfitMembers, WardrobeError } from './domain';
+import {
+  garmentFields,
+  itemName,
+  outfitMembers,
+  WardrobeError,
+} from './domain';
 import type { Garment, GarmentDraft, Outfit } from './domain';
 import { MAX_IMAGE_BYTES, MAX_IMAGE_PIXELS } from './images';
 import type { PreparedImage } from './images';
@@ -38,17 +43,27 @@ function open(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore('garments', { keyPath: 'id' });
-      db.createObjectStore('images', { keyPath: 'garmentId' }).createIndex('hash', 'hash', {
-        unique: true,
-      });
-      db.createObjectStore('outfits', { keyPath: 'id' }).createIndex('member', 'garmentIds', {
-        multiEntry: true,
-      });
+      db.createObjectStore('images', { keyPath: 'garmentId' }).createIndex(
+        'hash',
+        'hash',
+        {
+          unique: true,
+        },
+      );
+      db.createObjectStore('outfits', { keyPath: 'id' }).createIndex(
+        'member',
+        'garmentIds',
+        {
+          multiEntry: true,
+        },
+      );
       db.createObjectStore('profile', { keyPath: 'id' });
     };
     request.onblocked = () => {
       blocked = true;
-      reject(new WardrobeError('BLOCKED', '다른 탭의 옷장을 닫고 다시 열어 주세요.'));
+      reject(
+        new WardrobeError('BLOCKED', '다른 탭의 옷장을 닫고 다시 열어 주세요.'),
+      );
     };
     request.onerror = () => reject(storageIssue(request.error));
     request.onsuccess = () => {
@@ -120,7 +135,9 @@ function newId() {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6]! & 15) | 64;
   bytes[8] = (bytes[8]! & 63) | 128;
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(
+    '',
+  );
   return [
     hex.slice(0, 8),
     hex.slice(8, 12),
@@ -138,7 +155,11 @@ function byRecent(
 async function ensureDevice(tx: IDBTransaction, now: string) {
   const store = tx.objectStore('profile');
   if (!(await result(store.getKey('device')))) {
-    const profile: DeviceProfile = { id: 'device', storage: 'local', createdAt: now };
+    const profile: DeviceProfile = {
+      id: 'device',
+      storage: 'local',
+      createdAt: now,
+    };
     await result(store.add(profile));
   }
 }
@@ -162,7 +183,9 @@ export async function getImage(
   kind: 'preview' | 'original' = 'preview',
 ): Promise<Blob | null> {
   return transaction(['images'], 'readonly', async (tx) => {
-    const image: ImageRecord | undefined = await result(tx.objectStore('images').get(id));
+    const image: ImageRecord | undefined = await result(
+      tx.objectStore('images').get(id),
+    );
     return image?.[kind] ?? null;
   });
 }
@@ -186,36 +209,91 @@ function validatePrepared(image: PreparedImage): void {
     image.height < 1 ||
     image.width * image.height > MAX_IMAGE_PIXELS
   ) {
-    throw new WardrobeError('INVALID', '사진 처리가 완료되지 않았어요. 사진을 다시 선택해 주세요.');
+    throw new WardrobeError(
+      'INVALID',
+      '사진 처리가 완료되지 않았어요. 사진을 다시 선택해 주세요.',
+    );
   }
 }
 
-export async function addGarment(draft: GarmentDraft, image: PreparedImage): Promise<Garment> {
+async function preventOrderDuplicate(tx: IDBTransaction, draft: GarmentDraft) {
+  if (!draft.purchase?.sourceKey) return;
+  const rows = await result<Garment[]>(tx.objectStore('garments').getAll());
+  const old = rows.find(
+    (g) => g.purchase?.sourceKey === draft.purchase?.sourceKey,
+  );
+  if (old)
+    throw new WardrobeError(
+      'DUPLICATE',
+      '이 주문서의 같은 상품이 이미 옷장에 있어요.',
+      old.id,
+    );
+}
+
+export async function addGarment(
+  draft: GarmentDraft,
+  image: PreparedImage,
+): Promise<Garment> {
   validatePrepared(image);
   const fields = garmentFields(draft, image.color);
-  return transaction(['garments', 'images', 'profile'], 'readwrite', async (tx) => {
-    const store = tx.objectStore('images');
-    const existing = await result(store.index('hash').getKey(image.hash));
-    if (existing !== undefined)
-      throw new WardrobeError(
-        'DUPLICATE',
-        '같은 사진으로 등록한 옷이 이미 있어요.',
-        String(existing),
-      );
-    const now = new Date().toISOString(),
-      id = newId();
-    const garment: Garment = { id, ...fields, createdAt: now, updatedAt: now };
-    const record: ImageRecord = {
-      garmentId: id,
-      hash: image.hash,
-      original: image.original,
-      preview: image.preview,
-      width: image.width,
-      height: image.height,
-      color: image.color,
+  return transaction(
+    ['garments', 'images', 'profile'],
+    'readwrite',
+    async (tx) => {
+      await preventOrderDuplicate(tx, draft);
+      const store = tx.objectStore('images');
+      const existing = await result(store.index('hash').getKey(image.hash));
+      if (existing !== undefined)
+        throw new WardrobeError(
+          'DUPLICATE',
+          '같은 사진으로 등록한 옷이 이미 있어요.',
+          String(existing),
+        );
+      const now = new Date().toISOString(),
+        id = newId();
+      const garment: Garment = {
+        id,
+        ...fields,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const record: ImageRecord = {
+        garmentId: id,
+        hash: image.hash,
+        original: image.original,
+        preview: image.preview,
+        width: image.width,
+        height: image.height,
+        color: image.color,
+      };
+      await Promise.all([
+        result(store.add(record)),
+        result(tx.objectStore('garments').add(garment)),
+        ensureDevice(tx, now),
+      ]);
+      return garment;
+    },
+  );
+}
+
+/** Link and manually confirmed order entries can be registered before a garment photo is available. */
+export async function addPurchaseGarment(
+  draft: GarmentDraft,
+): Promise<Garment> {
+  if (!draft.purchase)
+    throw new WardrobeError('INVALID', '구매 정보를 입력해 주세요.');
+  const fields = garmentFields(draft, '#a8aab0');
+  return transaction(['garments', 'profile'], 'readwrite', async (tx) => {
+    await preventOrderDuplicate(tx, draft);
+    const now = new Date().toISOString();
+    const garment: Garment = {
+      id: newId(),
+      ...fields,
+      photoUnavailable: true,
+      createdAt: now,
+      updatedAt: now,
     };
     await Promise.all([
-      result(store.add(record)),
       result(tx.objectStore('garments').add(garment)),
       ensureDevice(tx, now),
     ]);
@@ -223,7 +301,10 @@ export async function addGarment(draft: GarmentDraft, image: PreparedImage): Pro
   });
 }
 
-export async function updateGarment(id: string, draft: GarmentDraft): Promise<Garment> {
+export async function updateGarment(
+  id: string,
+  draft: GarmentDraft,
+): Promise<Garment> {
   return transaction(['garments'], 'readwrite', async (tx) => {
     const store = tx.objectStore('garments');
     const old: Garment | undefined = await result(store.get(id));
@@ -236,22 +317,33 @@ export async function updateGarment(id: string, draft: GarmentDraft): Promise<Ga
       },
       old.color,
     );
-    const updated: Garment = { ...old, ...fields, updatedAt: new Date().toISOString() };
+    const updated: Garment = {
+      ...old,
+      ...fields,
+      updatedAt: new Date().toISOString(),
+    };
     await result(store.put(updated));
     return updated;
   });
 }
 
 export async function deleteGarment(id: string): Promise<void> {
-  await transaction(['garments', 'images', 'outfits'], 'readwrite', async (tx) => {
-    if (await result(tx.objectStore('outfits').index('member').count(id))) {
-      throw new WardrobeError('IN_USE', '저장한 코디에서 이 옷을 먼저 빼 주세요.');
-    }
-    await Promise.all([
-      result(tx.objectStore('garments').delete(id)),
-      result(tx.objectStore('images').delete(id)),
-    ]);
-  });
+  await transaction(
+    ['garments', 'images', 'outfits'],
+    'readwrite',
+    async (tx) => {
+      if (await result(tx.objectStore('outfits').index('member').count(id))) {
+        throw new WardrobeError(
+          'IN_USE',
+          '저장한 코디에서 이 옷을 먼저 빼 주세요.',
+        );
+      }
+      await Promise.all([
+        result(tx.objectStore('garments').delete(id)),
+        result(tx.objectStore('images').delete(id)),
+      ]);
+    },
+  );
 }
 
 /** Existence check and outfit write are serialized with garment deletion, including other tabs. */
@@ -265,11 +357,17 @@ export async function saveOutfit(
   return transaction(['garments', 'outfits'], 'readwrite', async (tx) => {
     const garments = tx.objectStore('garments'),
       outfits = tx.objectStore('outfits');
-    const keys = await Promise.all(members.map((member) => result(garments.getKey(member))));
+    const keys = await Promise.all(
+      members.map((member) => result(garments.getKey(member))),
+    );
     if (keys.some((key) => key === undefined))
-      throw new WardrobeError('NOT_FOUND', '선택한 옷 중 옷장에서 삭제된 항목이 있어요.');
+      throw new WardrobeError(
+        'NOT_FOUND',
+        '선택한 옷 중 옷장에서 삭제된 항목이 있어요.',
+      );
     const now = new Date().toISOString();
-    const before: Outfit | undefined = id !== undefined ? await result(outfits.get(id)) : undefined;
+    const before: Outfit | undefined =
+      id !== undefined ? await result(outfits.get(id)) : undefined;
     if (id !== undefined && !before)
       throw new WardrobeError('NOT_FOUND', '이 코디가 저장 목록에 없어요.');
     const outfit: Outfit = {
@@ -295,7 +393,9 @@ async function dataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () =>
-      reject(new WardrobeError('STORAGE', '내보낼 이미지 파일을 읽을 수 없어요.'));
+      reject(
+        new WardrobeError('STORAGE', '내보낼 이미지 파일을 읽을 수 없어요.'),
+      );
     reader.onload = () => resolve(String(reader.result));
     reader.readAsDataURL(blob);
   });
@@ -303,13 +403,18 @@ async function dataUrl(blob: Blob): Promise<string> {
 
 /** Take one consistent DB snapshot before encoding blobs; never hold a write lock while serializing. */
 export async function exportData(): Promise<Blob> {
-  const [garments, outfits, images, profile] = await transaction([...STORES], 'readonly', (tx) =>
-    Promise.all([
-      result<Garment[]>(tx.objectStore('garments').getAll()),
-      result<Outfit[]>(tx.objectStore('outfits').getAll()),
-      result<ImageRecord[]>(tx.objectStore('images').getAll()),
-      result<DeviceProfile | undefined>(tx.objectStore('profile').get('device')),
-    ]),
+  const [garments, outfits, images, profile] = await transaction(
+    [...STORES],
+    'readonly',
+    (tx) =>
+      Promise.all([
+        result<Garment[]>(tx.objectStore('garments').getAll()),
+        result<Outfit[]>(tx.objectStore('outfits').getAll()),
+        result<ImageRecord[]>(tx.objectStore('images').getAll()),
+        result<DeviceProfile | undefined>(
+          tx.objectStore('profile').get('device'),
+        ),
+      ]),
   );
   const metadata = JSON.stringify({
     schemaVersion: 1,
@@ -334,6 +439,68 @@ export async function exportData(): Promise<Blob> {
 
 export async function clearData(): Promise<void> {
   await transaction([...STORES], 'readwrite', async (tx) => {
-    await Promise.all(STORES.map((name) => result(tx.objectStore(name).clear())));
+    await Promise.all(
+      STORES.map((name) => result(tx.objectStore(name).clear())),
+    );
+  });
+}
+
+/** Merge validated, decoded images and outfits atomically. Existing edits always win. */
+export async function mergeBackup(
+  garments: Garment[],
+  outfits: Outfit[],
+  images: Map<string, PreparedImage>,
+) {
+  return transaction([...STORES], 'readwrite', async (tx) => {
+    const garmentStore = tx.objectStore('garments'),
+      imageStore = tx.objectStore('images');
+    const outfitStore = tx.objectStore('outfits'),
+      mapped = new Map<string, string>();
+    let addedGarments = 0,
+      addedOutfits = 0;
+    for (const garment of garments) {
+      if (garment.photoUnavailable === true) {
+        mapped.set(garment.id, garment.id);
+        if (!(await result(garmentStore.getKey(garment.id)))) {
+          await result(garmentStore.add(garment));
+          addedGarments++;
+        }
+        continue;
+      }
+      const image = images.get(garment.id)!;
+      validatePrepared(image);
+      const old = await result<ImageRecord | undefined>(
+        imageStore.get(garment.id),
+      );
+      if (old && old.hash !== image.hash)
+        throw new WardrobeError(
+          'DUPLICATE',
+          '같은 의류 ID의 사진이 서로 달라 복원을 취소했어요.',
+        );
+      const identical = await result(
+        imageStore.index('hash').getKey(image.hash),
+      );
+      mapped.set(
+        garment.id,
+        identical !== undefined ? String(identical) : garment.id,
+      );
+      if (identical !== undefined) continue;
+      await result(garmentStore.add(garment));
+      await result(imageStore.add({ ...image, garmentId: garment.id }));
+      addedGarments++;
+    }
+    for (const outfit of outfits) {
+      if (await result(outfitStore.getKey(outfit.id))) continue;
+      const members = Array.from(
+        new Set(outfit.garmentIds.map((id) => mapped.get(id)!)),
+      );
+      await result(
+        outfitStore.add({ ...outfit, garmentIds: outfitMembers(members) }),
+      );
+      addedOutfits++;
+    }
+    if (addedGarments || addedOutfits)
+      await ensureDevice(tx, new Date().toISOString());
+    return { addedGarments, addedOutfits };
   });
 }

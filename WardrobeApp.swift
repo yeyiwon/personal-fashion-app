@@ -144,7 +144,7 @@ private struct WardrobeView: UIViewRepresentable {
         private var activeDownload: WKDownload?
         private var pickerOpen = false
         private let exportFolder = FileManager.default.temporaryDirectory.appendingPathComponent("WardrobeExport", isDirectory: true)
-        private var exportFile: URL { exportFolder.appendingPathComponent("내 옷장.json") }
+        private var exportFile: URL?
 
         init(failure: @escaping () -> Void) {
             self.failure = failure
@@ -155,6 +155,7 @@ private struct WardrobeView: UIViewRepresentable {
         private func discardExport() {
             activeDownload = nil
             pickerOpen = false
+            exportFile = nil
             try? FileManager.default.removeItem(at: exportFolder)
         }
 
@@ -180,6 +181,13 @@ private struct WardrobeView: UIViewRepresentable {
                 decisionHandler(activeDownload == nil && !pickerOpen ? .download : .cancel)
                 return
             }
+            if action.navigationType == .linkActivated, action.sourceFrame.isMainFrame,
+               trusted(action.sourceFrame.request.url), let url = action.request.url,
+               url.scheme == "https", !trusted(url) {
+                decisionHandler(.cancel)
+                UIApplication.shared.open(url)
+                return
+            }
             let allowed = action.targetFrame?.isMainFrame == true && trusted(action.request.url)
             decisionHandler(allowed ? .allow : .cancel)
         }
@@ -189,20 +197,23 @@ private struct WardrobeView: UIViewRepresentable {
             download.delegate = self
         }
         func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String, completionHandler: @escaping (URL?) -> Void) {
-            guard download === activeDownload, response.mimeType == "application/json" else {
+            let filenames = ["application/json": "내 옷장.json", "image/jpeg": "나의 룩북.jpg"]
+            guard download === activeDownload, let name = filenames[response.mimeType ?? ""] else {
                 completionHandler(nil)
                 return
             }
             do {
                 try FileManager.default.createDirectory(at: exportFolder, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.complete])
-                completionHandler(exportFile)
+                let destination = exportFolder.appendingPathComponent(name)
+                exportFile = destination
+                completionHandler(destination)
             } catch {
                 completionHandler(nil)
                 exportError()
             }
         }
         func downloadDidFinish(_ download: WKDownload) {
-            guard activeDownload === download else { return }
+            guard activeDownload === download, let exportFile else { return }
             guard let parent = webView?.window?.rootViewController, parent.presentedViewController == nil else { exportError(); return }
             activeDownload = nil
             pickerOpen = true

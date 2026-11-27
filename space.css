@@ -1,0 +1,362 @@
+.space-page {
+  max-width: 1180px;
+  margin: auto;
+}
+.space-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 17px;
+  gap: 10px;
+}
+.space-heading h1 {
+  font-size: clamp(29px, 4vw, 52px);
+  margin: 0;
+  letter-spacing: -0.075em;
+}
+.space-heading p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.rail-filters {
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+}
+.rail-filters button {
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 8px 14px;
+  font-size: 13px;
+  min-height: 40px;
+}
+.rail-filters button[aria-pressed='true'] {
+  background: var(--ink);
+  color: white;
+}
+.dressing-space {
+  --rack-w: clamp(130px, 39vw, 265px);
+  height: clamp(385px, 64svh, 660px);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fabric) 18%, #ccd3d9);
+  border-radius: 7px;
+  transition: background 0.4s;
+}
+.room-light {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      117deg,
+      #fff9 6%,
+      transparent 21%,
+      #fff6 37%,
+      transparent 51%
+    ),
+    linear-gradient(0deg, #27314620, transparent 74%);
+  pointer-events: none;
+}
+.room-floor {
+  position: absolute;
+  inset: 76% 0 0;
+  background:
+    linear-gradient(165deg, #fff6, transparent 58%),
+    color-mix(in srgb, var(--fabric) 20%, #a9b4c1);
+  box-shadow: inset 0 8px 28px #424d6521;
+}
+.room-track {
+  position: absolute;
+  height: 7px;
+  left: 0;
+  right: 0;
+  top: 12%;
+  background: linear-gradient(#667383, #ecf2f8 40%, #64707d);
+  box-shadow: 0 9px 16px #27344637;
+}
+.garment-rail {
+  position: absolute;
+  inset: 10% 0 18%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 calc(50% - var(--rack-w) / 2);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.rack-piece {
+  position: relative;
+  isolation: isolate;
+  height: 95%;
+  flex: 0 0 var(--rack-w);
+  scroll-snap-align: center;
+  padding: 24px 3px 9px;
+  border-radius: 32% 32% 6% 6%;
+  background: transparent;
+  transition:
+    transform 0.45s cubic-bezier(0.18, 0.82, 0.16, 1.12),
+    opacity 0.3s;
+  transform: perspective(650px) translateY(7px)
+    rotateY(calc(-25deg * var(--offset))) scale(0.91);
+}
+.rack-piece.front {
+  transform: perspective(650px) translateY(0) rotateY(0deg) scale(1);
+}
+.rack-piece img,
+.specimen-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(5px 14px 8px #25262c35);
+}
+.rack-hook {
+  width: 14px;
+  height: 28px;
+  border: 2px solid #576372;
+  border-bottom: none;
+  position: absolute;
+  top: -2px;
+  left: calc(50% - 7px);
+  border-radius: 10px 10px 0 0;
+  transform: skew(-6deg);
+  z-index: -1;
+}
+.room-lens {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92%, 430px);
+  border: 1px solid #ffffffc2;
+  border-radius: 40px;
+  background: #eff3f9c9;
+  backdrop-filter: blur(21px) saturate(1.25);
+  box-shadow:
+    inset 0 1.5px 2px white,
+    inset 0 -1px 2px #79859550,
+    0 6px 20px #2a354322;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 9px;
+  z-index: 3;
+}
+.room-lens > button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.room-lens button:disabled {
+  opacity: 0.3;
+}
+.lens-name {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  text-align: left;
+}
+.lens-name small {
+  grid-column: 1;
+  color: #58636f;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+.lens-name b {
+  grid-column: 1;
+  letter-spacing: -0.03em;
+  font-size: 14px;
+}
+.lens-name span {
+  grid-column: 2;
+  grid-row: 1/3;
+  border-left: 1px solid #acb3bc;
+  padding-left: 9px;
+  font-size: 12px;
+}
+.specimen {
+  position: absolute;
+  inset: 0;
+}
+.specimen-photo {
+  position: absolute;
+  inset: 4% 8% 24%;
+  border-radius: 7%;
+  padding: 12px;
+}
+.space-back {
+  position: absolute;
+  z-index: 2;
+  left: 14px;
+  top: 14px;
+  background: #f5f7fabd;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-height: 40px;
+  padding: 0 13px;
+  font-size: 12px;
+}
+.lens-tools {
+  border-radius: 23px;
+  padding: 12px 18px;
+  display: block;
+}
+.lens-tools small {
+  color: #505b68;
+  font-size: 11px;
+}
+.lens-tools h2 {
+  font-size: 19px;
+  margin: 2px 0 7px;
+  letter-spacing: -0.05em;
+}
+.lens-actions {
+  display: flex;
+  gap: 4px;
+}
+.lens-actions button {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 39px;
+  border-radius: 15px;
+  background: #fff9;
+  font-size: 12px;
+  font-weight: 650;
+}
+.lens-actions button:first-child {
+  background: var(--ink);
+  color: white;
+}
+.lens-actions button:last-child {
+  flex: 0 0 40px;
+}
+.space-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  height: 380px;
+  background: #e4e8ed;
+}
+.space-empty h2 {
+  margin: 0;
+  font-size: 20px;
+}
+::view-transition-group(studio-object),
+::view-transition-group(room-panel) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.22, 1);
+}
+.room-lens {
+  view-transition-name: room-panel;
+}
+@media (min-width: 800px) {
+  .space-page {
+    max-width: 1000px;
+  }
+  .specimen-photo {
+    inset: 4% 22% 19%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rack-piece,
+  .dressing-space {
+    transition: none;
+  }
+}
+.rack-piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(28px, 4vh, 41px) 3px 8px;
+}
+.rail-mount {
+  position: absolute;
+  top: -1%;
+  left: 25%;
+  width: 50%;
+  height: clamp(40px, 7.3vh, 75px);
+  fill: none;
+  stroke: #596572;
+  stroke-width: 2;
+  z-index: -1;
+}
+.rack-piece img {
+  flex: 0 1 auto;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  margin-top: 0;
+}
+.rack-piece:has(.photoFallback) {
+  background: #ffffff22;
+}
+.rack-piece img[src*='bangle'],
+.rack-piece img[src*='scarf'],
+.rack-piece img[src*='loafer'],
+.rack-piece img[src*='sneaker'],
+.rack-piece img[src*='slingback'],
+.rack-piece img[src*='bag.'] {
+  margin-top: 18px;
+}
+.dressing-space {
+  --rack-w: clamp(155px, 52vw, 295px);
+  background-image: url('/media/editorial/room.webp');
+  background-size: cover;
+  background-position: var(--rail-view, 50%) center;
+  transition: background-position 0.55s ease;
+}
+.room-light {
+  background: linear-gradient(
+    130deg,
+    transparent 30%,
+    color-mix(in srgb, var(--fabric) 23%, transparent) 83%
+  );
+  mix-blend-mode: multiply;
+}
+.room-floor {
+  box-shadow: none;
+  background: linear-gradient(0deg, #24314935, transparent);
+  inset: 65% 0 0;
+}
+.rack-piece {
+  filter: drop-shadow(7px 13px 8px #29344218);
+}
+.rack-piece.front {
+  filter: none;
+}
+.room-track {
+  box-shadow: 0 5px 9px #212a3929;
+}
+.room-light:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at var(--light-at, 40%) 28%,
+    transparent 8%,
+    color-mix(in srgb, var(--fabric) 15%, transparent) 85%
+  );
+}
+.garment-rail,
+.rack-piece {
+  cursor: grab;
+  user-select: none;
+}
+.garment-rail:active,
+.rack-piece:active {
+  cursor: grabbing;
+}

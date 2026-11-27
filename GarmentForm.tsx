@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import {
   CATEGORIES,
   CONDITIONS,
+  WardrobeError,
   type Garment,
   type GarmentDraft,
   type Category,
   type Condition,
 } from './domain';
 import { type PreparedImage, localImageProcessor } from './images';
-import { addGarment, updateGarment } from './storage';
+import { addGarment, updateGarment, listGarments } from './storage';
 import { Sheet, Icon, usePhoto, message, GarmentPhoto } from './presentation';
 
 export function GarmentForm({
@@ -27,8 +28,9 @@ export function GarmentForm({
   const [prepared, setPrepared] = useState<PreparedImage | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
+  const [duplicate, setDuplicate] = useState<Garment>();
   const [draft, setDraft] = useState<GarmentDraft>(() =>
-      edit ? { ...edit } : { name: '', category: '기타' }
+      edit ? { ...edit } : { name: '', category: '기타' },
     ),
     lock = useRef(false);
   const url = usePhoto(prepared?.preview ?? null);
@@ -36,6 +38,7 @@ export function GarmentForm({
     let live = true;
     setError('');
     setPrepared(null);
+    setDuplicate(undefined);
     if (edit) return;
     if (!file) return;
     setDraft({
@@ -77,6 +80,14 @@ export function GarmentForm({
       else next();
     } catch (e) {
       setError(message(e));
+      if (
+        e instanceof WardrobeError &&
+        e.code === 'DUPLICATE' &&
+        e.existingId
+      ) {
+        const existing = await listGarments().catch(() => []);
+        setDuplicate(existing.find((g) => g.id === e.existingId));
+      }
     } finally {
       lock.current = false;
       setBusy(false);
@@ -106,6 +117,22 @@ export function GarmentForm({
             </span>
           )}
         </div>
+        {duplicate && (
+          <div className="wc-duplicate">
+            <GarmentPhoto item={duplicate} />
+            <div>
+              <strong>이미 옷장에 있는 사진</strong>
+              <p>
+                {duplicate.name} · {duplicate.category}
+              </p>
+            </div>
+          </div>
+        )}
+        {!edit && (
+          <p className="wc-form-note">
+            사진에서 대표색을 추출했어요. 이름과 분류를 직접 확인해 주세요.
+          </p>
+        )}
         <label>
           의류 이름
           <input
@@ -119,6 +146,7 @@ export function GarmentForm({
           <label>
             분류
             <select
+              aria-label="분류"
               value={draft.category}
               onChange={(e) =>
                 setDraft({ ...draft, category: e.target.value as Category })
@@ -132,6 +160,7 @@ export function GarmentForm({
           <label>
             상태
             <select
+              aria-label="상태"
               value={draft.condition ?? '착용 중'}
               onChange={(e) =>
                 setDraft({ ...draft, condition: e.target.value as Condition })
@@ -178,7 +207,7 @@ export function GarmentForm({
           </p>
         )}
         <div className="actions">
-          {!edit && files.length > 1 && (
+          {!edit && (files.length > 1 || duplicate) && (
             <button
               type="button"
               className="plain"
