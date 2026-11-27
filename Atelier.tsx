@@ -144,6 +144,7 @@ function Measure({
         </output>
       </span>
       <input
+        aria-label={title}
         type="range"
         min={min}
         max={max}
