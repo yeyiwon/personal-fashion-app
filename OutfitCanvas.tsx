@@ -1,3 +1,4 @@
+import { Control, Feedback, Field } from './LiquidControls';
 import { useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { useStudio, useScopedState, type PageProps } from './studio';
 import { GarmentPhoto, Icon, Sheet, message } from './presentation';
@@ -56,7 +57,7 @@ export function SavedOutfits({ go }: PageProps) {
             {outfits.length}개
           </p>
         </div>
-        <button
+        <Control
           className="wc-outline"
           onClick={() =>
             replace(() => {
@@ -67,17 +68,17 @@ export function SavedOutfits({ go }: PageProps) {
           }
         >
           <Icon name="plus" size={16} />새 코디
-        </button>
+        </Control>
       </div>
       {outfits.length > 0 && (
-        <button className="wc-text" onClick={() => go('lookbook')}>
+        <Control className="wc-text" onClick={() => go('lookbook')}>
           룩북 이미지 만들기 <Icon name="diagonal" size={14} />
-        </button>
+        </Control>
       )}
       {outfits.length ? (
         <div className="wc-looks">
           {outfits.map((o) => (
-            <button
+            <Control
               className="wc-look"
               key={o.id}
               onClick={() =>
@@ -105,16 +106,16 @@ export function SavedOutfits({ go }: PageProps) {
                 <small>{o.garmentIds.length}벌</small>
               </span>
               <Icon name="right" size={18} />
-            </button>
+            </Control>
           ))}
         </div>
       ) : (
         <div className="wc-empty">
           <Icon name="outfit" size={38} />
           <h2>저장한 코디가 없어요</h2>
-          <button className="wc-text" onClick={() => go('direct')}>
+          <Control className="wc-text" onClick={() => go('direct')}>
             첫 조합 만들기
-          </button>
+          </Control>
         </div>
       )}
       {pending && (
@@ -123,13 +124,13 @@ export function SavedOutfits({ go }: PageProps) {
           onClose={() => setPending(undefined)}
         >
           <div className="wc-actions">
-            <button
+            <Control
               className="wc-outline"
               onClick={() => setPending(undefined)}
             >
               계속 편집
-            </button>
-            <button
+            </Control>
+            <Control
               className="wc-solid"
               onClick={() => {
                 pending();
@@ -137,7 +138,7 @@ export function SavedOutfits({ go }: PageProps) {
               }}
             >
               조합 바꾸기
-            </button>
+            </Control>
           </div>
         </Sheet>
       )}
@@ -323,13 +324,13 @@ export default function OutfitCanvas({ go }: PageProps) {
             {mode === 'sample' ? '샘플 옷장' : '내 옷장'}
           </p>
         </div>
-        <button
+        <Control
           className="wc-icon"
           aria-label={'저장한 코디 ' + outfits.length}
           onClick={() => go('saved')}
         >
           <Icon name="save" />
-        </button>
+        </Control>
       </div>
       <div className="wc-editor">
         <div>
@@ -342,7 +343,7 @@ export default function OutfitCanvas({ go }: PageProps) {
               members.map((g, i) => {
                 const spot = layout[g.id] ?? defaultSpot(i, members.length);
                 return (
-                  <button
+                  <Control
                     key={g.id}
                     className={'wc-cutout' + (active === g.id ? ' active' : '')}
                     aria-label={g.name + ' 위치 조절'}
@@ -386,7 +387,7 @@ export default function OutfitCanvas({ go }: PageProps) {
                     }}
                   >
                     <GarmentPhoto item={g} shared />
-                  </button>
+                  </Control>
                 );
               })
             ) : (
@@ -402,36 +403,36 @@ export default function OutfitCanvas({ go }: PageProps) {
           {focused && (
             <div className="canvas-context">
               <b>{focused.name}</b>
-              <button
+              <Control
                 aria-pressed={locked.includes(focused.id)}
                 onClick={toggleLock}
               >
                 {locked.includes(focused.id) ? '고정 풀기' : '이 옷 고정'}
-              </button>
-              <button
+              </Control>
+              <Control
                 disabled={locked.includes(focused.id) || !alternatives.length}
                 onClick={() => setSheet('swap')}
               >
                 같은 분류로 교체
-              </button>
+              </Control>
             </div>
           )}
           {members.length > 0 && (
             <div className="wc-selected">
               {members.map((g) => (
-                <button
+                <Control
                   key={g.id}
                   aria-label={g.name + ' 코디에서 빼기'}
                   onClick={() => toggle(g.id)}
                 >
                   {g.name}
                   <Icon name="close" size={12} />
-                </button>
+                </Control>
               ))}
             </div>
           )}
           <div className="wc-actions">
-            <button
+            <Control
               className="wc-solid"
               disabled={!members.length}
               onClick={() => {
@@ -442,24 +443,24 @@ export default function OutfitCanvas({ go }: PageProps) {
             >
               <Icon name="save" size={16} />
               코디 저장
-            </button>
-            <button
+            </Control>
+            <Control
               className="wc-outline"
               disabled={!members.length}
               onClick={() => go('fitting')}
             >
               피팅으로 보기
-            </button>
+            </Control>
           </div>
           <div className="wc-subactions">
-            <button
+            <Control
               className="wc-text"
               onClick={() => (ids.length ? setSheet('reset') : newLook())}
             >
               새 코디
-            </button>
+            </Control>
             {look && (
-              <button
+              <Control
                 className="wc-text"
                 onClick={() => {
                   setError('');
@@ -467,7 +468,7 @@ export default function OutfitCanvas({ go }: PageProps) {
                 }}
               >
                 저장한 코디 삭제
-              </button>
+              </Control>
             )}
           </div>
         </div>
@@ -479,9 +480,9 @@ export default function OutfitCanvas({ go }: PageProps) {
             compact
           />
           {!garments.length && (
-            <button className="wc-outline" onClick={() => go('register')}>
+            <Control className="wc-outline" onClick={() => go('register')}>
               옷 등록
-            </button>
+            </Control>
           )}
         </section>
       </div>
@@ -489,10 +490,10 @@ export default function OutfitCanvas({ go }: PageProps) {
         <Sheet title="교체할 의류" onClose={() => setSheet(null)}>
           <div className="swap-choices">
             {alternatives.map((g) => (
-              <button key={g.id} onClick={() => swap(g.id)}>
+              <Control key={g.id} onClick={() => swap(g.id)}>
                 <GarmentPhoto item={g} />
                 <span>{g.name}</span>
-              </button>
+              </Control>
             ))}
           </div>
         </Sheet>
@@ -513,7 +514,7 @@ export default function OutfitCanvas({ go }: PageProps) {
           >
             <label>
               코디 이름
-              <input
+              <Field
                 required
                 autoFocus
                 maxLength={80}
@@ -523,13 +524,17 @@ export default function OutfitCanvas({ go }: PageProps) {
               />
             </label>
             {error && (
-              <p role="alert" className="wc-alert">
+              <Feedback role="alert" className="wc-alert">
                 {error}
-              </p>
+              </Feedback>
             )}
-            <button className="wc-solid full" disabled={busy || !name.trim()}>
+            <Control
+              className="wc-solid full"
+              aria-busy={busy}
+              disabled={busy || !name.trim()}
+            >
               {busy ? '저장 중' : '저장하기'}
-            </button>
+            </Control>
           </form>
         </Sheet>
       )}
@@ -550,15 +555,15 @@ export default function OutfitCanvas({ go }: PageProps) {
               : '저장하지 않은 캔버스 편집은 사라져요.'}
           </p>
           {error && (
-            <p role="alert" className="wc-alert">
+            <Feedback role="alert" className="wc-alert">
               {error}
-            </p>
+            </Feedback>
           )}
           <div className="wc-actions">
-            <button className="wc-outline" onClick={() => setSheet(null)}>
+            <Control className="wc-outline" onClick={() => setSheet(null)}>
               취소
-            </button>
-            <button
+            </Control>
+            <Control
               className="wc-solid"
               disabled={busy}
               onClick={() =>
@@ -566,7 +571,7 @@ export default function OutfitCanvas({ go }: PageProps) {
               }
             >
               {sheet === 'delete' ? '삭제하기' : '새 코디 시작'}
-            </button>
+            </Control>
           </div>
         </Sheet>
       )}

@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field, Segment } from './LiquidControls';
 import {
   useCallback,
   useEffect,
@@ -44,7 +45,7 @@ import RoomPhotoFitting from './RoomPhotoFitting';
 import './dressing.css';
 import { OpticalStage } from './OpticalStage';
 import BelloSpace from './BelloSpace';
-import {BelloMark} from './BelloAtlas';
+import { BelloMark } from './BelloAtlas';
 
 type Panel =
   | 'closet'
@@ -88,7 +89,7 @@ function SmallButton({
   pressed?: boolean;
 }) {
   return (
-    <button
+    <Control
       className="mirror-tool"
       onClick={onClick}
       aria-label={label}
@@ -96,14 +97,15 @@ function SmallButton({
     >
       <Icon name={icon} size={18} />
       <small>{label}</small>
-    </button>
+    </Control>
   );
 }
 export default function Home({
   go,
-  onMode,onAtlas,
+  onMode,
+  onAtlas,
   page,
-}: { onMode: () => void; onAtlas:()=>void } & PageProps) {
+}: { onMode: () => void; onAtlas: () => void } & PageProps) {
   const studio = useStudio();
   const {
     mode,
@@ -133,7 +135,9 @@ export default function Home({
   >('avatar.looks', []);
   const [conditions] = useScopedState('look.conditions', firstConditions),
     [prefs] = useScopedState('look.preferences', firstPreferences);
-  const [panel, setPanel] = useState<Panel>(page === 'model' ? 'model' : page === 'fitting' ? 'current' : null),
+  const [panel, setPanel] = useState<Panel>(
+      page === 'model' ? 'model' : page === 'fitting' ? 'current' : null,
+    ),
     [assistant, setAssistant] = useState(page === 'stylist'),
     [group, setGroup] = useState('전체'),
     [source, setSource] = useState('내 옷'),
@@ -156,6 +160,8 @@ export default function Home({
     [refCategory, refCat] = useState<Category>('상의'),
     [refImage, refImg] = useState(''),
     [refColor, refTone] = useState('#85837e');
+  const [paintRevision, rendered] = useState(0);
+  const scan = useRef<HTMLCanvasElement>(null);
   const avatar = useRef<HTMLCanvasElement>(null),
     stage = useRef<HTMLDivElement>(null),
     ghost = useRef<HTMLDivElement>(null);
@@ -199,6 +205,37 @@ export default function Home({
           if (live && r) {
             setMissing(r);
             avatarReady.current = true;
+            rendered((n) => n + 1);
+            if (
+              avatar.current &&
+              scan.current &&
+              !matchMedia('(prefers-reduced-motion: reduce)').matches
+            ) {
+              const plate = scan.current,
+                ctx = plate.getContext('2d');
+              if (ctx) {
+                ctx.clearRect(0, 0, plate.width, plate.height);
+                ctx.drawImage(avatar.current, 0, 0, plate.width, plate.height);
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.fillStyle =
+                  getComputedStyle(plate).getPropertyValue('--bello-hologram');
+                ctx.fillRect(0, 0, plate.width, plate.height);
+                ctx.globalCompositeOperation = 'source-over';
+                plate.getAnimations().forEach((x) => x.cancel());
+                plate.animate(
+                  [
+                    { clipPath: 'inset(0% 0 93%)', opacity: 0.08 },
+                    {
+                      clipPath: 'inset(33% 0 58%)',
+                      opacity: 0.41,
+                      offset: 0.34,
+                    },
+                    { clipPath: 'inset(95% 0 0%)', opacity: 0 },
+                  ],
+                  { duration: 490, easing: 'ease-out' },
+                );
+              }
+            }
           }
         })
         .catch(() => {
@@ -339,7 +376,8 @@ export default function Home({
     // A vertical swipe browses the rail. Pull a piece inward to dress the avatar.
     if (
       !dragged.current &&
-      e.clientX-p.x > 9 && Math.abs(e.clientY-p.y) < e.clientX-p.x
+      e.clientX - p.x > 9 &&
+      Math.abs(e.clientY - p.y) < e.clientX - p.x
     ) {
       dragged.current = true;
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -368,25 +406,28 @@ export default function Home({
     }
     drag(null);
   }
-  const [savedKey,markSaved]=useState('');
-  const snapshotKey=JSON.stringify([ids,figure,skin]);
-  async function save(quick=false) {
+  const [savedKey, markSaved] = useState('');
+  const snapshotKey = JSON.stringify([ids, figure, skin]);
+  async function save(quick = false) {
     if (working) return;
     busy(true);
     try {
-      const title=quick ? (items.find(g=>['상의','원피스','아우터'].includes(g.category))?.name??items[0]?.name??'오늘')+' 착장' : lookName.trim();
+      const title = quick
+        ? (items.find((g) => ['상의', '원피스', '아우터'].includes(g.category))
+            ?.name ??
+            items[0]?.name ??
+            '오늘') + ' 착장'
+        : lookName.trim();
       if (!title) throw Error('착장 이름을 입력해 주세요.');
       if (!ids.length) throw Error('먼저 옷을 입혀 주세요.');
       if (items.every((g) => !g.source)) await saveLook(title, ids);
       setFavs((f) =>
-        [
-          { name: title, ids, figure: { ...figure }, skin },
-          ...f,
-        ].slice(0, 30),
+        [{ name: title, ids, figure: { ...figure }, skin }, ...f].slice(0, 30),
       );
       setLookName('');
-      markSaved(snapshotKey);haptic('success');
-      notify(title+'을 저장했어요.');
+      markSaved(snapshotKey);
+      haptic('success');
+      notify(title + '을 저장했어요.');
       openPanel(null);
     } catch (e) {
       showError(message(e));
@@ -438,7 +479,7 @@ export default function Home({
   const occluded = [...missing.misses, ...missing.uncut];
   function garmentButton(g: Piece) {
     return (
-      <button
+      <Control
         key={g.id}
         className={'hanger-piece' + (ids.includes(g.id) ? ' wearing' : '')}
         aria-label={g.name + ' 입히기'}
@@ -467,7 +508,7 @@ export default function Home({
           )}
         </span>
         <small>{g.name}</small>
-      </button>
+      </Control>
     );
   }
   const gauge = scales.find((d) => d[0] === dim)!;
@@ -484,22 +525,45 @@ export default function Home({
         } as CSSProperties
       }
     >
-      <h1 className="visually-hidden">{page === 'model' ? '개인 모델' : page === 'fitting' ? '가상 피팅' : '나의 드레스룸'}</h1>
+      <h1 className="visually-hidden">
+        {page === 'model'
+          ? '개인 모델'
+          : page === 'fitting'
+            ? '가상 피팅'
+            : page === 'stylist' ? 'AI 스타일리스트' : '나의 드레스룸'}
+      </h1>
       <div className="room-scene" ref={stage}>
-        <BelloSpace signal={items.length+selection.length} /><OpticalStage mode="mirror" focus={panel ? 1 : 0} signal={items.length+selection.length}/>
+        <BelloSpace signal={items.length + selection.length} />
+        <OpticalStage
+          mode="mirror"
+          focus={panel ? 1 : 0}
+          signal={paintRevision}
+          tint={
+            items.length
+              ? ((parseInt(items.at(-1)!.color.slice(1, 3), 16) || 0) -
+                  (parseInt(items.at(-1)!.color.slice(5, 7), 16) || 0)) /
+                255
+              : 0
+          }
+        />
         <div className="alcove-bounce" />
         <header className="dressing-head">
-          <button
-            onClick={onAtlas}
+          <Control
+            onClick={(e) => {
+              e.currentTarget.focus({ preventScroll: true });
+              onAtlas();
+            }}
             className="room-sign"
             aria-label="공간 이동"
           >
-            <BelloMark size={25} /><span>BELLO</span><Icon name="grid" size={13}/>
-          </button>
-          <button className="mode-pin" onClick={onMode}>
+            <BelloMark size={25} />
+            <span>BELLO</span>
+            <Icon name="grid" size={13} />
+          </Control>
+          <Control className="mode-pin" onClick={onMode}>
             {mode === 'sample' ? '샘플 옷장' : '개인 옷장'}{' '}
             <Icon name="down" size={12} />
-          </button>
+          </Control>
         </header>
         <div
           className={
@@ -539,6 +603,14 @@ export default function Home({
             role="img"
             hidden={diagram}
           />
+          <canvas
+            ref={scan}
+            className="garment-scan"
+            aria-hidden="true"
+            width={160}
+            height={400}
+            hidden={diagram}
+          />
           {diagram && (
             <FigurePreview
               figure={figure}
@@ -568,9 +640,9 @@ export default function Home({
               <i />
               {diagram ? '착장 실루엣 도식' : '실시간 2D 착장'}
               {occluded.length > 0 && (
-                <button onClick={() => openPanel('current')}>
+                <Control onClick={() => openPanel('current')}>
                   사진 확인 {occluded.length}
-                </button>
+                </Control>
               )}
             </div>
           </>
@@ -590,7 +662,7 @@ export default function Home({
       >
         <div className="tray-grip" />
         <div className="tray-heading">
-          <button
+          <Control
             onClick={() => {
               openPanel(panel === 'closet' ? null : 'closet');
               setSource('내 옷');
@@ -603,17 +675,17 @@ export default function Home({
             <strong>내 옷장</strong>
             <small>{garments.length}벌</small>
             <Icon name="down" size={13} />
-          </button>
-          <button onClick={() => openPanel('camera')} aria-label="옷 촬영">
+          </Control>
+          <Control onClick={() => openPanel('camera')} aria-label="옷 촬영">
             <Icon name="camera" size={19} />
             <span>촬영</span>
-          </button>
+          </Control>
         </div>
         {panel === 'closet' && (
           <div className="tray-filters">
-            <div className="source-tabs">
+            <Segment className="source-tabs">
               {['내 옷', '구매 후보', '참고 사진'].map((t) => (
-                <button
+                <Control
                   key={t}
                   aria-pressed={source === t}
                   onClick={() => {
@@ -622,21 +694,21 @@ export default function Home({
                   }}
                 >
                   {t}
-                </button>
+                </Control>
               ))}
-            </div>
+            </Segment>
             <div className="slot-strip">
               {['전체', ...slots].map((t) => (
-                <button
+                <Control
                   key={t}
                   aria-pressed={group === t}
                   onClick={() => setGroup(t)}
                 >
                   {t}
-                </button>
+                </Control>
               ))}
             </div>
-            <input
+            <Field
               type="search"
               aria-label="드레스룸 의류 검색"
               placeholder="옷 이름으로 찾기"
@@ -647,9 +719,9 @@ export default function Home({
               <small>구매 전 조합을 위한 샘플 상품</small>
             )}
             {source === '참고 사진' && (
-              <button onClick={() => openPanel('reference')}>
+              <Control onClick={() => openPanel('reference')}>
                 참고 사진 추가
-              </button>
+              </Control>
             )}
           </div>
         )}
@@ -664,10 +736,34 @@ export default function Home({
           )}
         </div>
       </div>
-      {!panel&&!assistant&&<div className="look-stamp">
-        <button className="look-label" onClick={()=>openPanel('current')} aria-label={'착장 '+items.length+'점'}><span>나의 피팅룸</span><small>착장 {items.length}점 <Icon name="right" size={12}/></small></button>
-        <button className={'stamp-save '+(savedKey===snapshotKey?'stamped':'')} onClick={()=>void save(true)} disabled={!items.length||working||savedKey===snapshotKey}><GlassSurface/><Icon name={savedKey===snapshotKey?'check':'save'} size={17}/>{savedKey===snapshotKey?'저장됨':'착장 저장'}</button>
-      </div>}
+      {!panel && !assistant && (
+        <div className="look-stamp">
+          <Control
+            className="look-label"
+            onClick={() => openPanel('current')}
+            aria-label={'착장 ' + items.length + '점'}
+          >
+            <span>나의 피팅룸</span>
+            <small>
+              착장 {items.length}점 <Icon name="right" size={12} />
+            </small>
+          </Control>
+          <Control
+            className={
+              'stamp-save ' + (savedKey === snapshotKey ? 'stamped' : '')
+            }
+            onClick={() => void save(true)}
+            disabled={!items.length || working || savedKey === snapshotKey}
+          >
+            <GlassSurface />
+            <Icon
+              name={savedKey === snapshotKey ? 'check' : 'save'}
+              size={17}
+            />
+            {savedKey === snapshotKey ? '저장됨' : '착장 저장'}
+          </Control>
+        </div>
+      )}
       {panel && panel !== 'closet' && (
         <section className="room-drawer" aria-label="드레스룸 도구">
           <div className="tray-grip" />
@@ -685,24 +781,26 @@ export default function Home({
                 }[panel]
               }
             </h2>
-            <button
+            <Control
               aria-label="드레스룸 도구 닫기"
               onClick={() => openPanel(null)}
             >
               <Icon name="close" size={19} />
-            </button>
+            </Control>
           </header>
           <div className="drawer-scroll">
             {panel === 'current' && (
               <>
                 <div className="dressing-actions">
-                  <button onClick={undo} disabled={!history.length}>
+                  <Control onClick={undo} disabled={!history.length}>
                     되돌리기
-                  </button>
-                  <button onClick={roll} disabled={!garments.length}>
+                  </Control>
+                  <Control onClick={roll} disabled={!garments.length}>
                     랜덤 스타일링
-                  </button>
-                  <button onClick={() => openPanel('fit')}>AI 실사 피팅</button>
+                  </Control>
+                  <Control onClick={() => openPanel('fit')}>
+                    AI 실사 피팅
+                  </Control>
                 </div>
                 {items.map((g) => (
                   <div className="worn-row" key={g.id}>
@@ -722,34 +820,45 @@ export default function Home({
                           : ''}
                       </small>
                     </span>
-                    <button
+                    <Control
                       aria-label={g.name + ' 고정'}
                       aria-pressed={locks.includes(g.id)}
                       onClick={() => toggleLock(g.id)}
                     >
                       {locks.includes(g.id) ? '고정됨' : '고정'}
-                    </button>
-                    <button
+                    </Control>
+                    <Control
                       aria-label={g.name + ' 벗기기'}
                       onClick={() => remove(g.id)}
                       disabled={locks.includes(g.id)}
                     >
                       벗기기
-                    </button>
+                    </Control>
                   </div>
                 ))}
                 {!items.length && <p>옷장에서 한 벌을 골라 입혀 주세요.</p>}
                 <div className="dressing-actions">
-                  <button onClick={() => openPanel('closet')}>옷 고르기</button>
-                  <button onClick={() => openPanel('save')} disabled={!items.length}>이름 지정해 저장</button>
-                  <button onClick={() => go('fitting-board')}>피팅 보드</button>
-                  <button onClick={() => void share()}>착장 이미지 공유</button>
+                  <Control onClick={() => openPanel('closet')}>
+                    옷 고르기
+                  </Control>
+                  <Control
+                    onClick={() => openPanel('save')}
+                    disabled={!items.length}
+                  >
+                    이름 지정해 저장
+                  </Control>
+                  <Control onClick={() => go('fitting-board')}>
+                    피팅 보드
+                  </Control>
+                  <Control onClick={() => void share()}>
+                    착장 이미지 공유
+                  </Control>
                 </div>
                 {(outfits.length > 0 || favs.length > 0) && (
                   <details>
                     <summary>저장한 착장 입기</summary>
                     {favs.map((f, i) => (
-                      <button
+                      <Control
                         className="room-row"
                         key={'f' + i}
                         onClick={() => {
@@ -759,18 +868,18 @@ export default function Home({
                         }}
                       >
                         {f.name}
-                      </button>
+                      </Control>
                     ))}
                     {outfits
                       .filter((o) => !favs.some((f) => f.name === o.name))
                       .map((o) => (
-                        <button
+                        <Control
                           className="room-row"
                           key={o.id}
                           onClick={() => whole(o.garmentIds)}
                         >
                           {o.name}
-                        </button>
+                        </Control>
                       ))}
                   </details>
                 )}
@@ -778,18 +887,20 @@ export default function Home({
             )}
             {panel === 'model' && (
               <>
-                <button className="room-row" onClick={() => go('model-study')}>모델 치수와 참고 사진 <Icon name="arrow" size={15}/></button>
+                <Control className="room-row" onClick={() => go('model-study')}>
+                  모델 치수와 참고 사진 <Icon name="arrow" size={15} />
+                </Control>
                 <div className="dressing-actions">
                   {(['f', 'm'] as const).map((base) => (
-                    <button
+                    <Control
                       key={base}
                       aria-pressed={figure.base === base}
                       onClick={() => setFigure((f) => ({ ...f, base }))}
                     >
                       {base === 'f' ? '여성형' : '남성형'}
-                    </button>
+                    </Control>
                   ))}
-                  <button
+                  <Control
                     aria-pressed={diagram}
                     onClick={() => {
                       setDiagram(!diagram);
@@ -797,12 +908,12 @@ export default function Home({
                     }}
                   >
                     {diagram ? '착장 정면' : '회전 도식'}
-                  </button>
+                  </Control>
                 </div>
                 {diagram && (
                   <label>
                     도식 회전 {angle}°
-                    <input
+                    <Field
                       type="range"
                       min="0"
                       max="359"
@@ -813,13 +924,13 @@ export default function Home({
                 )}
                 <div className="slot-strip">
                   {scales.map((d) => (
-                    <button
+                    <Control
                       key={d[0]}
                       aria-pressed={d[0] === dim}
                       onClick={() => setDim(d[0])}
                     >
                       {d[1]}
-                    </button>
+                    </Control>
                   ))}
                 </div>
                 <label className="measure-reading">
@@ -840,7 +951,7 @@ export default function Home({
                 <div className="skin-row">
                   피부 톤{' '}
                   {skinTones.map((v, i) => (
-                    <button
+                    <Control
                       key={v}
                       aria-label={v + ' 피부 톤'}
                       aria-pressed={skin === v}
@@ -863,7 +974,7 @@ export default function Home({
                   <summary>헤어와 참고 사진</summary>
                   <div className="dressing-actions">
                     {Object.entries(hairNames).map(([v, n]) => (
-                      <button
+                      <Control
                         key={v}
                         aria-pressed={figure.hair === v}
                         onClick={() => {
@@ -875,12 +986,12 @@ export default function Home({
                         }}
                       >
                         {n}
-                      </button>
+                      </Control>
                     ))}
                   </div>
                   <label>
                     도식 헤어 컬러
-                    <input
+                    <Field
                       type="color"
                       value={figure.hairColor ?? '#40312e'}
                       onChange={(e) => {
@@ -893,7 +1004,7 @@ export default function Home({
                     <label key={t}>
                       {t} 참고 사진
                       {(t === '전신' ? privatePhoto : face) ? ' · 저장됨' : ''}
-                      <input
+                      <Field
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         onChange={async (e) => {
@@ -924,16 +1035,16 @@ export default function Home({
                     setFiles(list);
                   }}
                 />
-                <button className="room-row" onClick={() => go('purchases')}>
+                <Control className="room-row" onClick={() => go('purchases')}>
                   구매 내역·상품 링크로 가져오기 <Icon name="arrow" size={15} />
-                </button>
+                </Control>
               </>
             )}
             {panel === 'reference' && (
               <>
                 <label>
                   의류 사진
-                  <input
+                  <Field
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={async (e) => {
@@ -952,7 +1063,7 @@ export default function Home({
                 </label>
                 <label>
                   이름
-                  <input
+                  <Field
                     value={refName}
                     maxLength={80}
                     onChange={(e) => setRefName(e.target.value)}
@@ -960,16 +1071,16 @@ export default function Home({
                 </label>
                 <label>
                   분류
-                  <select
+                  <Choice
                     value={refCategory}
                     onChange={(e) => refCat(e.target.value as Category)}
                   >
                     {CATEGORIES.map((v) => (
                       <option key={v}>{v}</option>
                     ))}
-                  </select>
+                  </Choice>
                 </label>
-                <button
+                <Control
                   disabled={!refImage || !refName.trim()}
                   onClick={() => {
                     try {
@@ -992,7 +1103,7 @@ export default function Home({
                   }}
                 >
                   참고 옷걸이에 보관
-                </button>
+                </Control>
               </>
             )}
             {panel === 'save' && (
@@ -1008,7 +1119,7 @@ export default function Home({
                 </p>
                 <label>
                   착장 이름
-                  <input
+                  <Field
                     autoFocus
                     value={lookName}
                     onChange={(e) => setLookName(e.target.value)}
@@ -1016,15 +1127,15 @@ export default function Home({
                     placeholder={localDate() + ' 착장'}
                   />
                 </label>
-                <button
+                <Control
                   className="primary-room"
                   disabled={working || !items.length || !lookName.trim()}
                 >
                   이 착장 저장
-                </button>
-                <button type="button" onClick={() => void share()}>
+                </Control>
+                <Control type="button" onClick={() => void share()}>
                   이미지 공유
-                </button>
+                </Control>
               </form>
             )}
             {panel === 'fit' && (
@@ -1041,10 +1152,12 @@ export default function Home({
                     {g.name}
                   </div>
                 ))}
-                <button onClick={() => go('colors')}>톤온톤·톤인톤 탐색</button>
+                <Control onClick={() => go('colors')}>
+                  톤온톤·톤인톤 탐색
+                </Control>
               </>
             )}
-            {error && <p role="alert">{error}</p>}
+            {error && <Feedback role="alert">{error}</Feedback>}
           </div>
         </section>
       )}
@@ -1071,9 +1184,9 @@ export default function Home({
         </div>
       )}
       {error && !panel && (
-        <p className="room-fault" role="alert">
+        <Feedback className="room-fault" role="alert">
           {error}
-        </p>
+        </Feedback>
       )}
     </div>
   );

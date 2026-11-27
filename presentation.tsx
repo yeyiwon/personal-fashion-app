@@ -1,3 +1,5 @@
+import { Control } from './LiquidControls';
+import { GlassSurface } from './RoomControls';
 import {
   useEffect,
   useRef,
@@ -288,11 +290,12 @@ export function Sheet({
       }}
     >
       <section className="sheet">
-        <header>
+        <header className="sheet-crown">
+          <GlassSurface />
           <h2>{title}</h2>
-          <button className="icon" aria-label="닫기" onClick={onClose}>
+          <Control className="icon" aria-label="닫기" onClick={onClose}>
             <Icon name="close" />
-          </button>
+          </Control>
         </header>
         {children}
       </section>

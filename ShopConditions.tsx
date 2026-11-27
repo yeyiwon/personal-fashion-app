@@ -1,3 +1,4 @@
+import { Control, Field } from './LiquidControls';
 import { useState } from 'react';
 import { useScopedState, useStudio } from './studio';
 import { products, won, type Product } from './atelierData';
@@ -41,7 +42,7 @@ export function OfferConditions({
         동일 상품 · {product.tone} · {option}. 할인과 재고는 판매 조건 예시예요.
       </p>
       <label className="at-coupon">
-        <input
+        <Field
           type="checkbox"
           checked={apply}
           onChange={(e) => setApply(e.target.checked)}
@@ -127,7 +128,7 @@ export function PriceAlerts({
         >
           <label className="at-field">
             목표 가격 (원)
-            <input
+            <Field
               type="number"
               min={1}
               step={1}
@@ -137,7 +138,7 @@ export function PriceAlerts({
               onChange={(e) => setAmount(e.target.value)}
             />
           </label>
-          <button className="at-smallbtn">조건 저장</button>
+          <Control className="at-smallbtn">조건 저장</Control>
         </form>
         <p className="at-note">
           현재는 목표가 저장까지 가능해요. 실시간 가격 수집과 푸시 알림은
@@ -157,7 +158,7 @@ export function PriceAlerts({
                   {r.option} · {won(r.target)} 이하
                 </p>
               </div>
-              <button
+              <Control
                 onClick={() =>
                   setRows((prev) =>
                     prev.filter((x) => x.id !== r.id || x.option !== r.option),
@@ -165,16 +166,16 @@ export function PriceAlerts({
                 }
               >
                 삭제
-              </button>
+              </Control>
             </li>
           ))}
         </ul>
       ) : (
         <p className="at-note">저장된 가격 조건이 없어요.</p>
       )}
-      <button className="at-textbtn" onClick={() => go('wishlist')}>
+      <Control className="at-textbtn" onClick={() => go('wishlist')}>
         관심 상품으로
-      </button>
+      </Control>
     </>
   );
 }

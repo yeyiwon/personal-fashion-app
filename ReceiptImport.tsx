@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field } from './LiquidControls';
 import { useState, useRef } from 'react';
 import { type StudioGarment, useScopedState, useStudio } from './studio';
 import { GarmentPhoto, Icon } from './presentation';
@@ -68,7 +69,7 @@ function OrderRow({
   onClick: () => void;
 }) {
   return (
-    <button onClick={onClick}>
+    <Control onClick={onClick}>
       <span className="wc-ledger-img">
         {item && <GarmentPhoto item={item} />}
       </span>
@@ -77,7 +78,7 @@ function OrderRow({
         <small>{row.date} · 샘플</small>
       </span>
       <b>{row.price.toLocaleString('ko-KR')}원</b>
-    </button>
+    </Control>
   );
 }
 
@@ -128,10 +129,10 @@ export default function ReceiptImport({
   }
   return (
     <section className="wc wc-narrow">
-      <button className="wc-back" onClick={close}>
+      <Control className="wc-back" onClick={close}>
         <Icon name="back" size={16} />
         구매 내역
-      </button>
+      </Control>
       <div className="wc-title">
         <div>
           <h1>{isMail ? '이메일 주문서' : '승인 쇼핑몰'}</h1>
@@ -162,7 +163,7 @@ export default function ReceiptImport({
             </div>
           </dl>
           <label className="wc-check">
-            <input
+            <Field
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
@@ -171,23 +172,23 @@ export default function ReceiptImport({
           </label>
           <div className="wc-actions">
             {isMail && (
-              <button
+              <Control
                 className="wc-solid"
                 disabled={!agreed}
                 onClick={() => file.current?.click()}
               >
                 기기의 .eml 열기
-              </button>
+              </Control>
             )}
-            <button
+            <Control
               className={isMail ? 'wc-outline' : 'wc-solid'}
               disabled={!agreed}
               onClick={startDemo}
             >
               샘플 주문으로 체험
-            </button>
+            </Control>
           </div>
-          <input
+          <Field
             ref={file}
             type="file"
             hidden
@@ -211,7 +212,7 @@ export default function ReceiptImport({
               {!isMail && (
                 <label className="wc-form-label">
                   샘플 판매처
-                  <select
+                  <Choice
                     value={store}
                     onChange={(e) => {
                       setStore(e.target.value);
@@ -220,7 +221,7 @@ export default function ReceiptImport({
                   >
                     <option>스튜디오 02</option>
                     <option>룸 편집숍</option>
-                  </select>
+                  </Choice>
                 </label>
               )}
               <div className="wc-order-list">
@@ -229,7 +230,7 @@ export default function ReceiptImport({
                   const item = garments.find((g) => g.id === row.garment);
                   return (
                     <label key={row.id}>
-                      <input
+                      <Field
                         type="checkbox"
                         disabled={duplicate}
                         checked={!duplicate && selected.includes(row.id)}
@@ -255,13 +256,13 @@ export default function ReceiptImport({
                   );
                 })}
               </div>
-              <button
+              <Control
                 className="wc-solid"
                 disabled={!pending.length}
                 onClick={() => setStage('confirm')}
               >
                 선택한 {pending.length}건 확인
-              </button>
+              </Control>
             </>
           ) : (
             <>
@@ -277,25 +278,25 @@ export default function ReceiptImport({
                 ))}
               </div>
               <div className="wc-actions">
-                <button className="wc-outline" onClick={() => setStage('pick')}>
+                <Control className="wc-outline" onClick={() => setStage('pick')}>
                   다시 선택
-                </button>
-                <button
+                </Control>
+                <Control
                   className="wc-solid"
                   disabled={!pending.length}
                   onClick={confirm}
                 >
                   샘플 구매 내역에 담기
-                </button>
+                </Control>
               </div>
             </>
           )}
         </>
       )}
       {error && (
-        <p role="alert" className="wc-alert">
+        <Feedback role="alert" className="wc-alert">
           {error}
-        </p>
+        </Feedback>
       )}
     </section>
   );

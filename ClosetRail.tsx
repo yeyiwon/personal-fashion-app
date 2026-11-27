@@ -1,4 +1,5 @@
-import {OpticalStage} from './OpticalStage';
+import { Control, Field, Segment } from './LiquidControls';
+import { OpticalStage } from './OpticalStage';
 import BelloSpace from './BelloSpace';
 import {
   useEffect,
@@ -47,9 +48,9 @@ export default function ClosetRail({ page, go }: PageProps) {
     [view, setView] = useState<'rack' | 'list'>('rack');
   const [current, center] = useState<string | null>(null),
     [open, inspect] = useState(false);
-  const [objectId,setObject]=useState('');
-  const [angle,rotate]=useState(0);
-  const gesture=useRef<{x:number;angle:number}|null>(null);
+  const [objectId, setObject] = useState('');
+  const [angle, rotate] = useState(0);
+  const gesture = useRef<{ x: number; angle: number } | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null),
     lastSwipe = useRef(0);
   const rack = useRef<HTMLDivElement>(null);
@@ -119,24 +120,24 @@ export default function ClosetRail({ page, go }: PageProps) {
           </span>
           <h1>내 옷장</h1>
         </div>
-        <button
+        <Control
           className="add-thread"
           aria-label="옷 등록"
           onClick={() => go('register')}
         >
           <Icon name="plus" size={17} /> 옷 등록
-        </button>
+        </Control>
       </div>
       <div className="rack-layout">
         <div className={'rack-main ' + view}>
-          <div className="rack-filter" aria-label="분류 필터">
+          <Segment className="rack-filter" aria-label="분류 필터">
             {[
               '전체',
               ...CATEGORIES.filter((c) =>
                 garments.some((g) => g.category === c),
               ),
             ].map((c) => (
-              <button
+              <Control
                 key={c}
                 aria-pressed={c === category}
                 onClick={() => {
@@ -146,14 +147,14 @@ export default function ClosetRail({ page, go }: PageProps) {
                 }}
               >
                 {c === '기타' ? '액세서리' : c}
-              </button>
+              </Control>
             ))}
-          </div>
+          </Segment>
           <div className="rack-view-tools">
-            <div className="view-selector">
+            <Segment className="view-selector">
               <GlassSurface />
               {(['rack', 'list'] as const).map((v) => (
-                <button
+                <Control
                   key={v}
                   aria-pressed={v === view}
                   onClick={() => {
@@ -163,12 +164,12 @@ export default function ClosetRail({ page, go }: PageProps) {
                 >
                   <Icon name={v === 'rack' ? 'closet' : 'menu'} size={17} />
                   {v === 'rack' ? '레일' : '목록'}
-                </button>
+                </Control>
               ))}
-            </div>
+            </Segment>
             <label className="catalog-search">
               <Icon name="search" size={16} />
-              <input
+              <Field
                 type="search"
                 value={query}
                 onChange={(e) => {
@@ -219,7 +220,8 @@ export default function ClosetRail({ page, go }: PageProps) {
                     rack.current?.style.removeProperty('--drag');
                   }}
                 >
-                  <BelloSpace kind="rail" signal={index}/><OpticalStage mode="rail" signal={index}/>
+                  <BelloSpace kind="rail" signal={index} />
+                  <OpticalStage mode="rail" signal={index} />
                   <div className="brass-rail" />
                   <div className="rail-track">
                     {list.map((g, i) => {
@@ -233,7 +235,7 @@ export default function ClosetRail({ page, go }: PageProps) {
                         g.category,
                       );
                       return (
-                        <button
+                        <Control
                           key={g.id}
                           className={
                             'hanging-piece' +
@@ -253,38 +255,84 @@ export default function ClosetRail({ page, go }: PageProps) {
                         >
                           {!shelf && <Hook />}
                           <GarmentPhoto item={g} shared={off === 0} />
-                        </button>
+                        </Control>
                       );
                     })}
                   </div>
                   <div className="rail-guides">
-                    <button
+                    <Control
                       aria-label="이전 의류"
                       disabled={list.length < 2}
                       onClick={() => move(index - 1)}
                     >
                       <Icon name="back" size={17} />
-                    </button>
+                    </Control>
                     <span>
                       {index + 1} / {list.length}
                     </span>
-                    <button
+                    <Control
                       aria-label="다음 의류"
                       disabled={list.length < 2}
                       onClick={() => move(index + 1)}
                     >
                       <Icon name="right" size={17} />
-                    </button>
+                    </Control>
                   </div>
                 </div>
-                {selected.id==='sample-bag' && open && <div className="object-inspection">
-                  <button className="woven-btn" aria-expanded={objectId===selected.id} onClick={()=>{setObject(objectId===selected.id?'':selected.id);rotate(0);}}>숄더백 3D 형태 살펴보기</button>
-                  {objectId===selected.id && <div className="bag-view"><div className="bag-turntable" role="group" aria-label="숄더백 3D 회전" onPointerDown={e=>{gesture.current={x:e.clientX,angle};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(gesture.current)rotate(gesture.current.angle+(e.clientX-gesture.current.x)*.018);}} onPointerUp={()=>gesture.current=null} onPointerCancel={()=>gesture.current=null}>
-                    <GarmentPhoto item={selected}/><OpticalStage mode="garment" turn={angle}/></div>
-                    <button aria-label="왼쪽으로 회전" onClick={()=>rotate(v=>v-.5)}>↶</button><small>샘플 형태 모델 · 드래그로 회전</small><button aria-label="오른쪽으로 회전" onClick={()=>rotate(v=>v+.5)}>↷</button>
-                  </div>}</div>}
+                {selected.id === 'sample-bag' && open && (
+                  <div className="object-inspection">
+                    <Control
+                      className="woven-btn"
+                      aria-expanded={objectId === selected.id}
+                      onClick={() => {
+                        setObject(objectId === selected.id ? '' : selected.id);
+                        rotate(0);
+                      }}
+                    >
+                      숄더백 3D 형태 살펴보기
+                    </Control>
+                    {objectId === selected.id && (
+                      <div className="bag-view">
+                        <div
+                          className="bag-turntable"
+                          role="group"
+                          aria-label="숄더백 3D 회전"
+                          onPointerDown={(e) => {
+                            gesture.current = { x: e.clientX, angle };
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                          }}
+                          onPointerMove={(e) => {
+                            if (gesture.current)
+                              rotate(
+                                gesture.current.angle +
+                                  (e.clientX - gesture.current.x) * 0.018,
+                              );
+                          }}
+                          onPointerUp={() => (gesture.current = null)}
+                          onPointerCancel={() => (gesture.current = null)}
+                        >
+                          <GarmentPhoto item={selected} />
+                          <OpticalStage mode="garment" turn={angle} />
+                        </div>
+                        <Control
+                          aria-label="왼쪽으로 회전"
+                          onClick={() => rotate((v) => v - 0.5)}
+                        >
+                          ↶
+                        </Control>
+                        <small>샘플 형태 모델 · 드래그로 회전</small>
+                        <Control
+                          aria-label="오른쪽으로 회전"
+                          onClick={() => rotate((v) => v + 0.5)}
+                        >
+                          ↷
+                        </Control>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className={'cloth-tag' + (open ? ' open-tag' : '')}>
-                  <button aria-expanded={open} onClick={() => inspect(!open)}>
+                  <Control aria-expanded={open} onClick={() => inspect(!open)}>
                     <i style={{ background: selected.color }} />
                     <span>
                       <small>
@@ -296,18 +344,20 @@ export default function ClosetRail({ page, go }: PageProps) {
                     <span className="tag-handle">
                       <Icon name={open ? 'close' : 'plus'} size={17} />
                     </span>
-                  </button>
+                  </Control>
                   <div className="tag-fold" inert={!open}>
                     <div>
                       <div className="tag-actions">
-                        <button onClick={() => detail(selected)}>상세</button>
-                        <button onClick={() => carry('direct')}>
+                        <Control onClick={() => detail(selected)}>상세</Control>
+                        <Control onClick={() => carry('direct')}>
                           직접 코디
-                        </button>
-                        <button onClick={() => carry('home')}>아바타에 입히기</button>
-                        <button onClick={() => carry('fitting')}>
+                        </Control>
+                        <Control onClick={() => carry('home')}>
+                          아바타에 입히기
+                        </Control>
+                        <Control onClick={() => carry('fitting')}>
                           피팅 보드
-                        </button>
+                        </Control>
                       </div>
                     </div>
                   </div>
@@ -316,7 +366,7 @@ export default function ClosetRail({ page, go }: PageProps) {
             ) : list.length ? (
               <div className="garment-ledger">
                 {list.map((g, i) => (
-                  <button
+                  <Control
                     key={g.id}
                     aria-label={g.name}
                     onClick={() => detail(g)}
@@ -333,7 +383,7 @@ export default function ClosetRail({ page, go }: PageProps) {
                     </span>
                     <i style={{ background: g.color }} />
                     <Icon name="right" size={15} />
-                  </button>
+                  </Control>
                 ))}
               </div>
             ) : (
@@ -344,22 +394,22 @@ export default function ClosetRail({ page, go }: PageProps) {
                     ? '아직 등록한 옷이 없어요'
                     : '조건에 맞는 옷이 없어요'}
                 </h2>
-                <button
+                <Control
                   className="woven-btn"
                   onClick={() =>
                     empty ? go('register') : (search(''), filter('전체'))
                   }
                 >
                   {empty ? '첫 옷 등록하기' : '필터 초기화'}
-                </button>
+                </Control>
               </div>
             )}
           </div>
         </div>
         <aside className="catalog-tools">
-          <div className="closet-sources wc-switch">
+          <Segment className="closet-sources wc-switch">
             {(['sample', 'personal'] as const).map((m) => (
-              <button
+              <Control
                 aria-pressed={m === mode}
                 key={m}
                 onClick={() => {
@@ -368,20 +418,20 @@ export default function ClosetRail({ page, go }: PageProps) {
                 }}
               >
                 {m === 'sample' ? '샘플 옷장' : '개인 옷장'}
-              </button>
+              </Control>
             ))}
-          </div>
+          </Segment>
           <div className="bench-index">
             {[
               ['space', '공간형 옷장', 'closet'],
               ['purchases', '구매 내역', 'save'],
               ['direct', '직접 코디', 'outfit'],
             ].map(([p, n, ic]) => (
-              <button key={p} onClick={() => go(p)}>
+              <Control key={p} onClick={() => go(p)}>
                 <Icon name={ic} />
                 <span>{n}</span>
                 <Icon name="right" size={15} />
-              </button>
+              </Control>
             ))}
           </div>
         </aside>

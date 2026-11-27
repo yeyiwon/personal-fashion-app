@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field, Segment } from './LiquidControls';
 import { useEffect, useRef, useState } from 'react';
 import { getImage } from './storage';
 import { jpegData, type Piece } from './avatarLayers';
@@ -134,17 +135,17 @@ export default function RoomPhotoFitting({
       </p>
       <label>
         모델
-        <select
+        <Choice
           value={own ? 'own' : 'base'}
           onChange={(e) => setOwn(e.target.value === 'own')}
         >
           <option value="base">현재 기본 모델</option>
           {refPhoto && <option value="own">내 전신 참고 사진</option>}
-        </select>
+        </Choice>
       </label>
       <label>
         착용할 한 점
-        <select
+        <Choice
           value={item?.id ?? ''}
           onChange={(e) => setItemId(e.target.value)}
         >
@@ -158,7 +159,7 @@ export default function RoomPhotoFitting({
                 {g.name}
               </option>
             ))}
-        </select>
+        </Choice>
       </label>
       <small>
         {item && ['신발', '가방', '기타'].includes(item.category)
@@ -170,7 +171,7 @@ export default function RoomPhotoFitting({
         <>
           <label>
             운영자 접근 코드
-            <input
+            <Field
               type="password"
               autoComplete="off"
               value={code}
@@ -178,7 +179,7 @@ export default function RoomPhotoFitting({
             />
           </label>
           <label>
-            <input
+            <Field
               type="checkbox"
               checked={approval}
               onChange={(e) => approve(e.target.checked)}
@@ -188,23 +189,24 @@ export default function RoomPhotoFitting({
         </>
       )}
       {job ? (
-        <button disabled={busy || !code} onClick={() => void check()}>
+        <Control disabled={busy || !code} onClick={() => void check()}>
           기존 작업 상태 확인
-        </button>
+        </Control>
       ) : (
-        <button
+        <Control
+          aria-busy={busy}
           disabled={!ready || !item || !code || !approval || busy}
           onClick={() => void generate()}
         >
           실사 피팅 1장 생성
-        </button>
+        </Control>
       )}
-      <p role="status">{status}</p>
+      <Feedback role="status">{status}</Feedback>
       {results.length > 0 && (
         <>
-          <div className="fit-compares">
+          <Segment className="fit-compares">
             {results.map((r, i) => (
-              <button
+              <Control
                 key={i}
                 aria-pressed={selected === i}
                 onClick={() => {
@@ -213,9 +215,9 @@ export default function RoomPhotoFitting({
                 }}
               >
                 {r.name}
-              </button>
+              </Control>
             ))}
-          </div>
+          </Segment>
           <img
             src={
               compare && results[1]
@@ -225,9 +227,9 @@ export default function RoomPhotoFitting({
             alt="저장한 AI 실사 피팅 결과"
           />
           {results.length > 1 && selected !== 1 && (
-            <button onClick={() => setCompare(!compare)}>
+            <Control onClick={() => setCompare(!compare)}>
               {compare ? '선택한 결과' : '이전 결과'} 보기
-            </button>
+            </Control>
           )}
           <a
             href={results[selected]?.image}

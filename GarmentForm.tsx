@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field } from './LiquidControls';
 import { analyseGarment, visionAvailable } from './localVision';
 import { jpegData } from './avatarLayers';
 import { useEffect, useRef, useState } from 'react';
@@ -165,16 +166,16 @@ export function GarmentForm({
         </div>
         {hasVision && prepared && (
           <div className="wc-form-note">
-            <button
+            <Control
               type="button"
               className="quiet"
               onClick={() => void analyse()}
             >
               기기 내 AI 분류·배경 분리
-            </button>
-            {analysis && <p role="status">{analysis.note}</p>}
+            </Control>
+            {analysis && <Feedback role="status">{analysis.note}</Feedback>}
             {analysis?.category && (
-              <button
+              <Control
                 type="button"
                 className="quiet"
                 onClick={() =>
@@ -182,7 +183,7 @@ export function GarmentForm({
                 }
               >
                 {analysis.category} 분류 적용
-              </button>
+              </Control>
             )}
           </div>
         )}
@@ -204,7 +205,7 @@ export function GarmentForm({
         )}
         <label>
           의류 이름
-          <input
+          <Field
             required
             maxLength={80}
             value={draft.name}
@@ -214,7 +215,7 @@ export function GarmentForm({
         <div className="fields">
           <label>
             분류
-            <select
+            <Choice
               aria-label="분류"
               value={draft.category}
               onChange={(e) =>
@@ -224,11 +225,11 @@ export function GarmentForm({
               {CATEGORIES.map((x) => (
                 <option key={x}>{x}</option>
               ))}
-            </select>
+            </Choice>
           </label>
           <label>
             상태
-            <select
+            <Choice
               aria-label="상태"
               value={draft.condition ?? '착용 중'}
               onChange={(e) =>
@@ -238,13 +239,13 @@ export function GarmentForm({
               {CONDITIONS.map((x) => (
                 <option key={x}>{x}</option>
               ))}
-            </select>
+            </Choice>
           </label>
         </div>
         <div className="fields">
           <label>
             구매 가격 (선택)
-            <input
+            <Field
               type="number"
               min="0"
               step="1"
@@ -262,7 +263,7 @@ export function GarmentForm({
           </label>
           <label>
             대표색
-            <input
+            <Field
               aria-label="대표색"
               type="color"
               value={draft.color ?? '#888888'}
@@ -271,25 +272,29 @@ export function GarmentForm({
           </label>
         </div>
         {error && (
-          <p role="alert" className="error">
+          <Feedback role="alert" className="error">
             {error}
-          </p>
+          </Feedback>
         )}
         <div className="actions">
           {!edit && (files.length > 1 || duplicate) && (
-            <button
+            <Control
               type="button"
               className="plain"
               disabled={busy}
               onClick={next}
             >
               건너뛰기
-            </button>
+            </Control>
           )}
-          <button className="primary" disabled={busy || (!edit && !prepared)}>
+          <Control
+            className="primary"
+            aria-busy={busy}
+            disabled={busy || (!edit && !prepared)}
+          >
             <Icon name="check" />
             {busy ? '저장 중' : edit ? '변경 저장' : '옷장에 저장'}
-          </button>
+          </Control>
         </div>
       </form>
     </Sheet>

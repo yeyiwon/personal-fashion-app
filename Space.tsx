@@ -1,3 +1,4 @@
+import { Control, Segment } from './LiquidControls';
 import {
   useLayoutEffect,
   useRef,
@@ -179,14 +180,14 @@ export default function Space({ go }: PageProps) {
             {mode === 'sample' ? '샘플 옷장' : '내 옷장'} · {garments.length}벌
           </p>
         </div>
-        <button className="quiet" onClick={() => go('closet')}>
+        <Control className="quiet" onClick={() => go('closet')}>
           <Icon name="grid" size={17} />
           목록 보기
-        </button>
+        </Control>
       </div>
-      <div className="rail-filters" aria-label="레일 분류">
+      <Segment className="rail-filters" aria-label="레일 분류">
         {['전체', ...CATEGORIES].map((t) => (
-          <button
+          <Control
             key={t}
             aria-pressed={t === filter}
             onClick={() => {
@@ -196,9 +197,9 @@ export default function Space({ go }: PageProps) {
             }}
           >
             {t === '기타' ? '액세서리' : t}
-          </button>
+          </Control>
         ))}
-      </div>
+      </Segment>
       {item ? (
         <div
           ref={scene}
@@ -270,7 +271,7 @@ export default function Space({ go }: PageProps) {
                 }}
               >
                 {items.map((g, i) => (
-                  <button
+                  <Control
                     key={g.id}
                     className={'rack-piece' + (i === index ? ' front' : '')}
                     style={
@@ -303,18 +304,18 @@ export default function Space({ go }: PageProps) {
                       )}
                     </svg>
                     <GarmentPhoto item={g} />
-                  </button>
+                  </Control>
                 ))}
               </div>
               <div className="room-lens">
-                <button
+                <Control
                   aria-label="이전 의류"
                   disabled={!index}
                   onClick={() => align(index - 1, true)}
                 >
                   <Icon name="back" />
-                </button>
-                <button
+                </Control>
+                <Control
                   className="lens-name"
                   onClick={(e) => {
                     opening.current = e.currentTarget;
@@ -327,22 +328,22 @@ export default function Space({ go }: PageProps) {
                   </small>
                   <b>{item.name}</b>
                   <span>살펴보기</span>
-                </button>
-                <button
+                </Control>
+                <Control
                   aria-label="다음 의류"
                   disabled={index === items.length - 1}
                   onClick={() => align(index + 1, true)}
                 >
                   <Icon name="right" />
-                </button>
+                </Control>
               </div>
             </>
           ) : (
             <div className="specimen">
-              <button className="space-back" ref={close} onClick={hide}>
+              <Control className="space-back" ref={close} onClick={hide}>
                 <Icon name="back" size={16} />
                 레일로
-              </button>
+              </Control>
               <div
                 className="specimen-photo"
                 style={{ viewTransitionName: 'studio-object' }}
@@ -357,20 +358,20 @@ export default function Space({ go }: PageProps) {
                   <h2>{item.name}</h2>
                 </div>
                 <div className="lens-actions">
-                  <button onClick={() => take('direct')}>
+                  <Control onClick={() => take('direct')}>
                     <Icon name="layer" size={16} />
                     코디에 담기
-                  </button>
-                  <button onClick={() => take('fitting')}>
+                  </Control>
+                  <Control onClick={() => take('fitting')}>
                     <Icon name="fit" size={16} />
                     피팅 보드
-                  </button>
-                  <button
+                  </Control>
+                  <Control
                     aria-label="의류 상세 정보"
                     onClick={() => go('garment')}
                   >
                     <Icon name="diagonal" size={18} />
-                  </button>
+                  </Control>
                 </div>
               </div>
             </div>
@@ -380,9 +381,9 @@ export default function Space({ go }: PageProps) {
         <div className="space-empty">
           <Icon name="closet" size={45} />
           <h2>레일에 걸린 옷이 없어요</h2>
-          <button className="action" onClick={() => go('register')}>
+          <Control className="action" onClick={() => go('register')}>
             옷 등록하기
-          </button>
+          </Control>
         </div>
       )}
     </section>

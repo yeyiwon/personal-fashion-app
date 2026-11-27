@@ -172,3 +172,47 @@ export function GlassSurface({ morph }: { morph?: boolean } = {}) {
     </span>
   );
 }
+
+export function CommonLens() {
+  const [map, setMap] = useState('');
+  useEffect(() => {
+    setMap(curvature(144, 46));
+  }, []);
+  return (
+    <svg
+      className="liquid-filter-bank"
+      width="0"
+      height="0"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        {map && (
+          <filter
+            id="bello-control-optics"
+            colorInterpolationFilters="sRGB"
+            x="0%"
+            y="0%"
+            width="100%"
+            height="100%"
+          >
+            <feImage
+              href={map}
+              preserveAspectRatio="none"
+              width="100%"
+              height="100%"
+              result="rim-normal"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="rim-normal"
+              scale="11"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        )}
+      </defs>
+    </svg>
+  );
+}

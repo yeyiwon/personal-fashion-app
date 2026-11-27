@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field } from './LiquidControls';
 import { useEffect, useRef, useState } from 'react';
 import type { Piece } from './avatarLayers';
 import { firstPreferences, localDate, affinity } from './lookEngine';
@@ -5,6 +6,7 @@ import { forecastCities, getForecast, type ForecastCity } from './forecast';
 import { useScopedState, useStudio } from './studio';
 import { GlassSurface } from './RoomControls';
 import { Icon } from './presentation';
+import { BelloSignal } from './BelloSignal';
 
 export type Advice = {
   tool: string;
@@ -73,7 +75,7 @@ export function RoomAssistant({
   const [voice, setVoice] = useScopedState('room.voice', false),
     [city, setCity] = useScopedState<ForecastCity | ''>(
       'room.forecast-city',
-      mode==='sample'?'seoul':'',
+      mode === 'sample' ? 'seoul' : '',
     );
   const [trip] = useScopedState<{
     destination: string;
@@ -105,6 +107,8 @@ export function RoomAssistant({
     [consent, setConsent] = useState(false),
     [settings, setSettings] = useState(false);
   const [rated, rate] = useState(false);
+  const [welcoming, showWelcomeWork] = useState(false),
+    [acting, setActing] = useState(false);
   const abort = useRef<AbortController | null>(null),
     latest = useRef(0),
     expanded = useRef<HTMLButtonElement>(null);
@@ -203,12 +207,14 @@ export function RoomAssistant({
   useEffect(() => {
     let live = true;
     setWelcome(null);
+    showWelcomeWork(false);
     if (!engine?.local || (city && !forecast && !weatherNote)) return;
     const existing = greetings.get(cacheKey);
     if (existing) {
       setWelcome(existing);
       return;
     }
+    showWelcomeWork(true);
     let task = pendingWelcome.get(cacheKey);
     if (!task) {
       task = api({
@@ -235,7 +241,10 @@ export function RoomAssistant({
             '기기 모델이 첫 제안을 끝내지 못했어요. 직접 요청할 수 있어요.',
           );
       })
-      .finally(() => pendingWelcome.delete(cacheKey));
+      .finally(() => {
+        pendingWelcome.delete(cacheKey);
+        if (live) showWelcomeWork(false);
+      });
     return () => {
       live = false;
     };
@@ -304,14 +313,25 @@ export function RoomAssistant({
   const answer = result ?? welcome;
   const useAdvice = () => {
     if (!answer) return;
-    act(answer);
-    setOpen(false);
+    setActing(true);
+    try {
+      act(answer);
+      setOpen(false);
+    } finally {
+      requestAnimationFrame(() => setActing(false));
+    }
   };
   const [voiceSupported, supportVoice] = useState(false);
   useEffect(() => {
     if (!('speechSynthesis' in window)) return;
-    const update = () => supportVoice(speechSynthesis.getVoices().some(v => v.localService && v.lang.startsWith('ko')));
-    update(); speechSynthesis.addEventListener('voiceschanged', update);
+    const update = () =>
+      supportVoice(
+        speechSynthesis
+          .getVoices()
+          .some((v) => v.localService && v.lang.startsWith('ko')),
+      );
+    update();
+    speechSynthesis.addEventListener('voiceschanged', update);
     return () => speechSynthesis.removeEventListener('voiceschanged', update);
   }, []);
   return (
@@ -325,7 +345,7 @@ export function RoomAssistant({
     >
       <div className="assistant-shell">
         <GlassSurface morph={open} />
-        <button
+        <Control
           ref={expanded}
           className="assistant-peek"
           aria-expanded={open}
@@ -334,11 +354,25 @@ export function RoomAssistant({
             open ? '스타일리스트 대화 접기' : '스타일리스트에게 요청하기'
           }
         >
-          <span className="silk-knot" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
+          <BelloSignal
+            state={
+              acting
+                ? 'acting'
+                : working || welcoming
+                  ? 'thinking'
+                  : fault
+                    ? 'error'
+                    : rated
+                      ? 'complete'
+                      : result
+                        ? 'proposed'
+                        : welcome
+                          ? 'greeting'
+                          : engine && !engine.local && !engine.cloud
+                            ? 'limited'
+                            : 'waiting'
+            }
+          />
           <span>
             <b>BELLO</b>
             <small>
@@ -351,7 +385,7 @@ export function RoomAssistant({
             </small>
           </span>
           <Icon name="down" size={15} />
-        </button>
+        </Control>
         {!open && (
           <p className="arrival-message" aria-live="polite">
             {welcome
@@ -374,7 +408,7 @@ export function RoomAssistant({
                   minute: '2-digit',
                 })}
               </span>
-              <button onClick={() => setSettings(!settings)}>
+              <Control onClick={() => setSettings(!settings)}>
                 {forecast
                   ? forecast.label +
                     ' ' +
@@ -384,7 +418,7 @@ export function RoomAssistant({
                     ? weatherNote || '예보 조회 중'
                     : '날씨·일정 설정'}{' '}
                 <Icon name="settings" size={12} />
-              </button>
+              </Control>
             </div>
             <p className="assistant-line" aria-live="polite">
               {working
@@ -405,12 +439,12 @@ export function RoomAssistant({
                   })}
                 </div>
                 {toolLabel[answer.tool] && (
-                  <button onClick={useAdvice}>
+                  <Control onClick={useAdvice}>
                     {toolLabel[answer.tool]} <Icon name="arrow" size={15} />
-                  </button>
+                  </Control>
                 )}
                 {!!answer.ids.length && (
-                  <button
+                  <Control
                     disabled={rated}
                     onClick={() => {
                       setFeedback((f) => {
@@ -422,15 +456,15 @@ export function RoomAssistant({
                     }}
                   >
                     {rated ? '취향에 반영됨' : '이 조합이 좋아요'}
-                  </button>
+                  </Control>
                 )}
               </div>
             )}
             {fault && (
-              <p role="status">
+              <Feedback role="status">
                 {fault}{' '}
-                <button onClick={() => retry((v) => v + 1)}>다시 확인</button>
-              </p>
+                <Control onClick={() => retry((v) => v + 1)}>다시 확인</Control>
+              </Feedback>
             )}
             {engine && !engine.local && !engine.cloud && (
               <p className="room-unavailable">
@@ -444,41 +478,41 @@ export function RoomAssistant({
                 void ask(question);
               }}
             >
-              <input
+              <Field
                 aria-label="스타일링 요청"
                 maxLength={400}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="어떤 옷을 입고 싶으세요?"
               />
-              <button
+              <Control
                 aria-label="스타일링 요청 보내기"
                 disabled={working || !question.trim()}
               >
                 <Icon name="arrow" size={18} />
-              </button>
+              </Control>
             </form>
             <div className="assistant-actions">
-              <button
+              <Control
                 onClick={() =>
                   void ask('지금 날씨와 일정에 맞게 오늘의 코디를 추천해 줘.')
                 }
                 disabled={working}
               >
                 오늘 뭐 입을까?
-              </button>
-              <button
+              </Control>
+              <Control
                 onClick={() => setSettings(!settings)}
                 aria-expanded={settings}
               >
                 벨로 설정
-              </button>
+              </Control>
             </div>
             {settings && (
               <div className="assistant-config">
                 <label>
                   예보 도시
-                  <select
+                  <Choice
                     value={city}
                     onChange={(e) =>
                       setCity(e.target.value as ForecastCity | '')
@@ -490,7 +524,7 @@ export function RoomAssistant({
                         {n}
                       </option>
                     ))}
-                  </select>
+                  </Choice>
                 </label>
                 {forecast && (
                   <small>
@@ -503,7 +537,7 @@ export function RoomAssistant({
                 )}
                 <label>
                   오늘 일정
-                  <input
+                  <Field
                     placeholder="예: 저녁 전시 관람"
                     maxLength={80}
                     value={event.day === today ? event.value : ''}
@@ -513,8 +547,9 @@ export function RoomAssistant({
                   />
                 </label>
                 <label>
-                  <input
+                  <Field
                     type="checkbox"
+                    role="switch"
                     checked={voice}
                     disabled={!voiceSupported}
                     onChange={(e) => {
@@ -529,7 +564,7 @@ export function RoomAssistant({
                   <>
                     <label>
                       드레스룸 접근 코드
-                      <input
+                      <Field
                         type="password"
                         value={access}
                         onChange={(e) => setAccess(e.target.value)}
@@ -537,7 +572,7 @@ export function RoomAssistant({
                       />
                     </label>
                     <label>
-                      <input
+                      <Field
                         type="checkbox"
                         checked={consent}
                         onChange={(e) => setConsent(e.target.checked)}

@@ -1,3 +1,5 @@
+import { Aperture } from './Aperture';
+import { Control, Feedback, Field } from './LiquidControls';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { GarmentForm } from './GarmentForm';
 import { deleteGarment } from './storage';
@@ -22,7 +24,7 @@ function Row({
   onClick: () => void;
 }) {
   return (
-    <button className="wc-row" onClick={onClick}>
+    <Control className="wc-row" onClick={onClick}>
       <span className="wc-row-icon">
         <Icon name={icon} />
       </span>
@@ -31,7 +33,7 @@ function Row({
         <small>{detail}</small>
       </span>
       <Icon name="right" size={16} />
-    </button>
+    </Control>
   );
 }
 function Registration({ page, go }: PageProps) {
@@ -76,19 +78,19 @@ function Registration({ page, go }: PageProps) {
               </p>
             </div>
           </div>
-          <button
+          <Control
             className="wc-camera-entry"
             onClick={() => enterReal('camera')}
           >
             <span className="wc-camera-lens">
-              <Icon name="camera" size={32} />
+              <Aperture />
             </span>
             <span>
               <strong>연속 촬영</strong>
               <small>한 벌씩 담고, 한 번에 확인</small>
             </span>
             <Icon name="right" size={19} />
-          </button>
+          </Control>
           <div className="wc-list">
             <Row
               icon="photo"
@@ -118,7 +120,7 @@ function Registration({ page, go }: PageProps) {
               onClick={() => go('recognition')}
             />
           </div>
-          <input
+          <Field
             hidden
             type="file"
             ref={album}
@@ -218,19 +220,19 @@ function Recognition({ page, go }: PageProps) {
         </div>
       )}
       <p className="wc-description">{desc}</p>
-      <button className="wc-solid" onClick={() => go('register')}>
+      <Control className="wc-solid" onClick={() => go('register')}>
         {cta}
-      </button>
+      </Control>
       {page === 'recognition' && (
         <details className="wc-states">
           <summary>등록 중 만날 수 있는 상태</summary>
           {Object.entries(scenarios)
             .filter(([key]) => key !== 'recognition')
             .map(([key, [label]]) => (
-              <button key={key} onClick={() => go(key)}>
+              <Control key={key} onClick={() => go(key)}>
                 {label}
                 <Icon name="right" size={15} />
-              </button>
+              </Control>
             ))}
         </details>
       )}
@@ -255,9 +257,9 @@ function GarmentDetail({ go }: PageProps) {
     return (
       <div className="wc wc-empty">
         <h1>선택할 옷이 없어요</h1>
-        <button className="wc-solid" onClick={() => go('closet')}>
+        <Control className="wc-solid" onClick={() => go('closet')}>
           옷장으로
-        </button>
+        </Control>
       </div>
     );
   const current = item;
@@ -304,10 +306,10 @@ function GarmentDetail({ go }: PageProps) {
   }
   return (
     <div className="wc wc-detail">
-      <button className="wc-back" onClick={() => go('closet')}>
+      <Control className="wc-back" onClick={() => go('closet')}>
         <Icon name="back" size={16} />
         옷장
-      </button>
+      </Control>
       <div className="wc-detail-layout">
         <div className="wc-product-photo">
           <GarmentPhoto item={item} shared />
@@ -329,7 +331,7 @@ function GarmentDetail({ go }: PageProps) {
             ))}
           </dl>
           <div className="wc-actions">
-            <button
+            <Control
               className="wc-solid"
               onClick={() => {
                 if (!selectedIds.includes(item.id)) {
@@ -344,15 +346,15 @@ function GarmentDetail({ go }: PageProps) {
             >
               <Icon name="layer" size={16} />
               코디에 담기
-            </button>
+            </Control>
             {mode === 'personal' && (
-              <button className="wc-outline" onClick={() => setPanel('edit')}>
+              <Control className="wc-outline" onClick={() => setPanel('edit')}>
                 의류 정보 수정
-              </button>
+              </Control>
             )}
           </div>
           {mode === 'personal' && (
-            <button
+            <Control
               className="wc-text"
               onClick={() => {
                 setError('');
@@ -360,7 +362,7 @@ function GarmentDetail({ go }: PageProps) {
               }}
             >
               이 의류 삭제
-            </button>
+            </Control>
           )}
         </div>
       </div>
@@ -384,21 +386,21 @@ function GarmentDetail({ go }: PageProps) {
         >
           <p>{item.name}의 원본 사진과 정보가 삭제돼요.</p>
           {error && (
-            <p role="alert" className="wc-alert">
+            <Feedback role="alert" className="wc-alert">
               {error}
-            </p>
+            </Feedback>
           )}
           <div className="wc-actions">
-            <button
+            <Control
               className="wc-outline"
               disabled={busy}
               onClick={() => setPanel(null)}
             >
               취소
-            </button>
-            <button className="wc-solid" disabled={busy} onClick={remove}>
+            </Control>
+            <Control className="wc-solid" disabled={busy} onClick={remove}>
               삭제하기
-            </button>
+            </Control>
           </div>
         </Sheet>
       )}

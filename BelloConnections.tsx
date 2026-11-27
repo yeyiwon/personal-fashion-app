@@ -1,3 +1,4 @@
+import { Control } from './LiquidControls';
 import {useEffect,useState} from 'react';
 import {providerDirectory} from './provider-contracts';
 import {Icon} from './presentation';
@@ -20,5 +21,5 @@ export default function BelloConnections({go}:Pick<PageProps,'go'>){
     ['FASHN 실사 피팅','fitting',state?.fit?'비용 승인 필요':'인증 설정 필요','한 장 생성 전 모델·의류 사진 전송과 크레딧 사용을 확인합니다.'],
     ...(['model','receipts','prices','alerts'] as const).map(k=>{const p=providerDirectory[k];return [p.name,p.page,k==='receipts'||k==='prices'?'상업 계약 또는 계정 권한 필요':'미구현',p.local+' · '+p.requires];})
   ];
-  return <section className="connections"><h1>연결 상태</h1><div>{entries.map(([k,page,s,d])=><details key={k}><summary><b>{k}</b><small>{state?s:'확인 중'}</small></summary><p>{d}</p><button className="quiet" onClick={()=>go(page)}>기능 열기 <Icon name="arrow" size={15}/></button></details>)}</div></section>;
+  return <section className="connections"><h1>연결 상태</h1><div>{entries.map(([k,page,s,d])=><details key={k}><summary><b>{k}</b><small>{state?s:'확인 중'}</small></summary><p>{d}</p><Control className="quiet" onClick={()=>go(page)}>기능 열기 <Icon name="arrow" size={15}/></Control></details>)}</div></section>;
 }

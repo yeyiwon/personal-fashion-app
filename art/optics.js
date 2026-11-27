@@ -64,17 +64,20 @@ void main(){
   } else painted=mix(painted,env,.07+.19*f);
   gl_FragColor=vec4(painted,1.);
 }`;
-export const backdropVertex=`varying vec2 uvp;void main(){uvp=position.xy*.5+.5;gl_Position=vec4(position.xy,.999998,1.);}`;
-export const backdropFragment=`
+export const backdropVertex = `varying vec2 uvp;void main(){uvp=position.xy*.5+.5;gl_Position=vec4(position.xy,.999998,1.);}`;
+export const backdropFragment = `
 varying vec2 uvp;
 uniform vec3 pearl,alloy,iris,ice,slate,midnight;
-uniform float night,aspect,aim;
+uniform float night,aspect,aim,tint;
 void main(){
   vec2 p=uvp;float dx=(p.x-.51-aim*.015)*aspect;
   float beam=exp(-pow((dx+.36*p.y)/.39,2.));
   float pool=exp(-dot(vec2(dx*1.85,(p.y-.45)*1.4),vec2(dx*1.85,(p.y-.45)*1.4)));
   vec3 wall=mix(alloy,pearl,.18+.76*pool);
-  wall=mix(wall,iris,.11*beam+.045);
+  float fabric=exp(-pow((dx+.25-.10*sin(p.y*4.5))/.42,2.));
+  wall=mix(wall,mix(iris,ice,.5+.45*tint),.18*fabric+.17*beam);
+  wall=mix(wall,slate,.23*smoothstep(.18,1.05,dx+.3*p.y));
+  wall=mix(wall,pearl,.45*exp(-pow((dx-.17+.36*p.y)/.10,2.)));
   float floorMix=1.-smoothstep(.05,.28,p.y);
   vec3 floorCol=mix(alloy,pearl,.48+.15*beam);
   vec3 lit=mix(wall,floorCol,floorMix);
@@ -84,4 +87,3 @@ void main(){
   vec3 shade=mix(lit,dim,night);
   gl_FragColor=vec4(mix(shade,midnight,.26*contact),1.);
 }`;
-

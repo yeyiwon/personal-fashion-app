@@ -1,3 +1,4 @@
+import { Control, Field, Segment } from './LiquidControls';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { type Figure, hairNames } from './atelierData';
 import { FigurePreview } from './FigurePreview';
@@ -44,13 +45,13 @@ export function Tape({
   const pct = ((value - min) / (max - min)) * 100;
   return (
     <div className="tape-instrument">
-      <button
+      <Control
         aria-label={title + ' 줄이기'}
         disabled={value <= min}
         onClick={() => change(Math.max(min, value - 1))}
       >
         −
-      </button>
+      </Control>
       <div
         className="tape-track"
         style={{ '--value': pct + '%' } as CSSProperties}
@@ -61,7 +62,7 @@ export function Tape({
           <span>{min}</span>
           <span>{max}</span>
         </div>
-        <input
+        <Field
           aria-label={title}
           aria-valuetext={String(value) + (unit || ' 단계')}
           type="range"
@@ -71,13 +72,13 @@ export function Tape({
           onChange={(e) => change(+e.target.value)}
         />
       </div>
-      <button
+      <Control
         aria-label={title + ' 늘리기'}
         disabled={value >= max}
         onClick={() => change(Math.min(max, value + 1))}
       >
         +
-      </button>
+      </Control>
     </div>
   );
 }
@@ -123,17 +124,17 @@ export default function MeasureMirror({
           <span className="date-stamp">피팅룸</span>
           <h1>개인 모델</h1>
         </div>
-        <div className="base-selector">
+        <Segment className="base-selector">
           {(['f', 'm'] as const).map((b) => (
-            <button
+            <Control
               key={b}
               aria-pressed={b === figure.base}
               onClick={() => tweak('base', b)}
             >
               {b === 'f' ? '여성형' : '남성형'}
-            </button>
+            </Control>
           ))}
-        </div>
+        </Segment>
       </div>
       <div className="mirror-layout">
         <div
@@ -176,7 +177,7 @@ export default function MeasureMirror({
           {view !== 'own' && (
             <div className="body-pins" aria-label="부위 선택">
               {pins.map(([k, y]) => (
-                <button
+                <Control
                   key={k}
                   className={view === 'diagram' && dim === k ? 'chosen' : ''}
                   style={{ top: y + (view === 'diagram' ? 8 : 0) + '%' }}
@@ -185,11 +186,11 @@ export default function MeasureMirror({
                 >
                   <i />
                   <span>{scales.find((d) => d[0] === k)![1]}</span>
-                </button>
+                </Control>
               ))}
             </div>
           )}
-          <div className="mirror-switch">
+          <Segment className="mirror-switch">
             <GlassSurface />
             {(
               [
@@ -198,7 +199,7 @@ export default function MeasureMirror({
                 ...(ownPhoto ? [['own', '내 사진']] : []),
               ] as [View, string][]
             ).map(([v, n]) => (
-              <button
+              <Control
                 key={v}
                 aria-pressed={v === view}
                 onClick={() => {
@@ -207,9 +208,9 @@ export default function MeasureMirror({
                 }}
               >
                 {n}
-              </button>
+              </Control>
             ))}
-          </div>
+          </Segment>
         </div>
         <div className="measure-desk">
           <div className="measure-title">
@@ -237,13 +238,13 @@ export default function MeasureMirror({
           />
           <div className="body-index" aria-label="조절할 항목">
             {scales.map(([k, l]) => (
-              <button
+              <Control
                 aria-pressed={k === dim}
                 key={k}
                 onClick={() => target(k)}
               >
                 {l}
-              </button>
+              </Control>
             ))}
           </div>
           {view === 'diagram' && (
@@ -256,13 +257,13 @@ export default function MeasureMirror({
                   [90, '측면'],
                   [180, '후면'],
                 ].map(([v, n]) => (
-                  <button
+                  <Control
                     key={v}
                     aria-pressed={angle === v}
                     onClick={() => turn(+v)}
                   >
                     {n}
-                  </button>
+                  </Control>
                 ))}
               </div>
               <Tape
@@ -282,13 +283,13 @@ export default function MeasureMirror({
             </summary>
             <div className="hair-styles">
               {(Object.keys(hairNames) as Figure['hair'][]).map((h) => (
-                <button
+                <Control
                   key={h}
                   aria-pressed={h === figure.hair}
                   onClick={() => tweak('hair', h)}
                 >
                   {hairNames[h]}
-                </button>
+                </Control>
               ))}
             </div>
             <div className="hair-colors">
@@ -298,14 +299,14 @@ export default function MeasureMirror({
                 ['#8c6045', '체스트넛'],
                 ['#b6a079', '애쉬 블론드'],
               ].map(([c, n]) => (
-                <button
+                <Control
                   key={c}
                   aria-label={n}
                   aria-pressed={(figure.hairColor ?? '#3f302b') === c}
                   onClick={() => tweak('hairColor', c)}
                 >
                   <i style={{ background: c }} />
-                </button>
+                </Control>
               ))}
             </div>
           </details>
@@ -320,9 +321,9 @@ export default function MeasureMirror({
             치수는 회전 가능한 도식에 반영돼요. 실사 착장은 고정된 예시이며 개인
             모델 생성은 연결 전이에요.
           </p>
-          <button className="woven-btn" onClick={fitting}>
+          <Control className="woven-btn" onClick={fitting}>
             이 모델로 피팅 준비 <Icon name="diagonal" size={16} />
-          </button>
+          </Control>
         </div>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field } from './LiquidControls';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import ReceiptImport, {
   DemoPurchaseRows,
@@ -145,7 +146,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           </div>
         </div>
         <div className="wc-actions">
-          <button
+          <Control
             className="wc-solid"
             onClick={() => {
               setMode('personal');
@@ -153,8 +154,8 @@ export default function PurchaseIntake({ page, go }: PageProps) {
             }}
           >
             구매 내역 캡처 등록
-          </button>
-          <button
+          </Control>
+          <Control
             className="wc-outline"
             onClick={() => {
               setMode('personal');
@@ -162,7 +163,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
             }}
           >
             상품 링크 입력
-          </button>
+          </Control>
         </div>
         <div className="wc-list">
           {(
@@ -171,7 +172,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
               ['mall', '승인 쇼핑몰', '연동 상태와 주문 선택'],
             ] as const
           ).map(([key, title, desc]) => (
-            <button
+            <Control
               className="wc-row"
               key={key}
               onClick={() => setChannel(key)}
@@ -182,19 +183,19 @@ export default function PurchaseIntake({ page, go }: PageProps) {
                 <small>{desc}</small>
               </span>
               <Icon name="right" size={16} />
-            </button>
+            </Control>
           ))}
         </div>
         {error && (
-          <p className="wc-alert" role="alert">
+          <Feedback className="wc-alert" role="alert">
             {error}
-          </p>
+          </Feedback>
         )}
         {mode === 'sample' && <DemoPurchaseRows go={go} />}
         {records.length ? (
           <div className="wc-ledger">
             {records.map((item) => (
-              <button
+              <Control
                 key={item.id}
                 onClick={() => {
                   setActiveGarmentId(item.id);
@@ -216,7 +217,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
                     ? '금액 미입력'
                     : item.price.toLocaleString('ko-KR') + '원'}
                 </b>
-              </button>
+              </Control>
             ))}
           </div>
         ) : mode === 'sample' ? null : (
@@ -239,9 +240,9 @@ export default function PurchaseIntake({ page, go }: PageProps) {
       {mode === 'sample' ? (
         <div className="wc-empty">
           <p>구매 정보는 개인 옷장에 저장해요.</p>
-          <button className="wc-solid" onClick={() => setMode('personal')}>
+          <Control className="wc-solid" onClick={() => setMode('personal')}>
             내 옷장에서 등록하기
-          </button>
+          </Control>
         </div>
       ) : (
         <form className="wc-fields" onSubmit={submit}>
@@ -258,7 +259,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           {isLink ? (
             <label>
               상품 링크
-              <input
+              <Field
                 required
                 type="url"
                 placeholder="https://shop.example.com/item"
@@ -271,7 +272,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
             <>
               <label>
                 구매 내역 캡처 <small>선택 · 이 화면에서만 확인</small>
-                <input
+                <Field
                   type="file"
                   accept={IMAGE_ACCEPT}
                   onChange={(e) => {
@@ -295,13 +296,13 @@ export default function PurchaseIntake({ page, go }: PageProps) {
                   alt="입력할 때 참고하는 구매 내역"
                 />
               )}
-              {preview && ocrReady && <button type="button" className="wc-outline" onClick={()=>void readReceipt()} disabled={reading}>{reading ? '기기에서 읽는 중…' : '캡처에서 상품명 읽기'}</button>}
-              {lines.length>0 && <div className="receipt-lines"><p>상품명으로 사용할 줄을 선택하세요.</p>{lines.map((line,i)=><button type="button" key={i} onClick={()=>setName(line.slice(0,80))}>{line}</button>)}</div>}
+              {preview && ocrReady && <Control type="button" className="wc-outline" onClick={()=>void readReceipt()} disabled={reading}>{reading ? '기기에서 읽는 중…' : '캡처에서 상품명 읽기'}</Control>}
+              {lines.length>0 && <div className="receipt-lines"><p>상품명으로 사용할 줄을 선택하세요.</p>{lines.map((line,i)=><Control type="button" key={i} onClick={()=>setName(line.slice(0,80))}>{line}</Control>)}</div>}
             </>
           )}
           <label>
             상품 이름
-            <input
+            <Field
               required
               maxLength={80}
               value={name}
@@ -311,18 +312,18 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           <div className="wc-cols">
             <label>
               분류
-              <select
+              <Choice
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
               >
                 {CATEGORIES.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
-              </select>
+              </Choice>
             </label>
             <label>
               구매일
-              <input
+              <Field
                 required
                 type="date"
                 value={date}
@@ -332,7 +333,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           </div>
           <label>
             판매처 <small>선택</small>
-            <input
+            <Field
               maxLength={100}
               value={shop}
               onChange={(e) => setShop(e.target.value)}
@@ -340,7 +341,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           </label>
           <label>
             구매 가격 <small>선택 · 원</small>
-            <input
+            <Field
               type="number"
               inputMode="numeric"
               min="0"
@@ -353,7 +354,7 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           {!isLink && (
             <label>
               상품 링크 <small>선택</small>
-              <input
+              <Field
                 type="url"
                 maxLength={2048}
                 value={url}
@@ -364,20 +365,20 @@ export default function PurchaseIntake({ page, go }: PageProps) {
           )}
           <label>
             의류 사진 <small>선택 · 옷장에 저장</small>
-            <input
+            <Field
               type="file"
               accept={IMAGE_ACCEPT}
               onChange={(e) => setPhoto(e.target.files?.[0])}
             />
           </label>
           {error && (
-            <p role="alert" className="wc-alert">
+            <Feedback role="alert" className="wc-alert">
               {error}
-            </p>
+            </Feedback>
           )}
-          <button className="wc-solid full" disabled={busy}>
+          <Control className="wc-solid full" disabled={busy}>
             {busy ? '저장 중' : '옷장에 등록'}
-          </button>
+          </Control>
         </form>
       )}
     </div>

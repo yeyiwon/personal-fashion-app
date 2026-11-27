@@ -1,9 +1,10 @@
-import {ThemeChoice} from './BelloAtlas';
+import { Control, Feedback, Field, Segment } from './LiquidControls';
+import { ThemeChoice } from './BelloAtlas';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useStudio, useScopedState, type PageProps } from './studio';
 import { exportData, clearData } from './storage';
 import { importWardrobe } from './backup';
-import { Icon } from './presentation';
+import { Icon, GarmentPhoto } from './presentation';
 import './settings.css';
 
 const colors = [
@@ -36,13 +37,13 @@ function SettingLink({
   open: () => void;
 }) {
   return (
-    <button type="button" className="settings-link" onClick={open}>
+    <Control type="button" className="settings-link" onClick={open}>
       <span>
         {title}
         {note && <small>{note}</small>}
       </span>
       <Icon name="right" size={18} />
-    </button>
+    </Control>
   );
 }
 function Choices({
@@ -61,14 +62,14 @@ function Choices({
       <legend>{title}</legend>
       <div>
         {options.map((s) => (
-          <button
+          <Control
             key={s}
             type="button"
             aria-pressed={s === selected}
             onClick={() => choose(s)}
           >
             {s}
-          </button>
+          </Control>
         ))}
       </div>
     </fieldset>
@@ -105,7 +106,7 @@ function Preferences() {
         <legend>자주 입고 싶은 색</legend>
         <div className="settings-colors">
           {colors.map(([name, hex]) => (
-            <button
+            <Control
               key={hex}
               className="color-pick"
               type="button"
@@ -120,7 +121,7 @@ function Preferences() {
           ))}
           <label className="settings-custom-color">
             직접 선택
-            <input
+            <Field
               aria-label="선호 색상 직접 선택"
               type="color"
               value={preference.color}
@@ -161,7 +162,7 @@ function Account({ go }: Pick<PageProps, 'go'>) {
   return (
     <section className="settings-view">
       <Heading title="내 프로필" />
-      <div className="settings-identity">
+      <div className="settings-identity wardrobe-signature">
         <span className="settings-monogram" aria-hidden="true">
           {name.trim().slice(0, 1) || (mode === 'sample' ? 'S' : 'W')}
         </span>
@@ -171,6 +172,22 @@ function Account({ go }: Pick<PageProps, 'go'>) {
           </strong>
           <p>이 기기의 프로필</p>
         </div>
+        <Control
+          className="signature-closet"
+          aria-label={garments.length ? '이 프로필의 옷장 열기' : '첫 옷 등록'}
+          onClick={() => go(garments.length ? 'closet' : 'register')}
+        >
+          {garments.length ? (
+            garments.slice(0, 3).map((g) => (
+              <span key={g.id}>
+                <GarmentPhoto item={g} />
+              </span>
+            ))
+          ) : (
+            <Icon name="plus" />
+          )}
+          <Icon name="diagonal" size={14} />
+        </Control>
       </div>
       <form
         className="settings-name"
@@ -182,7 +199,7 @@ function Account({ go }: Pick<PageProps, 'go'>) {
       >
         <label htmlFor="profile-name">불리고 싶은 이름</label>
         <div>
-          <input
+          <Field
             id="profile-name"
             autoComplete="nickname"
             value={draft}
@@ -190,32 +207,38 @@ function Account({ go }: Pick<PageProps, 'go'>) {
             placeholder="이름 또는 별명"
             onChange={(e) => setDraft(e.target.value)}
           />
-          <button
+          <Control
             className="quiet"
             type="submit"
             disabled={draft.trim() === name}
           >
             저장
-          </button>
+          </Control>
         </div>
       </form>
-      <section className="settings-bello"><h2>BELLO 환경</h2><ThemeChoice/><button className="quiet" onClick={()=>go('stylist')}>벨로 음성·일정 설정</button></section>
+      <section className="settings-bello">
+        <h2>BELLO 환경</h2>
+        <ThemeChoice />
+        <Control className="quiet" onClick={() => go('stylist')}>
+          벨로 음성·일정 설정
+        </Control>
+      </section>
       <div className="settings-mode">
         <h2>사용 중인 옷장</h2>
-        <div className="settings-segment">
-          <button
+        <Segment className="settings-segment">
+          <Control
             aria-pressed={mode === 'sample'}
             onClick={() => setMode('sample')}
           >
             샘플 옷장
-          </button>
-          <button
+          </Control>
+          <Control
             aria-pressed={mode === 'personal'}
             onClick={() => setMode('personal')}
           >
             개인 옷장
-          </button>
-        </div>
+          </Control>
+        </Segment>
         <p>
           옷 {garments.length}벌 · 저장한 코디 {outfits.length}개
         </p>
@@ -349,7 +372,7 @@ function DataSettings() {
         </p>
         {mode === 'personal' ? (
           <>
-            <button
+            <Control
               disabled={busy}
               className="action"
               onClick={() =>
@@ -360,15 +383,15 @@ function DataSettings() {
               }
             >
               사진과 코디 내보내기
-            </button>
-            <button
+            </Control>
+            <Control
               disabled={busy}
               className="quiet"
               onClick={() => fileInput.current?.click()}
             >
               옷장 백업 가져오기
-            </button>
-            <input
+            </Control>
+            <Field
               ref={fileInput}
               hidden
               aria-label="옷장 백업 파일"
@@ -397,13 +420,13 @@ function DataSettings() {
             </p>
           </>
         ) : (
-          <button
+          <Control
             className="quiet"
             disabled={busy}
             onClick={() => setMode('personal')}
           >
             개인 옷장의 백업 열기
-          </button>
+          </Control>
         )}
       </div>
       <div className="settings-data-block">
@@ -412,7 +435,7 @@ function DataSettings() {
           현재 옷장의 취향, 모델 설정, 참고 사진과 기기에 저장한 활동을 읽을 수
           있는 JSON 파일로 내려받아요.
         </p>
-        <button
+        <Control
           className="quiet"
           disabled={busy}
           onClick={() =>
@@ -448,14 +471,14 @@ function DataSettings() {
           }
         >
           활동 기록 내려받기
-        </button>
+        </Control>
       </div>
       <div className="settings-data-block">
         <h2>
           {mode === 'personal' ? '이 기기의 개인 데이터 삭제' : '샘플 초기화'}
         </h2>
         {!confirm ? (
-          <button
+          <Control
             className="settings-danger"
             disabled={busy}
             onClick={() => {
@@ -465,7 +488,7 @@ function DataSettings() {
             }}
           >
             {mode === 'personal' ? '삭제 범위 확인' : '초기화 범위 확인'}
-          </button>
+          </Control>
         ) : (
           <div className="settings-confirm">
             <p>
@@ -475,14 +498,14 @@ function DataSettings() {
             </p>
             <label>
               계속하려면 ‘삭제’를 입력하세요.
-              <input
+              <Field
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 autoComplete="off"
               />
             </label>
             <div>
-              <button
+              <Control
                 className="quiet"
                 disabled={busy}
                 onClick={() => {
@@ -491,14 +514,14 @@ function DataSettings() {
                 }}
               >
                 취소
-              </button>
-              <button
+              </Control>
+              <Control
                 className="settings-danger"
                 disabled={typed !== '삭제' || busy}
                 onClick={() => void run(erase)}
               >
                 확인하고 삭제
-              </button>
+              </Control>
             </div>
           </div>
         )}
@@ -507,9 +530,9 @@ function DataSettings() {
         {busy ? '처리 중…' : status}
       </p>
       {error && (
-        <p role="alert" className="settings-error">
+        <Feedback role="alert" className="settings-error">
           {error}
-        </p>
+        </Feedback>
       )}
     </section>
   );

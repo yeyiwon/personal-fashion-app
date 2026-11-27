@@ -15,12 +15,19 @@ except ImportError:
 else:
     from blender_mesh import surface,ring,tube,block,sphere,export
 
-# The stage floats over a matte, concave cyclorama. The lower step and the wafer of
-# dichroic glass are separate solids so their profiles stay crisp at grazing angles.
-ring('Dais_Base', [(-.12,.72,.38),(-.117,.78,.42),(-.091,.82,.44),(-.075,.82,.44)], 'graphite')
-ring('Dais_Reveal',[(-.080,.82,.44),(-.074,.843,.448),(-.058,.848,.45),(-.052,.84,.448)],'alloy')
-ring('Dais_Glass',[(-.06,.835,.443),(-.058,.86,.46),(-.043,.862,.462),(-.037,.85,.46)],'lens')
-ring('Dais_Crown',[(-.045,.835,.453),(-.038,.853,.46),(-.018,.844,.455),(-.010,.816,.44),(-.009,.02,.012)],'porcelain')
+# An offset catwalk crosses the room at an angle. Its rolled leading edge wraps
+# beneath the floor instead of enclosing the wearer on a pedestal.
+for k,material in enumerate(['porcelain','alloy','lens']):
+    rows=[]
+    for j in range(53):
+        t=j/52; x=-2.65+5.3*t
+        center=.16*math.sin(t*5.1-1.2)-.30*x
+        depth=.52+.16*math.sin(t*3.2)
+        profile=[(-1,-.024),(-.72,-.013),(.36,-.008),(.89,-.012),(1,-.028)]
+        if k==1: profile=[(1,-.028),(1.017,-.035),(1.019,-.072),(1.003,-.089),(.985,-.093)]
+        if k==2: profile=[(1.021,-.056),(1.024,-.060),(1.021,-.065)]
+        rows.append([(x,y,center+d*depth) for d,y in profile])
+    surface('Runway_'+str(k),rows,material,False)
 # Broad ruled surfaces twist between the gallery wall and the overhead skylight.
 for side, count in [(-1,4),(1,3)]:
     for k in range(count):
@@ -40,15 +47,14 @@ for side, count in [(-1,4),(1,3)]:
             rows.append(cross)
         surface(('Wing_L_' if side<0 else 'Wing_R_') + str(k), rows,
                 'lens' if k == 1 else 'alloy' if k==2 else 'porcelain', cap=True)
-# The mirror perimeter is a gently tapered superellipse swept into a polished lip.
+# Recessed gallery portal, open at floor level. Two rails lean toward different
+# vanishing points. The horizon remains visible through the opening.
 for k in range(2):
-    points = []
-    for i in range(32):
-        a=TAU*i/32
-        co,si=math.cos(a),math.sin(a)
-        points.append((math.copysign(abs(co)**.79,co)*(.91+k*.055),
-                       1.30+math.copysign(abs(si)**.83,si)*(1.32+k*.045),-.94-.08*k))
-    tube('Mirror_Bezel_'+str(k),points,.018 if not k else .008,'alloy' if not k else 'lens',True)
+    tube('Mirror_Bezel_'+str(k),[
+        (-1.07-.07*k,-.19,-.8),(-1.04-.065*k,.68,-.98),(-.95-.06*k,1.64,-1.17),
+        (-.72-.04*k,2.26,-1.26),(-.25,2.59+.035*k,-1.31),(.36,2.71+.04*k,-1.24),
+        (.83+.05*k,2.64+.032*k,-1.08),(1.01+.06*k,2.43,-.91),(1.16+.06*k,2.08,-.82)
+    ],.020 if not k else .008,'alloy' if not k else 'lens')
 export('studio.glb')
 
 

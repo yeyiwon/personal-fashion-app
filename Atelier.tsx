@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field, Segment } from './LiquidControls';
 import {
   useEffect,
   useRef,
@@ -65,14 +66,14 @@ function Tab({
   children: ReactNode;
 }) {
   return (
-    <button
+    <Control
       type="button"
       className={'at-tab' + (chosen ? ' on' : '')}
       aria-pressed={chosen}
       onClick={onClick}
     >
       {children}
-    </button>
+    </Control>
   );
 }
 function Next({
@@ -87,7 +88,7 @@ function Next({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <Control
       type="button"
       className={secondary ? 'at-next at-secondary' : 'at-next'}
       onClick={onClick}
@@ -95,17 +96,17 @@ function Next({
     >
       {children}
       <Icon name="right" size={17} />
-    </button>
+    </Control>
   );
 }
 function Subnav({ items, go }: { items: [string, string][] } & Nav) {
   return (
     <nav className="at-subnav" aria-label="관련 메뉴">
       {items.map(([p, t]) => (
-        <button key={p} onClick={() => go(p)}>
+        <Control key={p} onClick={() => go(p)}>
           {t}
           <Icon name="right" size={14} />
-        </button>
+        </Control>
       ))}
     </nav>
   );
@@ -209,11 +210,11 @@ function ModelRoom({ go }: Nav) {
         ].map((r) => (
           <div key={r.name}>
             {r.src && <img src={r.src} alt={r.name + ' 참고 사진'} />}
-            <button disabled={busy} onClick={() => r.ref.current?.click()}>
+            <Control disabled={busy} onClick={() => r.ref.current?.click()}>
               <Icon name="photo" size={16} />
               {r.name} 사진 {r.src ? '변경' : '선택'}
-            </button>
-            {r.src && <button onClick={r.clear}>{r.name} 사진 삭제</button>}
+            </Control>
+            {r.src && <Control onClick={r.clear}>{r.name} 사진 삭제</Control>}
           </div>
         ))}
       </div>
@@ -221,7 +222,7 @@ function ModelRoom({ go }: Nav) {
         참고 사진은 이 기기의 {mode === 'sample' ? '샘플' : '개인'} 공간에만
         저장돼요.
       </p>
-      <input
+      <Field
         ref={faceRef}
         type="file"
         aria-label="얼굴 사진 파일"
@@ -232,7 +233,7 @@ function ModelRoom({ go }: Nav) {
           e.target.value = '';
         }}
       />
-      <input
+      <Field
         ref={fileRef}
         type="file"
         aria-label="전신 사진 파일"
@@ -244,9 +245,9 @@ function ModelRoom({ go }: Nav) {
         }}
       />
       {error && (
-        <p role="alert" className="at-error">
+        <Feedback role="alert" className="at-error">
           {error}
-        </p>
+        </Feedback>
       )}
     </MeasureMirror>
   );
@@ -379,15 +380,17 @@ function FitRoom({ page, go }: PageProps) {
         <Heading
           title="착장 비교"
           aside={
-            <button className="at-arrowlink" onClick={() => go('fitting')}>
+            <Control className="at-arrowlink" onClick={() => go('fitting')}>
               피팅룸 <Icon name="right" size={15} />
-            </button>
+            </Control>
           }
         >
           같은 모델의 두 가지 고정 착장 예시예요.
         </Heading>
-        <button className="action" onClick={() => go('home')}>선택한 옷을 아바타에 입히기 <Icon name="arrow" size={16}/></button>
-      <div className="at-fit-layout">
+        <Control className="action" onClick={() => go('home')}>
+          선택한 옷을 아바타에 입히기 <Icon name="arrow" size={16} />
+        </Control>
+        <div className="at-fit-layout">
           <div
             className="at-compare-stage"
             style={{ '--split': position + '%' } as CSSProperties}
@@ -401,7 +404,7 @@ function FitRoom({ page, go }: PageProps) {
             <div className="at-slider-rule">
               <span>‹ ›</span>
             </div>
-            <input
+            <Field
               className="at-drag"
               type="range"
               min="0"
@@ -459,9 +462,9 @@ function FitRoom({ page, go }: PageProps) {
       <Heading
         title="가상 피팅"
         aside={
-          <button className="at-arrowlink" onClick={() => go('model')}>
+          <Control className="at-arrowlink" onClick={() => go('model')}>
             모델 편집 <Icon name="right" size={16} />
-          </button>
+          </Control>
         }
       >
         선택한 옷을 아바타에 입혀 보거나 피팅 보드를 구성하세요.
@@ -495,21 +498,21 @@ function FitRoom({ page, go }: PageProps) {
           </div>
           <div className="at-fitting-rail">
             {candidate && (
-              <button
+              <Control
                 onClick={() => setCandidateId('')}
                 aria-label={candidate.name + ' 후보 제외'}
               >
                 <img src={photoPath(candidate.id)} alt={candidate.name} />
-              </button>
+              </Control>
             )}
             {selected.slice(0, candidate ? 2 : 3).map((g) => (
-              <button
+              <Control
                 key={g.id}
                 aria-label={g.name + ' 선택 해제'}
                 onClick={() => toggle(g.id)}
               >
                 <GarmentPhoto item={g} shared />
-              </button>
+              </Control>
             ))}
             {!selected.length && !candidate && (
               <span>
@@ -533,20 +536,20 @@ function FitRoom({ page, go }: PageProps) {
           {ownPhoto && (
             <div className="at-line">
               <strong>모델 이미지</strong>
-              <div className="at-segment">
+              <Segment className="at-segment">
                 <Tab chosen={!own} onClick={() => setReference('model')}>
                   기본 모델
                 </Tab>
                 <Tab chosen={own} onClick={() => setReference('own')}>
                   내 사진
                 </Tab>
-              </div>
+              </Segment>
             </div>
           )}
           {outfits.length > 0 && (
             <label className="at-field">
               저장한 코디 가져오기
-              <select
+              <Choice
                 value=""
                 onChange={(e) => {
                   const look = outfits.find((o) => o.id === e.target.value);
@@ -559,7 +562,7 @@ function FitRoom({ page, go }: PageProps) {
                     {o.name}
                   </option>
                 ))}
-              </select>
+              </Choice>
             </label>
           )}
           <div className="at-sectiontitle">
@@ -569,7 +572,7 @@ function FitRoom({ page, go }: PageProps) {
           {garments.length ? (
             <div className="at-picker">
               {garments.map((g) => (
-                <button
+                <Control
                   key={g.id}
                   aria-pressed={selectedIds.includes(g.id)}
                   onClick={() => toggle(g.id)}
@@ -583,7 +586,7 @@ function FitRoom({ page, go }: PageProps) {
                     )}
                   </div>
                   <small>{g.name}</small>
-                </button>
+                </Control>
               ))}
             </div>
           ) : (
@@ -593,7 +596,7 @@ function FitRoom({ page, go }: PageProps) {
           )}
           <label className="at-field">
             구매 후보 추가
-            <select
+            <Choice
               value={candidate?.id ?? ''}
               onChange={(e) => setCandidateId(e.target.value)}
             >
@@ -603,14 +606,14 @@ function FitRoom({ page, go }: PageProps) {
                   {p.name} · 샘플 상품
                 </option>
               ))}
-            </select>
+            </Choice>
           </label>
           {selected.length > 0 && (
             <details className="at-details">
               <summary>한 벌만 교체</summary>
               <label className="at-field">
                 교체할 옷
-                <select
+                <Choice
                   value={replacement?.id ?? ''}
                   onChange={(e) => setReplaceId(e.target.value)}
                 >
@@ -620,13 +623,13 @@ function FitRoom({ page, go }: PageProps) {
                       {g.name}
                     </option>
                   ))}
-                </select>
+                </Choice>
               </label>
               {replacement &&
                 (alternatives.length ? (
                   <div className="at-picker">
                     {alternatives.map((g) => (
-                      <button
+                      <Control
                         key={g.id}
                         onClick={() => {
                           setSelectedIds((ids) =>
@@ -640,7 +643,7 @@ function FitRoom({ page, go }: PageProps) {
                           <GarmentPhoto item={g} />
                         </div>
                         <small>{g.name}</small>
-                      </button>
+                      </Control>
                     ))}
                   </div>
                 ) : (
@@ -656,7 +659,7 @@ function FitRoom({ page, go }: PageProps) {
             보드에서 확인할 수 있어요.
           </p>
           {recent && (
-            <button
+            <Control
               className="at-textbtn"
               onClick={() => {
                 setSelectedIds(
@@ -671,7 +674,7 @@ function FitRoom({ page, go }: PageProps) {
               }}
             >
               마지막 피팅 보드 다시 열기
-            </button>
+            </Control>
           )}
           <details className="at-details">
             <summary>생성 요청 상태 예시</summary>
@@ -755,12 +758,12 @@ function ImageSearch({ page, go }: PageProps) {
             <div className="at-upload-target">
               <Icon name="photo" size={44} />
               <h2>참고 착장 사진</h2>
-              <button
+              <Control
                 className="at-textbtn"
                 onClick={() => input.current?.click()}
               >
                 앨범에서 선택
-              </button>
+              </Control>
             </div>
           )}
           {ref && (
@@ -808,16 +811,16 @@ function ImageSearch({ page, go }: PageProps) {
           ) : (
             <>
               <div className="at-photo-input">
-                <button disabled={busy} onClick={() => input.current?.click()}>
+                <Control disabled={busy} onClick={() => input.current?.click()}>
                   <Icon name="photo" size={17} />
                   {busy
                     ? '사진 색상 읽는 중'
                     : ref
                       ? '다른 사진 선택'
                       : '내 사진 선택'}
-                </button>
+                </Control>
                 {ref && (
-                  <button
+                  <Control
                     onClick={() => {
                       task.current++;
                       setBusy(false);
@@ -825,7 +828,7 @@ function ImageSearch({ page, go }: PageProps) {
                     }}
                   >
                     지우기
-                  </button>
+                  </Control>
                 )}
               </div>
               <p className="at-note">
@@ -838,14 +841,14 @@ function ImageSearch({ page, go }: PageProps) {
                   ['model-m', '메리노 니트'],
                   ['model-f', '블랙 스커트'],
                 ].map(([p, n]) => (
-                  <button
+                  <Control
                     disabled={busy}
                     key={p}
                     onClick={() => void choose(editorial(p), n + ' 착장 예시')}
                   >
                     <img src={editorial(p)} alt="" />
                     {n}
-                  </button>
+                  </Control>
                 ))}
               </div>
               <Next disabled={!ref || busy} onClick={() => go('image-result')}>
@@ -854,13 +857,13 @@ function ImageSearch({ page, go }: PageProps) {
             </>
           )}
           {error && (
-            <p className="at-error" role="alert">
+            <Feedback className="at-error" role="alert">
               {error}
-            </p>
+            </Feedback>
           )}
         </section>
       </div>
-      <input
+      <Field
         ref={input}
         type="file"
         accept={IMAGE_ACCEPT}
@@ -888,29 +891,29 @@ function ProductCard({
   return (
     <article className="at-product">
       <div className="at-product-visual">
-        <button
+        <Control
           className="at-product-image"
           onClick={open}
           aria-label={product.name + ' 상세 보기'}
         >
           <img loading="lazy" src={photoPath(product.id)} alt={product.name} />
-        </button>
-        <button
+        </Control>
+        <Control
           aria-label={product.name + (saved ? ' 관심 해제' : ' 관심 저장')}
           aria-pressed={saved}
           className="at-bookmark"
           onClick={toggle}
         >
           <Icon name="save" size={16} />
-        </button>
+        </Control>
       </div>
-      <button className="at-product-info" onClick={open}>
+      <Control className="at-product-info" onClick={open}>
         <span>
           {product.tone} · {product.category}
         </span>
         <strong>{product.name}</strong>
         <small>{won(product.price)}</small>
-      </button>
+      </Control>
     </article>
   );
 }
@@ -957,7 +960,7 @@ function RetailSearch() {
       >
         <label className="at-field">
           찾고 싶은 상품
-          <input
+          <Field
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             maxLength={80}
@@ -965,9 +968,9 @@ function RetailSearch() {
             type="search"
           />
         </label>
-        <button className="at-smallbtn" disabled={!query.trim() || pending}>
+        <Control className="at-smallbtn" disabled={!query.trim() || pending}>
           {pending ? '검색 중' : '제휴몰 검색'}
-        </button>
+        </Control>
       </form>
       <div aria-live="polite">
         {error && <p>{error}</p>}
@@ -1095,7 +1098,7 @@ function Shopping({ page, go }: PageProps) {
         <Heading
           title={wish ? '관심 상품' : '맞춤 쇼핑'}
           aside={
-            <button
+            <Control
               className="at-arrowlink"
               onClick={() => {
                 setFilter('전체');
@@ -1105,7 +1108,7 @@ function Shopping({ page, go }: PageProps) {
             >
               {wish ? '쇼핑' : '관심 ' + wishlist.length}
               <Icon name={wish ? 'right' : 'save'} size={16} />
-            </button>
+            </Control>
           }
         >
           {wish
@@ -1113,9 +1116,60 @@ function Shopping({ page, go }: PageProps) {
             : '옷장에 있는 옷과 함께 입을 구매 후보를 살펴보세요.'}
         </Heading>
         {!wish && (
-          <section className="shop-pairing"><div className="purchase-objects"><button className="candidate-object" onClick={()=>open(product.id)}><img src={photoPath(product.id)} alt={product.name}/><small>구매 후보</small></button><i aria-hidden="true">+</i>{selected.pairs[0]?<button className="owned-object" onClick={()=>go('closet')}><GarmentPhoto item={selected.pairs[0]}/><small>내 옷장</small></button>:<button onClick={()=>go('register')}>내 옷 등록</button>}</div>
-          <div><small>샘플 상품 · 내 옷과 조합</small><h2>{product.name}</h2><p>{selected.pairs[0]?selected.pairs[0].name+'와 함께 입어 보기':'첫 번째 구매 후보를 입혀 보세요.'}</p><button className="action" onClick={()=>{setCandidateId(product.id);go('home');}}>아바타에 입히기 <Icon name="arrow" size={15}/></button><button className="quiet" onClick={()=>go('compare')}>옵션·가격 비교</button></div>
-          <div className="pairing-rail" aria-label="구매 후보 선택">{products.map(p=><button key={p.id} aria-pressed={p.id===product.id} onClick={()=>select(p.id)}><img src={photoPath(p.id)} alt={p.name}/></button>)}</div></section>
+          <section className="shop-pairing">
+            <div className="purchase-objects">
+              <Control
+                className="candidate-object"
+                onClick={() => open(product.id)}
+              >
+                <img src={photoPath(product.id)} alt={product.name} />
+                <small>구매 후보</small>
+              </Control>
+              <i aria-hidden="true">+</i>
+              {selected.pairs[0] ? (
+                <Control className="owned-object" onClick={() => go('closet')}>
+                  <GarmentPhoto item={selected.pairs[0]} />
+                  <small>내 옷장</small>
+                </Control>
+              ) : (
+                <Control onClick={() => go('register')}>내 옷 등록</Control>
+              )}
+            </div>
+            <div className="pairing-detail">
+              <small>샘플 상품 · 내 옷과 조합</small>
+              <h2>{product.name}</h2>
+              <p>
+                {selected.pairs[0]
+                  ? selected.pairs[0].name + '와 함께 입어 보기'
+                  : '첫 번째 구매 후보를 입혀 보세요.'}
+              </p>
+            </div>
+            <div className="pairing-actions">
+              <Control
+                className="action"
+                onClick={() => {
+                  setCandidateId(product.id);
+                  go('home');
+                }}
+              >
+                아바타에 입히기 <Icon name="arrow" size={15} />
+              </Control>
+              <Control className="quiet" onClick={() => go('compare')}>
+                옵션·가격 비교
+              </Control>
+            </div>
+            <div className="pairing-rail" aria-label="구매 후보 선택">
+              {products.map((p) => (
+                <Control
+                  key={p.id}
+                  aria-pressed={p.id === product.id}
+                  onClick={() => select(p.id)}
+                >
+                  <img src={photoPath(p.id)} alt={p.name} />
+                </Control>
+              ))}
+            </div>
+          </section>
         )}
         <div className="at-sectiontitle">
           <h2>{wish ? '저장한 후보' : '샘플 상품'}</h2>
@@ -1140,7 +1194,7 @@ function Shopping({ page, go }: PageProps) {
         <div className="at-sort">
           <label>
             예산{' '}
-            <select
+            <Choice
               aria-label="최대 가격"
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
@@ -1148,16 +1202,16 @@ function Shopping({ page, go }: PageProps) {
               <option value="all">전체</option>
               <option value="80000">8만원 이하</option>
               <option value="100000">10만원 이하</option>
-            </select>
+            </Choice>
           </label>
-          <select
+          <Choice
             aria-label="정렬"
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
             <option value="wardrobe">내 옷 조합순</option>
             <option value="price">낮은 가격순</option>
-          </select>
+          </Choice>
         </div>
         {candidates.length ? (
           <div className="at-product-grid">{candidates.map(productCard)}</div>
@@ -1174,7 +1228,7 @@ function Shopping({ page, go }: PageProps) {
                 샘플 상품 보기
               </Next>
             ) : (
-              <button
+              <Control
                 className="at-textbtn"
                 onClick={() => {
                   setFilter('전체');
@@ -1182,7 +1236,7 @@ function Shopping({ page, go }: PageProps) {
                 }}
               >
                 필터 초기화
-              </button>
+              </Control>
             )}
           </Blank>
         )}
@@ -1236,7 +1290,7 @@ function Shopping({ page, go }: PageProps) {
             <div key={i}>
               <label className="at-field">
                 후보 {i === 0 ? 'A' : 'B'}
-                <select
+                <Choice
                   value={p.id}
                   onChange={(e) =>
                     i === 0
@@ -1253,7 +1307,7 @@ function Shopping({ page, go }: PageProps) {
                         {x.name}
                       </option>
                     ))}
-                </select>
+                </Choice>
               </label>
               <img src={photoPath(p.id)} alt={p.name} />
               <h2>{p.name}</h2>
@@ -1294,9 +1348,9 @@ function Shopping({ page, go }: PageProps) {
               : product.name
         }
         aside={
-          <button className="at-arrowlink" onClick={() => go('shop')}>
+          <Control className="at-arrowlink" onClick={() => go('shop')}>
             쇼핑 <Icon name="right" size={15} />
-          </button>
+          </Control>
         }
       >
         {priceCompare
@@ -1313,7 +1367,7 @@ function Shopping({ page, go }: PageProps) {
         <section className="at-controls">
           <div className="at-sectiontitle">
             <h2>{product.name}</h2>
-            <button
+            <Control
               className="at-bookmark inline"
               aria-pressed={wishlist.includes(product.id)}
               aria-label="관심 상품 저장 또는 해제"
@@ -1327,7 +1381,7 @@ function Shopping({ page, go }: PageProps) {
               }}
             >
               <Icon name="save" size={20} />
-            </button>
+            </Control>
           </div>
           <p className="at-product-meta">
             <i style={{ background: product.color }} />
@@ -1395,7 +1449,7 @@ function Shopping({ page, go }: PageProps) {
               <div className="at-line">
                 <strong>옵션</strong>
                 {sizes ? (
-                  <div className="at-segment">
+                  <Segment className="at-segment">
                     {sizes.map((s) => (
                       <Tab
                         key={s}
@@ -1405,7 +1459,7 @@ function Shopping({ page, go }: PageProps) {
                         {s}
                       </Tab>
                     ))}
-                  </div>
+                  </Segment>
                 ) : (
                   <span>{optionLabel(product)}</span>
                 )}

@@ -1,3 +1,4 @@
+import { Segment, Choice, Control, Feedback, Field } from './LiquidControls';
 import {
   useState,
   useRef,
@@ -73,9 +74,9 @@ function Picker<T extends string>({
   return (
     <fieldset className="lk-fieldset">
       <legend>{label}</legend>
-      <div className="lk-pills">
+      <Segment className="lk-pills">
         {values.map((v) => (
-          <button
+          <Control
             type="button"
             aria-pressed={value === v}
             className={value === v ? 'active' : ''}
@@ -83,9 +84,9 @@ function Picker<T extends string>({
             onClick={() => change(v)}
           >
             {v}
-          </button>
+          </Control>
         ))}
-      </div>
+      </Segment>
     </fieldset>
   );
 }
@@ -96,9 +97,9 @@ function Empty({ go }: Pick<PageProps, 'go'>) {
       <Icon name="closet" size={36} />
       <h2>코디에 사용할 옷을 추가해 주세요</h2>
       <p>입을 수 있는 의류가 생기면 조합이 여기에 표시돼요.</p>
-      <button className="lk-main" onClick={() => go('closet')}>
+      <Control className="lk-main" onClick={() => go('closet')}>
         옷장 열기
-      </button>
+      </Control>
     </div>
   );
 }
@@ -138,7 +139,12 @@ function LookBoard({
         (items.some((g) => g.category === '원피스') ? 'is-dress ' : '') +
         (items.length === 1 ? 'solo' : '')
       }
-      style={{'--outfit-light':(items.find(g=>g.id===active)??items[0])?.color} as React.CSSProperties}
+      style={
+        {
+          '--outfit-light': (items.find((g) => g.id === active) ?? items[0])
+            ?.color,
+        } as React.CSSProperties
+      }
       onTouchStart={(e) => {
         origin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }}
@@ -149,7 +155,7 @@ function LookBoard({
       }}
     >
       {items.map((g) => (
-        <button
+        <Control
           type="button"
           aria-label={g.name + ' 선택'}
           aria-pressed={active === g.id}
@@ -168,7 +174,7 @@ function LookBoard({
               ✦
             </span>
           )}
-        </button>
+        </Control>
       ))}
       <div className="lk-board-palette" aria-label="코디 색상">
         {items.map((g) => (
@@ -345,7 +351,7 @@ function OutfitComposer({ page, go }: PageProps) {
         >
           <div className="lk-spectrum">
             {paletteChoices.map((p) => (
-              <button
+              <Control
                 key={p.hex}
                 type="button"
                 aria-label={p.name}
@@ -357,14 +363,14 @@ function OutfitComposer({ page, go }: PageProps) {
                 }}
               >
                 <span>{color === p.hex ? '✓' : ''}</span>
-              </button>
+              </Control>
             ))}
           </div>
           <div className="lk-swatch-caption">
             <strong>{paletteName}</strong>
             <label>
               직접 선택
-              <input
+              <Field
                 type="color"
                 value={color}
                 onChange={(e) => {
@@ -386,9 +392,9 @@ function OutfitComposer({ page, go }: PageProps) {
           <p className="lk-note">
             {harmonyNotes[harmony]} 보유한 옷 중 가까운 조합을 골라요.
           </p>
-          <button className="lk-link" onClick={() => go('color-analysis')}>
+          <Control className="lk-link" onClick={() => go('color-analysis')}>
             내 옷장 색상 분포 보기 <Icon name="right" size={14} />
-          </button>
+          </Control>
         </div>
       )}
       {!inColor && !result && (
@@ -402,10 +408,10 @@ function OutfitComposer({ page, go }: PageProps) {
               resetComposition();
             }}
           />
-          <button className="lk-link" onClick={() => go('weather')}>
+          <Control className="lk-link" onClick={() => go('weather')}>
             {conditions.weather} · 날씨와 일정 설정{' '}
             <Icon name="right" size={14} />
-          </button>
+          </Control>
         </div>
       )}
       {!result && !inColor && choices.length > 0 && (
@@ -423,7 +429,7 @@ function OutfitComposer({ page, go }: PageProps) {
                   ? frequent.name + ' · 저장·착용 기록 반영'
                   : conditions.occasion + ' · ' + conditions.weather + ' 기준';
               return (
-                <button
+                <Control
                   key={look.map((g) => g.id).join()}
                   type="button"
                   aria-pressed={
@@ -444,7 +450,7 @@ function OutfitComposer({ page, go }: PageProps) {
                     ))}
                   </span>
                   <small>{reason}</small>
-                </button>
+                </Control>
               );
             })}
           </div>
@@ -476,12 +482,12 @@ function OutfitComposer({ page, go }: PageProps) {
                   <small>{selected.category}</small>
                   <strong>{selected.name}</strong>
                 </div>
-                <button
+                <Control
                   aria-pressed={pinned.includes(selected.id)}
                   onClick={() => fix(selected.id)}
                 >
                   {pinned.includes(selected.id) ? '고정 해제' : '이 옷 고정'}
-                </button>
+                </Control>
               </div>
             )}
             {selected &&
@@ -490,10 +496,14 @@ function OutfitComposer({ page, go }: PageProps) {
                 <div className="lk-alts">
                   <span>부분 교체</span>
                   {alternatives.map((g) => (
-                    <button key={g.id} type="button" onClick={() => swap(g.id)}>
+                    <Control
+                      key={g.id}
+                      type="button"
+                      onClick={() => swap(g.id)}
+                    >
                       <i style={{ background: g.color }} />
                       {g.name}
-                    </button>
+                    </Control>
                   ))}
                 </div>
               )}
@@ -502,7 +512,7 @@ function OutfitComposer({ page, go }: PageProps) {
             {!result && (
               <label className="lk-label">
                 꼭 입을 옷
-                <select
+                <Choice
                   value=""
                   onChange={(e) => {
                     if (e.target.value) {
@@ -518,34 +528,34 @@ function OutfitComposer({ page, go }: PageProps) {
                       {pinned.includes(g.id) ? ' · 고정됨' : ''}
                     </option>
                   ))}
-                </select>
+                </Choice>
               </label>
             )}
             {!result && (
               <div className="lk-pair">
-                <button className="lk-secondary" onClick={switchLook}>
+                <Control className="lk-secondary" onClick={switchLook}>
                   랜덤 조합
-                </button>
-                <button
+                </Control>
+                <Control
                   className="lk-main"
                   onClick={() =>
                     page === 'colors' ? go('palette') : handoff('result')
                   }
                 >
                   {page === 'colors' ? '팔레트 상세 보기' : '코디 결과 보기'}
-                </button>
+                </Control>
               </div>
             )}
             {result && (
               <>
                 <div className="lk-pair">
-                  <button
+                  <Control
                     className="lk-secondary"
                     onClick={() => handoff('direct')}
                   >
                     직접 편집
-                  </button>
-                  <button
+                  </Control>
+                  <Control
                     className="lk-main"
                     onClick={() => {
                       setEditingSave(!editingSave);
@@ -556,37 +566,37 @@ function OutfitComposer({ page, go }: PageProps) {
                     }}
                   >
                     코디 저장
-                  </button>
+                  </Control>
                 </div>
                 {editingSave && (
                   <form className="lk-savebox" onSubmit={save}>
                     <label className="lk-label">
                       코디 이름
-                      <input
+                      <Field
                         required
                         maxLength={80}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
                     </label>
-                    <button className="lk-main" disabled={saving}>
+                    <Control className="lk-main" disabled={saving}>
                       저장하기
-                    </button>
+                    </Control>
                   </form>
                 )}
                 <div className="lk-pair">
-                  <button
+                  <Control
                     className="lk-secondary"
                     onClick={() => handoff('fitting')}
                   >
                     가상 피팅
-                  </button>
-                  <button
+                  </Control>
+                  <Control
                     className="lk-secondary"
                     onClick={() => handoff('wear')}
                   >
                     입은 날 기록
-                  </button>
+                  </Control>
                 </div>
               </>
             )}
@@ -625,7 +635,7 @@ function ColorAnalysis({ go }: Pick<PageProps, 'go'>) {
         <>
           <div className="lk-color-bar">
             {groups.map((g) => (
-              <button
+              <Control
                 key={g.label}
                 aria-label={g.label + ' ' + g.items.length + '벌'}
                 style={{ flex: g.items.length, background: g.items[0].color }}
@@ -635,7 +645,7 @@ function ColorAnalysis({ go }: Pick<PageProps, 'go'>) {
           </div>
           <div className="lk-colorlist">
             {groups.map((g) => (
-              <button
+              <Control
                 key={g.label}
                 aria-pressed={chosen.label === g.label}
                 onClick={() => setFilter(g.label)}
@@ -643,13 +653,13 @@ function ColorAnalysis({ go }: Pick<PageProps, 'go'>) {
                 <i style={{ background: g.items[0].color }} />
                 {g.label}
                 <b>{g.items.length}벌</b>
-              </button>
+              </Control>
             ))}
           </div>
           <h2>{chosen.label}</h2>
           <div className="lk-itemgrid">
             {chosen.items.map((g) => (
-              <button
+              <Control
                 key={g.id}
                 onClick={() => {
                   setColor(g.color);
@@ -659,7 +669,7 @@ function ColorAnalysis({ go }: Pick<PageProps, 'go'>) {
                 <GarmentPhoto item={g} />
                 <span>{g.name}</span>
                 <small>이 색으로 코디</small>
-              </button>
+              </Control>
             ))}
           </div>
         </>
@@ -715,7 +725,7 @@ function Weather({ go }: Pick<PageProps, 'go'>) {
       <div className="lk-weather">
         <label className="lk-label">
           도시
-          <select
+          <Choice
             disabled={loading}
             value={city}
             onChange={(e) => {
@@ -729,15 +739,20 @@ function Weather({ go }: Pick<PageProps, 'go'>) {
                 {v}
               </option>
             ))}
-          </select>
+          </Choice>
         </label>
-        <button className="lk-secondary" disabled={loading} onClick={read}>
+        <Control
+          className="lk-secondary"
+          aria-busy={loading}
+          disabled={loading}
+          onClick={read}
+        >
           {loading ? '예보 확인 중…' : '도시 예보 가져오기'}
-        </button>
+        </Control>
         {error && (
-          <p role="status" className="lk-note">
+          <Feedback role="status" className="lk-note">
             {error}
-          </p>
+          </Feedback>
         )}
         {forecast && climate && (
           <div aria-live="polite" className="lk-weather-value">
@@ -764,7 +779,7 @@ function Weather({ go }: Pick<PageProps, 'go'>) {
                 CC BY 4.0
               </a>
             </small>
-            <button
+            <Control
               className="lk-link"
               onClick={() => {
                 setConditions({ ...conditions, weather: climate });
@@ -772,7 +787,7 @@ function Weather({ go }: Pick<PageProps, 'go'>) {
               }}
             >
               예보 적용 · {climate}
-            </button>
+            </Control>
           </div>
         )}
       </div>
@@ -788,9 +803,9 @@ function Weather({ go }: Pick<PageProps, 'go'>) {
         value={conditions.occasion}
         change={(occasion) => setConditions({ ...conditions, occasion })}
       />
-      <button className="lk-main" onClick={() => go('ai')}>
+      <Control className="lk-main" onClick={() => go('ai')}>
         이 조건으로 코디 보기
-      </button>
+      </Control>
     </section>
   );
 }
@@ -887,7 +902,7 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
       </div>
       <div className="lk-suggestions">
         {quickQuestions.map((q) => (
-          <button
+          <Control
             type="button"
             key={q}
             disabled={busy}
@@ -895,7 +910,7 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
           >
             {q}
             <Icon name="right" size={15} />
-          </button>
+          </Control>
         ))}
       </div>
       <form
@@ -905,20 +920,20 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
         }}
         className="lk-query"
       >
-        <input
+        <Field
           value={question}
           aria-label="스타일링 질문"
           placeholder="예: 비 오는 날 출근 코디와 어울리는 색"
           maxLength={160}
           onChange={(e) => setQuestion(e.target.value)}
         />
-        <button disabled={busy || !question.trim()}>
+        <Control disabled={busy || !question.trim()}>
           {busy ? '선택 중…' : '질문하기'}
-        </button>
+        </Control>
       </form>
       {ready ? (
         <label className="lk-pack">
-          <input
+          <Field
             type="checkbox"
             checked={deviceOn}
             disabled={busy}
@@ -937,7 +952,9 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
         </p>
       )}
       {asked && !busy && !tools.length && (
-        <p role="status">코디·색상·구매·날씨 중 필요한 내용을 적어 주세요.</p>
+        <Feedback role="status">
+          코디·색상·구매·날씨 중 필요한 내용을 적어 주세요.
+        </Feedback>
       )}
       <div aria-live="polite">
         {tools.map((key) => {
@@ -953,9 +970,9 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                     setConditions({ ...conditions, weather })
                   }
                 />
-                <button className="lk-link" onClick={() => go('weather')}>
+                <Control className="lk-link" onClick={() => go('weather')}>
                   도시 예보 확인 <Icon name="right" size={14} />
-                </button>
+                </Control>
               </section>
             );
           if (key === 'palette')
@@ -964,7 +981,7 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                 <h2>이 색을 중심으로</h2>
                 <div className="lk-quickcolor">
                   {paletteChoices.map((p) => (
-                    <button
+                    <Control
                       key={p.hex}
                       aria-label={p.name}
                       aria-pressed={contextColor === p.hex}
@@ -975,10 +992,10 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                       }}
                     >
                       {contextColor === p.hex ? '✓' : ''}
-                    </button>
+                    </Control>
                   ))}
                 </div>
-                <button
+                <Control
                   className="lk-link"
                   onClick={() => {
                     setColor(contextColor);
@@ -986,7 +1003,7 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                   }}
                 >
                   배색 방식 비교 <Icon name="right" size={14} />
-                </button>
+                </Control>
               </section>
             );
           if (key === 'shopping')
@@ -997,15 +1014,15 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                   보유한 {garments.length}벌과 조합해 볼 구매 후보를 선택해요.
                 </p>
                 <div className="lk-pair">
-                  <button
+                  <Control
                     className="lk-secondary"
                     onClick={() => go('wishlist')}
                   >
                     관심 상품
-                  </button>
-                  <button className="lk-main" onClick={() => go('shop')}>
+                  </Control>
+                  <Control className="lk-main" onClick={() => go('shop')}>
                     구매 후보 찾기
-                  </button>
+                  </Control>
                 </div>
               </section>
             );
@@ -1027,10 +1044,10 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                   : '의류를 먼저 등록해 주세요.'}
               </p>
               <div className="lk-pair">
-                <button className="lk-secondary" onClick={() => go('ai')}>
+                <Control className="lk-secondary" onClick={() => go('ai')}>
                   다른 조합 보기
-                </button>
-                <button
+                </Control>
+                <Control
                   className="lk-main"
                   disabled={!items.length}
                   onClick={() => {
@@ -1041,7 +1058,7 @@ function Stylist({ go }: Pick<PageProps, 'go'>) {
                   }}
                 >
                   이 조합 편집
-                </button>
+                </Control>
               </div>
             </section>
           );

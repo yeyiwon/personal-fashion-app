@@ -1,3 +1,4 @@
+import { Choice, Control, Feedback, Field, TextArea } from './LiquidControls';
 import { useState, type FormEvent } from 'react';
 import {
   useStudio,
@@ -46,13 +47,13 @@ function JournalNav({ page, go }: PageProps) {
         ['calendar', '캘린더'],
         ['analytics', '활용도'],
       ].map(([key, label]) => (
-        <button
+        <Control
           key={key}
           aria-current={page === key ? 'page' : undefined}
           onClick={() => go(key)}
         >
           {label}
-        </button>
+        </Control>
       ))}
     </nav>
   );
@@ -98,7 +99,7 @@ function Wear({ go }: Pick<PageProps, 'go'>) {
         <form className="lk-diaryform" onSubmit={save}>
           <label className="lk-label">
             입은 날짜
-            <input
+            <Field
               type="date"
               required
               max={localDate()}
@@ -109,21 +110,21 @@ function Wear({ go }: Pick<PageProps, 'go'>) {
           {outfits.length > 0 && (
             <label className="lk-label">
               저장한 코디에서 불러오기
-              <select value="" onChange={(e) => chooseOutfit(e.target.value)}>
+              <Choice value="" onChange={(e) => chooseOutfit(e.target.value)}>
                 <option value="">코디 선택</option>
                 {outfits.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.name}
                   </option>
                 ))}
-              </select>
+              </Choice>
             </label>
           )}
           <fieldset className="lk-fieldset">
             <legend>입은 옷 · {picked.length}벌</legend>
             <div className="lk-itemgrid">
               {garments.map((g) => (
-                <button
+                <Control
                   key={g.id}
                   type="button"
                   aria-pressed={picked.includes(g.id)}
@@ -138,13 +139,13 @@ function Wear({ go }: Pick<PageProps, 'go'>) {
                   <GarmentPhoto item={g} />
                   <span>{g.name}</span>
                   {picked.includes(g.id) && <i>✓</i>}
-                </button>
+                </Control>
               ))}
             </div>
           </fieldset>
           <label className="lk-label">
             코디 이름 <small>선택</small>
-            <input
+            <Field
               maxLength={80}
               placeholder="예: 금요일 출근"
               value={name}
@@ -153,26 +154,26 @@ function Wear({ go }: Pick<PageProps, 'go'>) {
           </label>
           <label className="lk-label">
             메모 <small>선택</small>
-            <textarea
+            <TextArea
               value={note}
               maxLength={300}
               placeholder="하루 종일 걷기 편했던 조합"
               onChange={(e) => setNote(e.target.value)}
             />
           </label>
-          <button
+          <Control
             className="lk-main"
             disabled={!picked.length || !day || day > localDate()}
           >
             착용 기록 저장
-          </button>
+          </Control>
         </form>
       ) : (
         <div className="lk-empty">
           <h2>먼저 옷을 등록해 주세요</h2>
-          <button className="lk-main" onClick={() => go('register')}>
+          <Control className="lk-main" onClick={() => go('register')}>
             옷 등록
-          </button>
+          </Control>
         </div>
       )}
       <p className="lk-note">
@@ -212,12 +213,12 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
           {String(first.getMonth() + 1).padStart(2, '0')}
         </h2>
         <div>
-          <button aria-label="이전 달" onClick={() => move(-1)}>
+          <Control aria-label="이전 달" onClick={() => move(-1)}>
             <Icon name="back" />
-          </button>
-          <button aria-label="다음 달" onClick={() => move(1)}>
+          </Control>
+          <Control aria-label="다음 달" onClick={() => move(1)}>
             <Icon name="right" />
-          </button>
+          </Control>
         </div>
       </div>
       <div className="lk-dates">
@@ -233,7 +234,7 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
           const date = month + '-' + String(i + 1).padStart(2, '0');
           const records = entries.filter((r) => r.date === date);
           return (
-            <button
+            <Control
               type="button"
               key={date}
               aria-label={
@@ -248,7 +249,7 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
             >
               {i + 1}
               {records.length > 0 && <i />}
-            </button>
+            </Control>
           );
         })}
       </div>
@@ -256,9 +257,9 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
         <div className="lk-sectionline">
           <h2>{dayTitle(active)}</h2>
           {active <= localDate() && (
-            <button className="lk-link" onClick={() => go('wear')}>
+            <Control className="lk-link" onClick={() => go('wear')}>
               기록 추가 <Icon name="plus" size={16} />
-            </button>
+            </Control>
           )}
         </div>
         {chosen.length ? (
@@ -269,13 +270,13 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
               {row.note && <p>{row.note}</p>}
               {removing === row.id ? (
                 <div className="lk-pair">
-                  <button
+                  <Control
                     className="lk-secondary"
                     onClick={() => setRemoving('')}
                   >
                     유지
-                  </button>
-                  <button
+                  </Control>
+                  <Control
                     className="lk-secondary"
                     onClick={() => {
                       setEntries((prev) => prev.filter((r) => r.id !== row.id));
@@ -284,12 +285,12 @@ function Calendar({ go }: Pick<PageProps, 'go'>) {
                     }}
                   >
                     삭제 확인
-                  </button>
+                  </Control>
                 </div>
               ) : (
-                <button className="lk-link" onClick={() => setRemoving(row.id)}>
+                <Control className="lk-link" onClick={() => setRemoving(row.id)}>
                   기록 삭제
-                </button>
+                </Control>
               )}
             </article>
           ))
@@ -340,14 +341,14 @@ function Analytics({ go }: Pick<PageProps, 'go'>) {
       </div>
       <div className="lk-pills">
         {['전체', '입은 옷', '아직 안 입은 옷'].map((v) => (
-          <button
+          <Control
             key={v}
             aria-pressed={v === filter}
             className={v === filter ? 'active' : ''}
             onClick={() => setFilter(v)}
           >
             {v}
-          </button>
+          </Control>
         ))}
       </div>
       {rows.map((g) => {
@@ -379,9 +380,9 @@ function Analytics({ go }: Pick<PageProps, 'go'>) {
       {!rows.length && (
         <p className="lk-note">이 조건에 해당하는 의류가 없어요.</p>
       )}
-      <button className="lk-link" onClick={() => go('wear')}>
+      <Control className="lk-link" onClick={() => go('wear')}>
         착용 기록 남기기 <Icon name="right" size={15} />
-      </button>
+      </Control>
     </>
   );
 }
@@ -451,7 +452,7 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
       <form className="lk-tripform" onSubmit={create}>
         <label className="lk-label">
           목적지
-          <input
+          <Field
             required
             maxLength={60}
             placeholder="어디로 떠나나요?"
@@ -462,7 +463,7 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
         <div className="lk-twodates">
           <label className="lk-label">
             가는 날
-            <input
+            <Field
               type="date"
               required
               value={start}
@@ -471,7 +472,7 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
           </label>
           <label className="lk-label">
             오는 날
-            <input
+            <Field
               type="date"
               required
               min={start}
@@ -480,14 +481,14 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
             />
           </label>
         </div>
-        <button type="button" className="lk-link" onClick={() => go('weather')}>
+        <Control type="button" className="lk-link" onClick={() => go('weather')}>
           여행지 날씨 조건 · {conditions.weather}{' '}
           <Icon name="right" size={14} />
-        </button>
-        <button className="lk-main">
+        </Control>
+        <Control className="lk-main">
           {trip ? '여행 코디 다시 구성' : '날짜별 코디 구성'}
-        </button>
-        {error && <p role="alert">{error}</p>}
+        </Control>
+        {error && <Feedback role="alert">{error}</Feedback>}
       </form>
       {trip && choice && (
         <section className="lk-tripresult">
@@ -497,17 +498,17 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
           </p>
           <div className="lk-daystrip">
             {trip.days.map((d, i) => (
-              <button
+              <Control
                 key={d.date}
                 aria-pressed={d === choice}
                 onClick={() => setDay(i)}
               >
                 {dateAtNoon(d.date).getDate()}일
-              </button>
+              </Control>
             ))}
           </div>
           <Miniatures items={idsToItems(choice.ids, garments)} />
-          <button
+          <Control
             className="lk-link"
             onClick={() => {
               setSelectedIds(idsToItems(choice.ids, garments).map((g) => g.id));
@@ -516,7 +517,7 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
             }}
           >
             이날의 코디 편집 <Icon name="right" size={13} />
-          </button>
+          </Control>
           <div className="lk-sectionline">
             <h3>챙길 옷</h3>
             <span>
@@ -526,7 +527,7 @@ function Travel({ go }: Pick<PageProps, 'go'>) {
           </div>
           {packed.map((g) => (
             <label className="lk-pack" key={g.id}>
-              <input
+              <Field
                 type="checkbox"
                 checked={checked.includes(g.id)}
                 onChange={() =>

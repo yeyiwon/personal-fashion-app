@@ -1,3 +1,4 @@
+import { Choice, Control } from './LiquidControls';
 import { useState } from 'react';
 import { useStudio, type PageProps, type StudioGarment } from './studio';
 import { getImage } from './storage';
@@ -142,21 +143,21 @@ export default function Lookbook({ go }: PageProps) {
       {!look ? (
         <>
           <p>코디를 저장하면 한 장의 룩북으로 내보낼 수 있어요.</p>
-          <button className="action" onClick={() => go('direct')}>
+          <Control className="action" onClick={() => go('direct')}>
             코디 만들기
-          </button>
+          </Control>
         </>
       ) : (
         <>
           <label>
             룩북으로 만들 코디
-            <select value={look.id} onChange={(e) => choose(e.target.value)}>
+            <Choice value={look.id} onChange={(e) => choose(e.target.value)}>
               {outfits.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
                 </option>
               ))}
-            </select>
+            </Choice>
           </label>
           <div className="look-print">
             <strong>BELLO</strong>
@@ -176,23 +177,23 @@ export default function Lookbook({ go }: PageProps) {
           <div className="book-actions">
             {output ? (
               <>
-                <button className="action" onClick={save}>
+                <Control className="action" onClick={save}>
                   룩북 이미지 저장
-                </button>
+                </Control>
                 {navigator.canShare?.({ files: [output] }) && (
-                  <button className="quiet" onClick={share}>
+                  <Control className="quiet" onClick={share}>
                     공유할 앱 선택 <Icon name="diagonal" size={15} />
-                  </button>
+                  </Control>
                 )}
               </>
             ) : (
-              <button
+              <Control
                 className="action"
                 disabled={busy}
                 onClick={() => void make()}
               >
                 {busy ? '이미지 만드는 중…' : '룩북 이미지 만들기'}
-              </button>
+              </Control>
             )}
           </div>
         </>

@@ -1,3 +1,5 @@
+import { Aperture } from './Aperture';
+import { Control, Feedback, Field } from './LiquidControls';
 import { useEffect, useRef, useState } from 'react';
 import { IMAGE_ACCEPT } from './images';
 import { Icon, message, usePhoto } from './presentation';
@@ -5,14 +7,14 @@ import { Icon, message, usePhoto } from './presentation';
 function Shot({ file, remove }: { file: File; remove: () => void }) {
   const url = usePhoto(file);
   return (
-    <button
+    <Control
       type="button"
       aria-label={file.name + ' 촬영 목록에서 제거'}
       onClick={remove}
     >
       {url && <img alt="" src={url} />}
       <span>×</span>
-    </button>
+    </Control>
   );
 }
 
@@ -153,17 +155,18 @@ export default function Capture({
           />
         ) : (
           <div className="wc-finder-start">
-            <Icon name="camera" size={34} />
+            <Aperture active={requesting} />
             <strong>
               {requesting ? '카메라를 여는 중' : '카메라 미리보기'}
             </strong>
-            <button
+            <Control
               className="wc-solid light"
+              aria-busy={requesting}
               disabled={requesting}
               onClick={enable}
             >
               카메라 켜기
-            </button>
+            </Control>
           </div>
         )}
         <div className="wc-reticle" aria-hidden="true">
@@ -175,37 +178,38 @@ export default function Capture({
         <span className="wc-counter">{shots.length} / 24</span>
       </div>
       {error && (
-        <p role="alert" className="wc-alert">
+        <Feedback role="alert" className="wc-alert">
           {error}
-        </p>
+        </Feedback>
       )}
       <div className="wc-shutterbar">
-        <button
+        <Control
           className="wc-tool"
           onClick={() => album.current?.click()}
           disabled={shots.length >= 24}
         >
           <Icon name="photo" />
           앨범
-        </button>
-        <button
+        </Control>
+        <Control
           className="wc-shutter"
+          aria-busy={busy}
           disabled={!active || busy || shots.length >= 24}
           aria-label="사진 촬영"
           onClick={capture}
         >
-          <i />
-        </button>
-        <button
+          <Aperture active={active} />
+        </Control>
+        <Control
           className="wc-tool"
           disabled={!shots.length}
           onClick={() => onReview(shots)}
         >
           <Icon name="check" />
           확인
-        </button>
+        </Control>
       </div>
-      <input
+      <Field
         hidden
         ref={album}
         type="file"
@@ -230,14 +234,14 @@ export default function Capture({
               />
             ))}
           </div>
-          <button className="wc-solid full" onClick={() => onReview(shots)}>
+          <Control className="wc-solid full" onClick={() => onReview(shots)}>
             촬영한 옷 {shots.length}벌 확인
-          </button>
+          </Control>
         </>
       )}
-      <button className="wc-text" onClick={() => go('register')}>
+      <Control className="wc-text" onClick={() => go('register')}>
         등록 방법으로 돌아가기
-      </button>
+      </Control>
     </div>
   );
 }

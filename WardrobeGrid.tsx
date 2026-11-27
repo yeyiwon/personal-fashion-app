@@ -1,3 +1,4 @@
+import { Control, Field, Segment } from './LiquidControls';
 import { useState } from 'react';
 import { GarmentPhoto, Icon } from './presentation';
 import { CATEGORIES } from './domain';
@@ -25,7 +26,7 @@ export function WardrobeGrid({
     <>
       <label className="wc-search">
         <Icon name="search" size={18} />
-        <input
+        <Field
           type="search"
           aria-label="의류 검색"
           placeholder="옷 이름으로 찾기"
@@ -33,23 +34,23 @@ export function WardrobeGrid({
           onChange={(e) => setSearch(e.target.value)}
         />
       </label>
-      <div className="wc-filters" aria-label="분류 필터">
+      <Segment className="wc-filters" aria-label="분류 필터">
         {[
           '전체',
           ...CATEGORIES.filter((c) => garments.some((g) => g.category === c)),
         ].map((c) => (
-          <button
+          <Control
             key={c}
             aria-pressed={category === c}
             onClick={() => setCategory(c)}
           >
             {c === '기타' ? '기타·액세서리' : c}
-          </button>
+          </Control>
         ))}
-      </div>
+      </Segment>
       <div className={'wc-grid' + (compact ? ' compact' : '')}>
         {shown.map((g) => (
-          <button
+          <Control
             key={g.id}
             className={'wc-piece' + (marked?.includes(g.id) ? ' marked' : '')}
             aria-label={g.name}
@@ -69,13 +70,13 @@ export function WardrobeGrid({
               {g.category === '기타' ? '기타·액세서리' : g.category}
             </span>
             <strong>{g.name}</strong>
-          </button>
+          </Control>
         ))}
       </div>
       {!shown.length && (
         <div className="wc-empty">
           <h2>조건에 맞는 옷이 없어요</h2>
-          <button
+          <Control
             className="wc-text"
             onClick={() => {
               setCategory('전체');
@@ -83,7 +84,7 @@ export function WardrobeGrid({
             }}
           >
             필터 초기화
-          </button>
+          </Control>
         </div>
       )}
     </>

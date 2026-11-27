@@ -1,3 +1,4 @@
+import { Control, Field } from './LiquidControls';
 import { useEffect, useState, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
@@ -7,9 +8,13 @@ import Looks from './Looks';
 import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
-import { BelloAtlas,BelloHeader,useAppearance } from './BelloAtlas';
+import { BelloAtlas, BelloHeader, useAppearance } from './BelloAtlas';
 import './rooms.css';
 import './bello.css';
+import './liquid.css';
+import { RoomNavigation, FeatureIndex } from './RoomNavigation';
+import { CommonLens } from './RoomControls';
+import { useControlLight } from './LiquidControls';
 import Space from './Space';
 import Lookbook from './Lookbook';
 import { capabilities } from './featureStatus';
@@ -17,7 +22,6 @@ import BelloConnections from './BelloConnections';
 import { StudioProvider, useStudio, type PageProps } from './studio';
 import { Icon, Sheet, haptic } from './presentation';
 import {
-  sections,
   titles,
   stateRoutes,
   closetPages,
@@ -28,65 +32,26 @@ function route() {
   return location.hash.replace(/^#\/?/, '').split('?')[0] || 'home';
 }
 function Directory({ go }: Pick<PageProps, 'go'>) {
-  const [query, setQuery] = useState('');
-  const q = query.trim().toLocaleLowerCase('ko');
-  const visible = sections
-    .map((s) => ({
-      ...s,
-      items: Object.entries(s.pages).filter(
-        ([, v]) => v.toLowerCase().includes(q) || s.title.includes(q),
-      ),
-    }))
-    .filter((s) => s.items.length);
+  const [group, setGroup] = useState(0);
   return (
     <div className="directory">
-      <h1>전체 메뉴</h1>
-      <label className="menu-search">
-        <Icon name="search" size={18} />
-        <input
-          placeholder="기능 찾기"
-          aria-label="기능 찾기"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </label>
-      <div className="directory-groups">
-        {visible.map((s) => (
-          <section key={s.title}>
-            <h2>{s.title}</h2>
-            {s.items.map(([p, n]) => (
-              <a
-                key={p}
-                href={'#/' + p}
-                onClick={(e) => {
-                  e.preventDefault();
-                  go(p);
-                }}
-              >
-                {n}
-                <Icon name="right" size={15} />
-              </a>
-            ))}
-          </section>
-        ))}
-      </div>
-      {!visible.length && <p>일치하는 메뉴가 없어요.</p>}
+      <FeatureIndex group={group} setGroup={setGroup} go={go} />
       <details className="state-list capability-list">
         <summary>기능별 이용 범위</summary>
         {capabilities.map((c) => (
-          <button key={c.label} onClick={() => go(c.page)}>
+          <Control key={c.label} onClick={() => go(c.page)}>
             <span>{c.label}</span>
             <small>{c.state}</small>
-          </button>
+          </Control>
         ))}
       </details>
       <details className="state-list">
         <summary>입력 및 연결 상태 살펴보기</summary>
         {Object.entries(stateRoutes).map(([p, n]) => (
-          <button key={p} onClick={() => go(p)}>
+          <Control key={p} onClick={() => go(p)}>
             {n}
             <Icon name="right" size={14} />
-          </button>
+          </Control>
         ))}
       </details>
     </div>
@@ -107,7 +72,7 @@ function Onboarding({ go }: Pick<PageProps, 'go'>) {
           샘플 21벌로 룩을 만들어 보거나, 사진을 등록해 나만의 옷장을 열어
           보세요.
         </p>
-        <button
+        <Control
           className="action"
           onClick={() => {
             setMode('sample');
@@ -115,8 +80,8 @@ function Onboarding({ go }: Pick<PageProps, 'go'>) {
           }}
         >
           샘플 옷장 둘러보기 <Icon name="arrow" />
-        </button>
-        <button
+        </Control>
+        <Control
           className="quiet"
           onClick={() => {
             setMode('personal');
@@ -124,14 +89,15 @@ function Onboarding({ go }: Pick<PageProps, 'go'>) {
           }}
         >
           내 첫 옷 등록
-        </button>
+        </Control>
       </div>
     </section>
   );
 }
 function App() {
   useAppearance();
-  const [atlas,setAtlas]=useState(false);
+  useControlLight();
+  const [atlas, setAtlas] = useState(false);
   const { mode, setMode } = useStudio();
   const [page, setPage] = useState(route),
     [modeOpen, showMode] = useState(false);
@@ -141,7 +107,8 @@ function App() {
     const update = () => {
       const next = route();
       setPage(next);
-      setAtlas(false);showMode(false);
+      setAtlas(false);
+      showMode(false);
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', update);
@@ -164,33 +131,14 @@ function App() {
       history.pushState({ wardrobe: true }, '', '#/' + next);
       flushSync(() => {
         setPage(next);
+        setAtlas(false);
         showMode(false);
       });
       window.scrollTo(0, 0);
       main.current?.focus({ preventScroll: true });
     };
-    const objectTransition =
-      [
-        'home',
-        'closet',
-        'garment',
-        'direct',
-        'space',
-        'fitting',
-        'model',
-      ].includes(next) &&
-      [
-        'home',
-        'closet',
-        'garment',
-        'direct',
-        'space',
-        'fitting',
-        'model',
-      ].includes(page);
     if (
       document.startViewTransition &&
-      objectTransition &&
       !matchMedia('(prefers-reduced-motion: reduce)').matches
     )
       transition.current = document.startViewTransition(change);
@@ -198,37 +146,52 @@ function App() {
     haptic('selection');
   }
   const props = { page, go };
-  let content =
-    ['home','stylist','model','fitting'].includes(page) ? (
-      <Home key={mode+page} {...props} onMode={() => showMode(true)} onAtlas={()=>setAtlas(true)} />
-    ) : page === 'connections' ? (
-      <BelloConnections go={go} />
-    ) : page === 'lookbook' ? (
-      <Lookbook {...props} />
-    ) : page === 'space' ? (
-      <Space {...props} />
-    ) : page === 'tools' ? (
-      <Directory go={go} />
-    ) : page === 'onboarding' ? (
-      <Onboarding go={go} />
-    ) : closetPages.includes(page) ? (
-      <Closet {...props} />
-    ) : lookPages.includes(page) ? (
-      <Looks key={mode + ':looks'} {...props} />
-    ) : atelierPages.includes(page) ? (
-      <Atelier key={mode + ':atelier'} {...props} page={page === 'model-study' ? 'model' : page === 'fitting-board' ? 'fitting' : page} />
-    ) : ['account', 'preferences', 'data', 'privacy'].includes(page) ? (
-      <Settings {...props} />
-    ) : (
-      <section className="notfound">
-        <h1>이 화면을 찾을 수 없어요</h1>
-        <button className="action" onClick={() => go('tools')}>
-          전체 메뉴 열기
-        </button>
-      </section>
-    );
+  let content = ['home', 'stylist', 'model', 'fitting'].includes(page) ? (
+    <Home
+      key={mode + page}
+      {...props}
+      onMode={() => showMode(true)}
+      onAtlas={() => setAtlas(true)}
+    />
+  ) : page === 'connections' ? (
+    <BelloConnections go={go} />
+  ) : page === 'lookbook' ? (
+    <Lookbook {...props} />
+  ) : page === 'space' ? (
+    <Space {...props} />
+  ) : page === 'tools' ? (
+    <h1 className="visually-hidden">전체 메뉴</h1>
+  ) : page === 'onboarding' ? (
+    <Onboarding go={go} />
+  ) : closetPages.includes(page) ? (
+    <Closet {...props} />
+  ) : lookPages.includes(page) ? (
+    <Looks key={mode + ':looks'} {...props} />
+  ) : atelierPages.includes(page) ? (
+    <Atelier
+      key={mode + ':atelier'}
+      {...props}
+      page={
+        page === 'model-study'
+          ? 'model'
+          : page === 'fitting-board'
+            ? 'fitting'
+            : page
+      }
+    />
+  ) : ['account', 'preferences', 'data', 'privacy'].includes(page) ? (
+    <Settings {...props} />
+  ) : (
+    <section className="notfound">
+      <h1>이 화면을 찾을 수 없어요</h1>
+      <Control className="action" onClick={() => go('tools')}>
+        전체 메뉴 열기
+      </Control>
+    </section>
+  );
   return (
     <>
+      <CommonLens />
       <a
         className="skip"
         href="#main-content"
@@ -239,7 +202,17 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      {!['home','stylist','model','fitting'].includes(page) && <BelloHeader {...props} mode={mode} onMode={()=>showMode(true)} onAtlas={()=>setAtlas(true)} />}
+      {!['home', 'stylist', 'model', 'fitting'].includes(page) && (
+        <BelloHeader
+          {...props}
+          mode={mode}
+          onMode={() => showMode(true)}
+          onAtlas={() => setAtlas(true)}
+        />
+      )}
+      {!['home', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
+        <RoomNavigation {...props} />
+      )}
       <main
         id="main-content"
         tabIndex={-1}
@@ -248,7 +221,23 @@ function App() {
       >
         {content}
       </main>
-      <BelloAtlas page={page} go={go} open={atlas} close={()=>setAtlas(false)}/>
+      <BelloAtlas
+        page={page}
+        go={go}
+        open={atlas || page === 'tools'}
+        close={() => {
+          setAtlas(false);
+          if (page === 'tools') go('home');
+        }}
+        indexContent={
+          <Directory
+            go={(p) => {
+              setAtlas(false);
+              go(p);
+            }}
+          />
+        }
+      />
       {modeOpen && (
         <Sheet title="사용할 옷장" onClose={() => showMode(false)}>
           {(
@@ -265,7 +254,7 @@ function App() {
               ],
             ] as const
           ).map(([v, n, s]) => (
-            <button
+            <Control
               className="mode-choice"
               key={v}
               onClick={() => {
@@ -283,7 +272,7 @@ function App() {
               ) : (
                 <Icon name="right" size={16} />
               )}
-            </button>
+            </Control>
           ))}
         </Sheet>
       )}
