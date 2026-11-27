@@ -1,3 +1,5 @@
+import { analyseGarment, visionAvailable } from './localVision';
+import { jpegData } from './avatarLayers';
 import { useEffect, useRef, useState } from 'react';
 import {
   CATEGORIES,
@@ -33,6 +35,50 @@ export function GarmentForm({
       edit ? { ...edit } : { name: '', category: '기타' },
     ),
     lock = useRef(false);
+  const [analysis, setAnalysis] = useState<{
+    category?: Category;
+    cutout?: string | null;
+    note: string;
+  } | null>(null);
+  const [hasVision, setHasVision] = useState(false);
+  const analysisRun = useRef(0);
+  useEffect(() => {
+    let live = true;
+    visionAvailable().then((v) => {
+      if (live) setHasVision(v);
+    });
+    return () => {
+      live = false;
+      analysisRun.current++;
+    };
+  }, []);
+  useEffect(() => {
+    analysisRun.current++;
+    setAnalysis(null);
+  }, [file]);
+  async function analyse() {
+    if (!prepared) return;
+    const seq = ++analysisRun.current;
+    setAnalysis({ note: '이 Mac에서 사진을 분석하고 있어요…' });
+    try {
+      const result = await analyseGarment(
+        await jpegData(prepared.preview, 720),
+      );
+      if (seq !== analysisRun.current) return;
+      setAnalysis({
+        category: result?.category,
+        cutout: result?.cutout,
+        note: result?.cutout
+          ? '배경 분리 미리보기예요. 등록할 때 원본 사진을 보관해요.'
+          : '피사체 경계를 확정하지 못했어요. 원본을 사용해요.',
+      });
+    } catch {
+      if (seq === analysisRun.current)
+        setAnalysis({
+          note: '사진을 분석하지 못했어요. 직접 분류할 수 있어요.',
+        });
+    }
+  }
   const url = usePhoto(prepared?.preview ?? null);
   useEffect(() => {
     let live = true;
@@ -110,13 +156,36 @@ export function GarmentForm({
           {edit ? (
             <GarmentPhoto item={edit} />
           ) : url ? (
-            <img src={url} alt="등록할 의류" />
+            <img src={analysis?.cutout || url} alt="등록할 의류" />
           ) : (
             <span>
               {error ? '사진을 확인해 주세요' : '사진을 준비하고 있어요'}
             </span>
           )}
         </div>
+        {hasVision && prepared && (
+          <div className="wc-form-note">
+            <button
+              type="button"
+              className="quiet"
+              onClick={() => void analyse()}
+            >
+              기기 내 AI 분류·배경 분리
+            </button>
+            {analysis && <p role="status">{analysis.note}</p>}
+            {analysis?.category && (
+              <button
+                type="button"
+                className="quiet"
+                onClick={() =>
+                  setDraft((d) => ({ ...d, category: analysis.category! }))
+                }
+              >
+                {analysis.category} 분류 적용
+              </button>
+            )}
+          </div>
+        )}
         {duplicate && (
           <div className="wc-duplicate">
             <GarmentPhoto item={duplicate} />

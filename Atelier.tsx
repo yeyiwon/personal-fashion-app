@@ -386,7 +386,8 @@ function FitRoom({ page, go }: PageProps) {
         >
           같은 모델의 두 가지 고정 착장 예시예요.
         </Heading>
-        <div className="at-fit-layout">
+        <button className="action" onClick={() => go('home')}>선택한 옷을 아바타에 입히기 <Icon name="arrow" size={16}/></button>
+      <div className="at-fit-layout">
           <div
             className="at-compare-stage"
             style={{ '--split': position + '%' } as CSSProperties}
@@ -463,7 +464,7 @@ function FitRoom({ page, go }: PageProps) {
           </button>
         }
       >
-        모델 옆에 입혀 보고 싶은 옷을 놓아 보세요.
+        선택한 옷을 아바타에 입혀 보거나 피팅 보드를 구성하세요.
       </Heading>
       <div className="at-fit-layout">
         <div className="at-fitting-set">

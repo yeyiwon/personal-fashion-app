@@ -293,6 +293,7 @@ export default function ClosetRail({ page, go }: PageProps) {
                         <button onClick={() => carry('direct')}>
                           직접 코디
                         </button>
+                        <button onClick={() => carry('home')}>아바타에 입히기</button>
                         <button onClick={() => carry('fitting')}>
                           피팅 보드
                         </button>

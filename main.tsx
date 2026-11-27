@@ -196,8 +196,8 @@ function App() {
   }
   const props = { page, go };
   let content =
-    page === 'home' ? (
-      <Home {...props} />
+    ['home','stylist'].includes(page) ? (
+      <Home key={mode+page} {...props} onMode={() => showMode(true)} />
     ) : page === 'connections' ? (
       <section className="connections">
         <h1>외부 서비스 연결</h1>
@@ -261,7 +261,7 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      <RoomHeader
+      {!['home','stylist'].includes(page) && <RoomHeader
         page={page}
         go={go}
         mode={mode}
@@ -270,7 +270,7 @@ function App() {
           if (history.state?.wardrobe) history.back();
           else go('home');
         }}
-      />
+      />}
       <main
         id="main-content"
         tabIndex={-1}
@@ -279,7 +279,7 @@ function App() {
       >
         {content}
       </main>
-      <RoomDock page={page} go={go} />
+      {!['home','stylist'].includes(page) && <RoomDock page={page} go={go} />}
       {modeOpen && (
         <Sheet title="사용할 옷장" onClose={() => showMode(false)}>
           {(

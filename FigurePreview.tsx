@@ -32,10 +32,12 @@ export function FigurePreview({
   figure: f,
   angle,
   turn,
+  garments = [],
 }: {
   figure: Figure;
   angle: number;
   turn: (v: number) => void;
+  garments?: { category: string; color: string; name: string }[];
 }) {
   const drag = useRef<{ x: number; a: number } | null>(null),
     uid = useId().replace(/[^a-z0-9]/gi, '');
@@ -226,6 +228,91 @@ export function FigurePreview({
           )}
         </g>
       ))}
+      {garments
+        .slice()
+        .sort(
+          (a, b) =>
+            ['하의', '원피스', '상의', '아우터'].indexOf(a.category) -
+            ['하의', '원피스', '상의', '아우터'].indexOf(b.category),
+        )
+        .map((g) => {
+          const color = g.color,
+            k = g.category,
+            hem = feet - 36;
+          const upper: Ring[] = [
+            [shoulder - 8, 8, 7],
+            [shoulder + 1, sh + 4, 15],
+            [shoulder + 19, sh - 1, 17],
+            [belt, waist + 3, 15],
+            [pelvis - 5, hip + 3, 17],
+          ];
+          if (k === '상의' || k === '아우터')
+            return (
+              <g key={g.name} fill={color}>
+                <path d={profile(upper)} />
+                {[-1, 1].map((i) => (
+                  <path key={i} d={profile(limb(i, true).slice(0, 4))} />
+                ))}
+              </g>
+            );
+          if (k === '원피스' || (k === '하의' && /치마|스커트/.test(g.name)))
+            return (
+              <path
+                key={g.name}
+                d={profile([
+                  ...(k === '원피스' ? upper.slice(0, 3) : []),
+                  [belt, waist + 2, 15],
+                  [pelvis, hip + 3, 18],
+                  [hem, hip + 15, 22],
+                  [hem + 1, hip + 14, 20],
+                ])}
+                fill={color}
+              />
+            );
+          if (k === '하의')
+            return (
+              <g key={g.name} fill={color}>
+                <path
+                  d={profile([
+                    [belt, waist + 2, 16],
+                    [pelvis + 4, hip + 3, 18],
+                  ])}
+                />
+                {[-1, 1].map((i) => (
+                  <path
+                    key={i}
+                    d={profile(
+                      limb(i, false)
+                        .slice(0, 5)
+                        .map(([y, rx, rz, x, z]) => [
+                          y,
+                          rx + 3.5,
+                          rz + 2,
+                          x,
+                          z,
+                        ]),
+                    )}
+                  />
+                ))}
+              </g>
+            );
+          if (k === '신발')
+            return (
+              <g key={g.name} fill={color}>
+                {[-1, 1].map((i) => (
+                  <path
+                    key={i}
+                    d={profile([
+                      [feet - 6, 4, 5, i * 11],
+                      [feet - 2, 5, 9, i * 11, 3],
+                      [feet, 5, 9, i * 11, 3],
+                    ])}
+                  />
+                ))}
+              </g>
+            );
+          return null;
+        })}
       {cs >= 0 && <path d={hairBack} fill={hair} />}
       <path d={profile(head)} fill={fill} stroke="#80857b" strokeWidth=".6" />
       {cs < 0 && <path d={hairBack} fill={hair} />}

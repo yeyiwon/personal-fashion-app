@@ -4,7 +4,7 @@ import { FigurePreview } from './FigurePreview';
 import { Icon } from './presentation';
 import { GlassSurface } from './RoomControls';
 
-const scales = [
+export const scales = [
   ['height', '키', 140, 205, 'cm', 168],
   ['weight', '몸무게', 35, 140, 'kg', 56],
   ['shoulder', '어깨', 30, 70, '', 50],
@@ -26,7 +26,7 @@ type Props = {
   fitting: () => void;
   children: ReactNode;
 };
-function Tape({
+export function Tape({
   title,
   value,
   min,

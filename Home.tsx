@@ -1,374 +1,1102 @@
-import { useState, useRef, type CSSProperties, type PointerEvent } from 'react';
-import { Icon, GarmentPhoto } from './presentation';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
 import { useStudio, useScopedState, type PageProps } from './studio';
-import { arrange, firstConditions, firstPreferences } from './lookEngine';
-import { sampleOutfits } from './sample';
-import { initialFigure, type Figure } from './atelierData';
-import { GlassSurface } from './RoomControls';
+import { GarmentPhoto, Icon, Sheet, haptic, message } from './presentation';
+import {
+  initialFigure,
+  products,
+  photoPath,
+  hairNames,
+  type Figure,
+} from './atelierData';
+import { RoomAssistant, type Advice } from './RoomAssistant';
+import { GlassSurface, ThreadMark } from './RoomControls';
+import {
+  arrange,
+  firstConditions,
+  firstPreferences,
+  localDate,
+} from './lookEngine';
+import {
+  slots,
+  slot,
+  wearPiece,
+  paintAvatar,
+  skinTones,
+  clearRoomAssets,
+  jpegData,
+  type Piece,
+} from './avatarLayers';
+import { FigurePreview } from './FigurePreview';
+import { scales, Tape } from './MeasureMirror';
+import Capture from './Capture';
+import { GarmentForm } from './GarmentForm';
+import { prepareImage } from './images';
+import { CATEGORIES, type Category } from './domain';
+import RoomPhotoFitting from './RoomPhotoFitting';
+import './dressing.css';
 
-const swatchStyle = (tone: string) => ({ '--pigment': tone }) as CSSProperties;
-
-export default function Home({ go }: PageProps) {
+type Panel =
+  | 'closet'
+  | 'model'
+  | 'current'
+  | 'camera'
+  | 'save'
+  | 'fit'
+  | 'menu'
+  | 'palette'
+  | 'reference'
+  | null;
+type RefPiece = {
+  id: string;
+  name: string;
+  category: Category;
+  image: string;
+  color: string;
+};
+const shopPieces: Piece[] = products.map((p) => ({
+  ...p,
+  id: 'shop-' + p.id,
+  image: photoPath(p.id),
+  source: 'candidate',
+  condition: '착용 중',
+  createdAt: '',
+  updatedAt: '',
+}));
+const initialDress = ['sample-shirt', 'sample-skirt', 'sample-slingback'];
+function same(a: string[], b: string[]) {
+  return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+function SmallButton({
+  icon,
+  label,
+  onClick,
+  pressed,
+}: {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  pressed?: boolean;
+}) {
+  return (
+    <button
+      className="mirror-tool"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={pressed}
+    >
+      <Icon name={icon} size={18} />
+      <small>{label}</small>
+    </button>
+  );
+}
+export default function Home({
+  go,
+  onMode,
+  page,
+}: { onMode: () => void } & PageProps) {
+  const studio = useStudio();
   const {
     mode,
     garments,
     outfits,
-    setActiveGarmentId,
+    selectedIds,
     setSelectedIds,
-    setEditLookId,
-  } = useStudio();
-  const [variation, choose] = useState(0),
-    [picked, pick] = useState<string | null>(null);
+    saveLook,
+    refresh,
+    setMode,
+    notify,
+  } = studio;
+  const [figure, setFigure] = useScopedState<Figure>('model', initialFigure),
+    [skin, setSkin] = useScopedState('avatar.skin', '기본');
+  const [privatePhoto, setPhoto] = useScopedState('model-reference', ''),
+    [face, setFace] = useScopedState('model-face', '');
+  const [refPieces, setRefs] = useScopedState<RefPiece[]>('avatar.refs', []);
+  const [externals, setExternals] = useScopedState<string[]>(
+      'avatar.extra',
+      [],
+    ),
+    [touched, touch] = useScopedState('avatar.dressed', false);
+  const [locks, setLocks] = useScopedState<string[]>('avatar.locks', []);
+  const [candidate, setCandidate] = useScopedState('fitting-product', '');
+  const [favs, setFavs] = useScopedState<
+    { name: string; ids: string[]; figure: Figure; skin: string }[]
+  >('avatar.looks', []);
   const [conditions] = useScopedState('look.conditions', firstConditions),
-    [preferences] = useScopedState('look.preferences', firstPreferences);
-  const [figure] = useScopedState<Figure>('model', initialFigure);
-  const [name] = useScopedState('display-name', '');
-  const [dragging, setDragging] = useState(false);
-  const gesture = useRef<{
-    x: number;
-    y: number;
-    node: HTMLButtonElement;
-    id: string;
-    active: boolean;
-  } | null>(null);
-  const lastDrop = useRef(0);
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const suggestion = (v: number) =>
-    arrange(garments, conditions, {
-      color: preferences.color,
-      style: preferences.style,
-      variation: v,
-    });
-  const options =
-    mode === 'sample'
-      ? sampleOutfits.map((look) => ({
-          name: look.name,
-          items: look.garmentIds.flatMap((id) =>
-            garments.filter((g) => g.id === id),
-          ),
-        }))
-      : [0, 1, 2]
-          .map((v) => ({
-            name: conditions.occasion + ' 코디',
-            items: suggestion(v),
-          }))
-          .filter(
-            (l, i, a) =>
-              a.findIndex(
-                (o) =>
-                  o.items.map((g) => g.id).join('|') ===
-                  l.items.map((g) => g.id).join('|'),
-              ) === i,
-          );
-  const index = variation % Math.max(1, options.length),
-    look = options[index],
-    pieces = look?.items ?? [],
-    item = pieces.find((g) => g.id === picked);
-  const date = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(new Date());
-  function shift(d: number) {
-    pick(null);
-    choose((index + d + options.length) % Math.max(1, options.length));
-  }
-  function send(page: string, ids = pieces.map((g) => g.id)) {
-    setSelectedIds(ids);
-    setEditLookId(null);
-    go(page);
-  }
-  function dragPiece(e: PointerEvent<HTMLButtonElement>) {
-    const g = gesture.current;
-    if (!g || g.node !== e.currentTarget) return;
-    const dx = e.clientX - g.x,
-      dy = e.clientY - g.y;
-    if (!g.active && Math.hypot(dx, dy) < 8) return;
-    if (!g.active) {
-      g.active = true;
-      g.node.setPointerCapture(e.pointerId);
-      setDragging(true);
-      pick(g.id);
-      start.current = null;
+    [prefs] = useScopedState('look.preferences', firstPreferences);
+  const [panel, setPanel] = useState<Panel>(null),
+    [assistant, setAssistant] = useState(page === 'stylist'),
+    [group, setGroup] = useState('전체'),
+    [source, setSource] = useState('내 옷'),
+    [search, setSearch] = useState('');
+  const [dim, setDim] = useState<(typeof scales)[number][0]>('height');
+  const [angle, turn] = useState(0),
+    [diagram, setDiagram] = useState(false),
+    [zoom, setZoom] = useState(false);
+  const [history, record] = useState<string[][]>([]),
+    [selection, select] = useState(''),
+    [error, showError] = useState(''),
+    [working, busy] = useState(false);
+  const [missing, setMissing] = useState<{ misses: string[]; uncut: string[] }>(
+    { misses: [], uncut: [] },
+  );
+  const [files, setFiles] = useState<File[]>([]),
+    [lookName, setLookName] = useState(''),
+    [dragging, drag] = useState<Piece | null>(null);
+  const [refName, setRefName] = useState(''),
+    [refCategory, refCat] = useState<Category>('상의'),
+    [refImage, refImg] = useState(''),
+    [refColor, refTone] = useState('#85837e');
+  const avatar = useRef<HTMLCanvasElement>(null),
+    stage = useRef<HTMLDivElement>(null),
+    ghost = useRef<HTMLDivElement>(null);
+  const imported = useRef(false);
+  const avatarReady = useRef(false),
+    dragged = useRef(false),
+    pointer = useRef<{ x: number; y: number; id: number; item: Piece } | null>(
+      null,
+    );
+  const pointers = useRef(new Map<number, { x: number; y: number }>()),
+    pinchDistance = useRef(0);
+  const all = useMemo<Piece[]>(
+    () => [
+      ...garments,
+      ...shopPieces,
+      ...refPieces.map((p): Piece => ({
+        ...p,
+        source: 'reference',
+        condition: '착용 중',
+        createdAt: '',
+        updatedAt: p.id,
+        price: null,
+      })),
+    ],
+    [garments, refPieces],
+  );
+  const owned = selectedIds.filter((id) => garments.some((g) => g.id === id));
+  const ids = [
+    ...(!touched && !owned.length && mode === 'sample' ? initialDress : owned),
+    ...externals,
+  ].filter((id) => all.some((g) => g.id === id));
+  const items = ids.flatMap((id) => all.filter((g) => g.id === id)),
+    active = all.find((g) => g.id === selection);
+  const signature = JSON.stringify(items.map((g) => [g.id, g.updatedAt]));
+  useEffect(() => {
+    let live = true;
+    avatarReady.current = false;
+    if (avatar.current)
+      paintAvatar(avatar.current, figure, skin, items, () => live)
+        .then((r) => {
+          if (live && r) {
+            setMissing(r);
+            avatarReady.current = true;
+          }
+        })
+        .catch(() => {
+          if (live) showError('아바타를 불러오지 못했어요. 다시 열어 주세요.');
+        });
+    return () => {
+      live = false;
+    };
+  }, [figure, skin, signature]);
+  useEffect(
+    () => () => {
+      clearRoomAssets();
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!candidate) return;
+    const p = shopPieces.find((g) => g.id === 'shop-' + candidate);
+    if (p) {
+      apply(wearPiece(ids, p, all, locks));
+      select(p.id);
+      setPanel('current');
     }
-    g.node.style.setProperty('--mx', dx + 'px');
-    g.node.style.setProperty('--my', dy + 'px');
-  }
-  function endDrag(e: PointerEvent<HTMLButtonElement>, cancel = false) {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g?.active) return;
-    lastDrop.current = Date.now();
-    g.node.style.removeProperty('--mx');
-    g.node.style.removeProperty('--my');
-    setDragging(false);
-    if (!cancel) {
-      const targets =
-        document.querySelectorAll<HTMLElement>('[data-drop-room]');
-      for (const el of targets) {
-        const b = el.getBoundingClientRect();
-        if (
-          e.clientX >= b.left &&
-          e.clientX <= b.right &&
-          e.clientY >= b.top &&
-          e.clientY <= b.bottom
-        ) {
-          send(el.dataset.dropRoom!, [g.id]);
-          break;
-        }
+    setCandidate('');
+  }, [candidate]);
+  const openPanel = useCallback((v: Panel) => {
+    setAssistant(false);
+    setPanel(v);
+    showError('');
+  }, []);
+  const openAssistant = useCallback((v: boolean) => {
+    if (v) setPanel(null);
+    setAssistant(v);
+  }, []);
+  useEffect(() => {
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) {
+        setAssistant(false);
+        setPanel(null);
       }
+    };
+    window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, []);
+  function apply(next: string[], remember = true) {
+    if (same(ids, next)) return;
+    if (remember) record((h) => [...h.slice(-11), ids]);
+    touch(true);
+    setSelectedIds(next.filter((id) => garments.some((g) => g.id === id)));
+    setExternals(next.filter((id) => all.some((g) => g.id === id && g.source)));
+    haptic('selection');
+  }
+  function put(g: Piece) {
+    const next = wearPiece(ids, g, all, locks);
+    if (same(next, ids) && !ids.includes(g.id)) {
+      notify('교체할 부위의 고정을 먼저 풀어 주세요.');
+      return;
+    }
+    apply(next);
+    select(g.id);
+    setDiagram(false);
+  }
+  function toggleLock(id: string) {
+    setLocks((q) => (q.includes(id) ? q.filter((v) => v !== id) : [...q, id]));
+  }
+  function remove(id: string) {
+    if (locks.includes(id)) {
+      notify('고정을 먼저 풀어 주세요.');
+      return;
+    }
+    apply(ids.filter((v) => v !== id));
+  }
+  function undo() {
+    if (!history.length) return;
+    apply(history.at(-1)!, false);
+    record((h) => h.slice(0, -1));
+  }
+  function whole(next: string[]) {
+    let result = ids.filter((id) => locks.includes(id));
+    next.forEach((id) => {
+      const g = all.find((x) => x.id === id);
+      if (g) result = wearPiece(result, g, all, locks);
+    });
+    apply(result);
+    setDiagram(false);
+  }
+  function roll() {
+    const picks = arrange(garments, conditions, {
+      locked: locks,
+      variation: 1 + Math.floor(Math.random() * 17),
+      style: prefs.style,
+      color: prefs.color,
+    });
+    whole(picks.map((p) => p.id));
+  }
+  function action(a: Advice) {
+    const valid = a.ids.filter((id) => garments.some((g) => g.id === id));
+    if (a.tool === 'outfit' && valid.length) {
+      whole(valid);
+      openPanel('current');
+    } else if (a.tool === 'swap' && valid.length) {
+      let next = ids;
+      for (const id of valid)
+        next = wearPiece(
+          next,
+          all.find((g) => g.id === id)!,
+          all,
+          locks,
+        );
+      apply(next);
+      openPanel('current');
+    } else if (a.tool === 'lock' && valid.length) {
+      const targets = valid.filter((id) => ids.includes(id));
+      if (targets.length) setLocks((q) => [...new Set([...q, ...targets])]);
+      else notify('현재 착용 중인 옷을 선택해 주세요.');
+      openPanel('current');
+    } else if (a.tool === 'shopping') {
+      setSource('구매 후보');
+      setGroup('전체');
+      openPanel('closet');
+    } else if (a.tool === 'save') {
+      openPanel('save');
+    } else if (a.tool === 'palette') {
+      openPanel('palette');
+    } else if (a.tool === 'fitting') {
+      if (valid.length) whole(valid);
+      openPanel('fit');
+    } else openPanel('closet');
+  }
+  function start(e: PointerEvent<HTMLButtonElement>, g: Piece) {
+    if (e.button !== 0) return;
+    pointer.current = { id: e.pointerId, x: e.clientX, y: e.clientY, item: g };
+    dragged.current = false;
+  }
+  function move(e: PointerEvent<HTMLButtonElement>) {
+    const p = pointer.current;
+    if (!p || p.id !== e.pointerId) return;
+    // Horizontal swipes browse, vertical drags lift a garment off the rail.
+    if (
+      !dragged.current &&
+      p.y - e.clientY > 9 &&
+      Math.abs(e.clientX - p.x) < p.y - e.clientY
+    ) {
+      dragged.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      drag(p.item);
+    }
+    if (dragged.current && ghost.current) {
+      ghost.current.style.left = e.clientX + 'px';
+      ghost.current.style.top = e.clientY + 'px';
     }
   }
+  function finish(e: PointerEvent<HTMLButtonElement>) {
+    const p = pointer.current;
+    pointer.current = null;
+    if (!p) return;
+    const b = stage.current?.getBoundingClientRect();
+    if (
+      dragged.current &&
+      b &&
+      e.clientY >= b.top &&
+      e.clientY < b.bottom &&
+      e.clientX >= b.left &&
+      e.clientX <= b.right
+    ) {
+      put(p.item);
+      setPanel(null);
+    }
+    drag(null);
+  }
+  async function save() {
+    if (working) return;
+    busy(true);
+    try {
+      if (!lookName.trim()) throw Error('착장 이름을 입력해 주세요.');
+      if (!ids.length) throw Error('먼저 옷을 입혀 주세요.');
+      if (items.every((g) => !g.source)) await saveLook(lookName, ids);
+      setFavs((f) =>
+        [
+          { name: lookName.trim(), ids, figure: { ...figure }, skin },
+          ...f,
+        ].slice(0, 30),
+      );
+      setLookName('');
+      notify('착장을 저장했어요.');
+      openPanel('current');
+    } catch (e) {
+      showError(message(e));
+    } finally {
+      busy(false);
+    }
+  }
+  async function share() {
+    if (!avatarReady.current || !avatar.current) return;
+    const blob = await new Promise<Blob | null>((r) =>
+      avatar.current!.toBlob(r, 'image/png'),
+    );
+    if (!blob) return;
+    const file = new File([blob], 'wardrobe-look.png', { type: 'image/png' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: '나의 드레스룸 착장' });
+        return;
+      }
+      const url = URL.createObjectURL(blob),
+        a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      notify('착장 이미지를 내보냈어요.');
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError')
+        showError('이미지를 내보낼 수 없어요.');
+    }
+  }
+  const selectionItems = (
+    source === '구매 후보'
+      ? shopPieces
+      : source === '참고 사진'
+        ? all.filter((g) => g.source === 'reference')
+        : garments
+  ).filter(
+    (g) =>
+      (group === '전체' || slot(g) === group) && g.name.includes(search.trim()),
+  );
+  const shelf =
+    panel === 'closet'
+      ? selectionItems
+      : [
+          ...garments.filter((g) => !ids.includes(g.id)),
+          ...items.filter((g) => !g.source),
+        ].slice(0, 8);
+  const occluded = [...missing.misses, ...missing.uncut];
+  function garmentButton(g: Piece) {
+    return (
+      <button
+        key={g.id}
+        className={'hanger-piece' + (ids.includes(g.id) ? ' wearing' : '')}
+        aria-label={g.name + ' 입히기'}
+        aria-pressed={ids.includes(g.id)}
+        onPointerDown={(e) => start(e, g)}
+        onPointerMove={move}
+        onPointerUp={finish}
+        onPointerCancel={() => {
+          pointer.current = null;
+          drag(null);
+        }}
+        onClick={() => {
+          if (dragged.current) {
+            dragged.current = false;
+            return;
+          }
+          put(g);
+        }}
+      >
+        <span>
+          <GarmentPhoto item={g} />
+          {ids.includes(g.id) && (
+            <i>
+              <Icon name="check" size={11} />
+            </i>
+          )}
+        </span>
+        <small>{g.name}</small>
+      </button>
+    );
+  }
+  const gauge = scales.find((d) => d[0] === dim)!;
   return (
-    <section className="table-room">
-      <div className="table-intro">
-        <div>
-          <span className="date-stamp">{date}</span>
-          <h1>
-            {name && mode === 'personal' ? name + '의 착장' : '오늘의 착장'}
-          </h1>
+    <div
+      className={
+        'live-room ' +
+        (panel ? ' has-panel panel-' + panel : '') +
+        (assistant ? ' assistant-open' : '')
+      }
+      style={
+        {
+          '--garment-light': active?.color ?? items[0]?.color ?? '#a2a995',
+        } as CSSProperties
+      }
+    >
+      <h1 className="visually-hidden">나의 드레스룸</h1>
+      <div className="room-scene" ref={stage}>
+        <div className="alcove-plate" />
+        <div className="alcove-bounce" />
+        <header className="dressing-head">
+          <button
+            onClick={() => openPanel('menu')}
+            className="room-sign"
+            aria-label="공간 메뉴"
+          >
+            <ThreadMark size={25} />
+            <span>Wardrobe</span>
+          </button>
+          <button className="mode-pin" onClick={onMode}>
+            {mode === 'sample' ? '샘플 옷장' : '개인 옷장'}{' '}
+            <Icon name="down" size={12} />
+          </button>
+        </header>
+        <div
+          className={
+            'avatar-floor ' +
+            (zoom ? 'closeup ' : '') +
+            (diagram ? ' schematic' : '')
+          }
+          onPointerDown={(e) => {
+            pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.current.size === 2) {
+              const [a, b] = [...pointers.current.values()];
+              pinchDistance.current = Math.hypot(a.x - b.x, a.y - b.y);
+            }
+          }}
+          onPointerMove={(e) => {
+            if (!pointers.current.has(e.pointerId)) return;
+            pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (pointers.current.size === 2) {
+              const [a, b] = [...pointers.current.values()];
+              const d =
+                Math.hypot(a.x - b.x, a.y - b.y) - pinchDistance.current;
+              if (Math.abs(d) > 12) setZoom(d > 0);
+            }
+          }}
+          onPointerUp={(e) => pointers.current.delete(e.pointerId)}
+          onPointerCancel={(e) => pointers.current.delete(e.pointerId)}
+        >
+          <div className="sole-shadow" />
+          <canvas
+            ref={avatar}
+            width={400}
+            height={1000}
+            aria-label={
+              '실시간 2D 착장 · ' +
+              (items.map((g) => g.name).join(', ') || '기본 아바타')
+            }
+            role="img"
+            hidden={diagram}
+          />
+          {diagram && (
+            <FigurePreview
+              figure={figure}
+              angle={angle}
+              turn={turn}
+              garments={items}
+            />
+          )}
         </div>
-        {pieces.length > 0 && (
-          <div className="look-turn">
-            <button
-              aria-label="이전 착장"
-              disabled={options.length < 2}
-              onClick={() => shift(-1)}
-            >
-              <Icon name="back" size={16} />
-            </button>
-            <span>
-              {String(index + 1).padStart(2, '0')} <i>/</i>{' '}
-              {String(options.length).padStart(2, '0')}
-            </span>
-            <button
-              aria-label="다음 착장"
-              disabled={options.length < 2}
-              onClick={() => shift(1)}
-            >
-              <Icon name="right" size={16} />
-            </button>
-          </div>
+        {!assistant && (
+          <>
+            <div className="room-edge-tools">
+              <SmallButton
+                icon="model"
+                label="모델 조절"
+                onClick={() => openPanel(panel === 'model' ? null : 'model')}
+                pressed={panel === 'model'}
+              />
+              <SmallButton
+                icon="fit"
+                label={zoom ? '전신 보기' : '확대'}
+                onClick={() => setZoom(!zoom)}
+                pressed={zoom}
+              />
+            </div>
+            <div className="room-caption">
+              <i />
+              {diagram ? '착장 실루엣 도식' : '실시간 2D 착장'}
+              {occluded.length > 0 && (
+                <button onClick={() => openPanel('current')}>
+                  사진 확인 {occluded.length}
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
-      <div className="desk-layout">
-        <div className="desk-primary">
-          <div
-            className={
-              'cloth-table' +
-              (item ? ' inspecting' : '') +
-              (dragging ? ' carrying' : '')
-            }
-            data-count={Math.min(pieces.length, 4)}
-            style={swatchStyle(item?.color || pieces[0]?.color || '#80666a')}
-            onPointerDown={(e) => {
-              start.current = { x: e.clientX, y: e.clientY };
+      <RoomAssistant
+        key={mode}
+        open={assistant}
+        setOpen={openAssistant}
+        worn={ids}
+        locked={locks.filter((id) => ids.includes(id))}
+        act={action}
+      />
+      <div
+        className={'wardrobe-tray ' + (panel === 'closet' ? 'unfold' : '')}
+        inert={assistant || !!(panel && panel !== 'closet')}
+      >
+        <div className="tray-grip" />
+        <div className="tray-heading">
+          <button
+            onClick={() => {
+              openPanel(panel === 'closet' ? null : 'closet');
+              setSource('내 옷');
+              setGroup('전체');
+              setSearch('');
             }}
-            onPointerUp={(e) => {
-              if (start.current && options.length > 1) {
-                const dx = e.clientX - start.current.x,
-                  dy = e.clientY - start.current.y;
-                if (Math.abs(dx) > 58 && Math.abs(dx) > 1.7 * Math.abs(dy)) {
-                  shift(dx < 0 ? 1 : -1);
-                  start.current = null;
-                  e.currentTarget.dataset.swiped = String(Date.now());
-                }
-              }
-            }}
-            onPointerCancel={() => {
-              start.current = null;
-            }}
-            onClickCapture={(e) => {
-              if (
-                Date.now() - Number(e.currentTarget.dataset.swiped || 0) <
-                250
-              ) {
-                e.stopPropagation();
-                e.preventDefault();
-              }
-            }}
+            aria-expanded={panel === 'closet'}
           >
-            <div className="table-fabric" aria-hidden="true" />
-            <div className="garment-lay">
-              {pieces.slice(0, 4).map((g, i) => (
+            <Icon name="closet" size={20} />
+            <strong>내 옷장</strong>
+            <small>{garments.length}벌</small>
+            <Icon name="down" size={13} />
+          </button>
+          <button onClick={() => openPanel('camera')} aria-label="옷 촬영">
+            <Icon name="camera" size={19} />
+            <span>촬영</span>
+          </button>
+        </div>
+        {panel === 'closet' && (
+          <div className="tray-filters">
+            <div className="source-tabs">
+              {['내 옷', '구매 후보', '참고 사진'].map((t) => (
                 <button
-                  key={g.id}
-                  className={
-                    'laid-garment slot-' +
-                    i +
-                    (item?.id === g.id ? ' is-picked' : '')
-                  }
-                  aria-label={g.name + ' 살펴보기'}
-                  aria-pressed={item?.id === g.id}
-                  onPointerDown={(e) => {
-                    gesture.current = {
-                      x: e.clientX,
-                      y: e.clientY,
-                      node: e.currentTarget,
-                      id: g.id,
-                      active: false,
-                    };
-                  }}
-                  onPointerMove={dragPiece}
-                  onPointerUp={(e) => endDrag(e)}
-                  onPointerCancel={(e) => endDrag(e, true)}
+                  key={t}
+                  aria-pressed={source === t}
                   onClick={() => {
-                    if (Date.now() - lastDrop.current > 250)
-                      pick(item?.id === g.id ? null : g.id);
+                    setSource(t);
+                    setGroup('전체');
                   }}
                 >
-                  <GarmentPhoto item={g} shared />
-                  <span className="sewn-dot">
-                    <Icon
-                      name={item?.id === g.id ? 'check' : 'plus'}
-                      size={12}
-                    />
-                  </span>
+                  {t}
                 </button>
               ))}
             </div>
-            {dragging && (
-              <div className="drop-zones">
-                <span data-drop-room="direct">
-                  <Icon name="layer" size={17} />
-                  코디에 놓기
-                </span>
-                <span data-drop-room="fitting">
-                  <Icon name="fit" size={17} />
-                  피팅에 놓기
-                </span>
-              </div>
-            )}
-            {!pieces.length && (
-              <div className="table-empty">
-                <Icon name="closet" size={38} />
-                <h2>첫 옷을 펼쳐 보세요</h2>
-                <button className="woven-btn" onClick={() => go('register')}>
-                  옷 등록 <Icon name="plus" size={16} />
+            <div className="slot-strip">
+              {['전체', ...slots].map((t) => (
+                <button
+                  key={t}
+                  aria-pressed={group === t}
+                  onClick={() => setGroup(t)}
+                >
+                  {t}
                 </button>
-              </div>
+              ))}
+            </div>
+            <input
+              type="search"
+              aria-label="드레스룸 의류 검색"
+              placeholder="옷 이름으로 찾기"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {source === '구매 후보' && (
+              <small>구매 전 조합을 위한 샘플 상품</small>
             )}
-            {pieces.length > 0 && (
-              <div className={'object-ticket' + (item ? ' ticket-open' : '')}>
-                <GlassSurface />
-                {item ? (
-                  <>
-                    <div className="ticket-copy">
-                      <small>
-                        {item.category}
-                        {item.material ? ' · ' + item.material : ''}
-                      </small>
-                      <strong>{item.name}</strong>
-                    </div>
-                    <button
-                      aria-label={item.name + ' 상세'}
-                      onClick={() => {
-                        setActiveGarmentId(item.id);
-                        go('garment');
-                      }}
-                    >
-                      <Icon name="diagonal" size={17} />
-                    </button>
-                    <button
-                      aria-label={item.name + ' 코디에 놓기'}
-                      onClick={() => send('direct', [item.id])}
-                    >
-                      <Icon name="layer" size={16} />
-                    </button>
-                    <button aria-label="선택 해제" onClick={() => pick(null)}>
-                      <Icon name="close" size={15} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <i className="ticket-pip" />
-                    <span>옷을 눌러 살펴보기</span>
-                  </>
-                )}
-              </div>
+            {source === '참고 사진' && (
+              <button onClick={() => openPanel('reference')}>
+                참고 사진 추가
+              </button>
             )}
           </div>
-          {pieces.length > 0 && (
-            <div className="swatch-label">
-              <div>
-                <div className="swatch-thread" aria-label="착장 색상">
-                  {pieces.slice(0, 5).map((g) => (
-                    <i key={g.id} style={{ background: g.color }} />
-                  ))}
-                </div>
-                <h2>{look.name}</h2>
-              </div>
-              <button className="woven-btn" onClick={() => send('direct')}>
-                코디 열기 <Icon name="diagonal" size={16} />
-              </button>
-            </div>
+        )}
+        <div className="hanger-strip">
+          {shelf.map(garmentButton)}
+          {!shelf.length && (
+            <p>
+              {garments.length
+                ? '이 조건에 맞는 옷이 없어요.'
+                : '아직 옷이 없어요. 촬영하거나 앨범에서 첫 옷을 담아 보세요.'}
+            </p>
           )}
         </div>
-        <aside className="table-side">
-          <div className="studio-portals">
-            <button className="closet-invite" onClick={() => go('closet')}>
-              <div className="mini-archive" aria-hidden="true">
-                {garments.slice(0, 3).map((g) => (
-                  <span key={g.id}>
+        <div className="room-bottom-line">
+          <button onClick={() => openPanel('current')}>
+            <Icon name="layer" size={15} />
+            착장 {items.length}점
+          </button>
+          <button onClick={() => openPanel('save')} disabled={!items.length}>
+            <Icon name="save" size={15} />
+            저장
+          </button>
+          <button onClick={() => openPanel('menu')}>
+            <Icon name="grid" size={15} />
+            공간
+          </button>
+        </div>
+      </div>
+      {panel && panel !== 'closet' && (
+        <section className="room-drawer" aria-label="드레스룸 도구">
+          <div className="tray-grip" />
+          <header>
+            <h2>
+              {
+                {
+                  model: '나의 아바타',
+                  current: '입고 있는 옷',
+                  camera: '내 옷 촬영',
+                  save: '착장 저장',
+                  fit: '피팅 엔진',
+                  menu: '공간 이동',
+                  palette: '착장 팔레트',
+                  reference: '참고 사진',
+                }[panel]
+              }
+            </h2>
+            <button
+              aria-label="드레스룸 도구 닫기"
+              onClick={() => openPanel(null)}
+            >
+              <Icon name="close" size={19} />
+            </button>
+          </header>
+          <div className="drawer-scroll">
+            {panel === 'current' && (
+              <>
+                <div className="dressing-actions">
+                  <button onClick={undo} disabled={!history.length}>
+                    되돌리기
+                  </button>
+                  <button onClick={roll} disabled={!garments.length}>
+                    랜덤 스타일링
+                  </button>
+                  <button onClick={() => openPanel('fit')}>AI 실사 피팅</button>
+                </div>
+                {items.map((g) => (
+                  <div className="worn-row" key={g.id}>
                     <GarmentPhoto item={g} />
-                  </span>
+                    <span>
+                      <b>{g.name}</b>
+                      <small>
+                        {slot(g)}
+                        {g.source
+                          ? ' · ' +
+                            (g.source === 'candidate'
+                              ? '구매 후보'
+                              : '참고 사진')
+                          : ''}
+                        {occluded.includes(g.name)
+                          ? ' · 사진 분리 불가, 보드에서 확인'
+                          : ''}
+                      </small>
+                    </span>
+                    <button
+                      aria-label={g.name + ' 고정'}
+                      aria-pressed={locks.includes(g.id)}
+                      onClick={() => toggleLock(g.id)}
+                    >
+                      {locks.includes(g.id) ? '고정됨' : '고정'}
+                    </button>
+                    <button
+                      aria-label={g.name + ' 벗기기'}
+                      onClick={() => remove(g.id)}
+                      disabled={locks.includes(g.id)}
+                    >
+                      벗기기
+                    </button>
+                  </div>
+                ))}
+                {!items.length && <p>옷장에서 한 벌을 골라 입혀 주세요.</p>}
+                <div className="dressing-actions">
+                  <button onClick={() => openPanel('closet')}>옷 고르기</button>
+                  <button onClick={() => void share()}>착장 이미지 공유</button>
+                </div>
+                {(outfits.length > 0 || favs.length > 0) && (
+                  <details>
+                    <summary>저장한 착장 입기</summary>
+                    {favs.map((f, i) => (
+                      <button
+                        className="room-row"
+                        key={'f' + i}
+                        onClick={() => {
+                          whole(f.ids);
+                          setFigure(f.figure);
+                          setSkin(f.skin);
+                        }}
+                      >
+                        {f.name}
+                      </button>
+                    ))}
+                    {outfits
+                      .filter((o) => !favs.some((f) => f.name === o.name))
+                      .map((o) => (
+                        <button
+                          className="room-row"
+                          key={o.id}
+                          onClick={() => whole(o.garmentIds)}
+                        >
+                          {o.name}
+                        </button>
+                      ))}
+                  </details>
+                )}
+              </>
+            )}
+            {panel === 'model' && (
+              <>
+                <div className="dressing-actions">
+                  {(['f', 'm'] as const).map((base) => (
+                    <button
+                      key={base}
+                      aria-pressed={figure.base === base}
+                      onClick={() => setFigure((f) => ({ ...f, base }))}
+                    >
+                      {base === 'f' ? '여성형' : '남성형'}
+                    </button>
+                  ))}
+                  <button
+                    aria-pressed={diagram}
+                    onClick={() => {
+                      setDiagram(!diagram);
+                      setZoom(false);
+                    }}
+                  >
+                    {diagram ? '착장 정면' : '회전 도식'}
+                  </button>
+                </div>
+                {diagram && (
+                  <label>
+                    도식 회전 {angle}°
+                    <input
+                      type="range"
+                      min="0"
+                      max="359"
+                      value={angle}
+                      onChange={(e) => turn(+e.target.value)}
+                    />
+                  </label>
+                )}
+                <div className="slot-strip">
+                  {scales.map((d) => (
+                    <button
+                      key={d[0]}
+                      aria-pressed={d[0] === dim}
+                      onClick={() => setDim(d[0])}
+                    >
+                      {d[1]}
+                    </button>
+                  ))}
+                </div>
+                <label className="measure-reading">
+                  {gauge[1]}{' '}
+                  <b>
+                    {figure[dim] ?? gauge[5]}
+                    {gauge[4]}
+                  </b>
+                </label>
+                <Tape
+                  title={gauge[1]}
+                  min={gauge[2]}
+                  max={gauge[3]}
+                  value={figure[dim] ?? gauge[5]}
+                  unit={gauge[4]}
+                  change={(v) => setFigure((f) => ({ ...f, [dim]: v }))}
+                />
+                <div className="skin-row">
+                  피부 톤{' '}
+                  {skinTones.map((v, i) => (
+                    <button
+                      key={v}
+                      aria-label={v + ' 피부 톤'}
+                      aria-pressed={skin === v}
+                      onClick={() => {
+                        setSkin(v);
+                        setDiagram(false);
+                      }}
+                      style={{
+                        background: [
+                          '#dfb59b',
+                          '#cc9c7e',
+                          '#aa9378',
+                          '#795941',
+                        ][i],
+                      }}
+                    />
+                  ))}
+                </div>
+                <details>
+                  <summary>헤어와 참고 사진</summary>
+                  <div className="dressing-actions">
+                    {Object.entries(hairNames).map(([v, n]) => (
+                      <button
+                        key={v}
+                        aria-pressed={figure.hair === v}
+                        onClick={() => {
+                          setFigure((f) => ({
+                            ...f,
+                            hair: v as Figure['hair'],
+                          }));
+                          setDiagram(true);
+                        }}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <label>
+                    도식 헤어 컬러
+                    <input
+                      type="color"
+                      value={figure.hairColor ?? '#40312e'}
+                      onChange={(e) => {
+                        setFigure((f) => ({ ...f, hairColor: e.target.value }));
+                        setDiagram(true);
+                      }}
+                    />
+                  </label>
+                  {(['전신', '얼굴'] as const).map((t) => (
+                    <label key={t}>
+                      {t} 참고 사진
+                      {(t === '전신' ? privatePhoto : face) ? ' · 저장됨' : ''}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          try {
+                            const p = await prepareImage(f);
+                            (t === '전신' ? setPhoto : setFace)(
+                              await jpegData(p.preview, 680),
+                            );
+                            notify('기기에 보관했어요.');
+                          } catch (x) {
+                            showError(message(x));
+                          }
+                        }}
+                      />
+                    </label>
+                  ))}
+                </details>
+              </>
+            )}
+            {panel === 'camera' && (
+              <>
+                <Capture
+                  go={(p) => (p === 'register' ? openPanel(null) : go(p))}
+                  onReview={(list) => {
+                    imported.current = false;
+                    setFiles(list);
+                  }}
+                />
+                <button className="room-row" onClick={() => go('purchases')}>
+                  구매 내역·상품 링크로 가져오기 <Icon name="arrow" size={15} />
+                </button>
+              </>
+            )}
+            {panel === 'reference' && (
+              <>
+                <label>
+                  의류 사진
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      try {
+                        const p = await prepareImage(f);
+                        refImg(await jpegData(p.preview, 640));
+                        refTone(p.color);
+                        setRefName(f.name.replace(/\.[^.]+$/, ''));
+                      } catch (x) {
+                        showError(message(x));
+                      }
+                    }}
+                  />
+                </label>
+                <label>
+                  이름
+                  <input
+                    value={refName}
+                    maxLength={80}
+                    onChange={(e) => setRefName(e.target.value)}
+                  />
+                </label>
+                <label>
+                  분류
+                  <select
+                    value={refCategory}
+                    onChange={(e) => refCat(e.target.value as Category)}
+                  >
+                    {CATEGORIES.map((v) => (
+                      <option key={v}>{v}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  disabled={!refImage || !refName.trim()}
+                  onClick={() => {
+                    try {
+                      setRefs((v) => [
+                        ...v,
+                        {
+                          id: 'ref-' + crypto.randomUUID(),
+                          name: refName.trim(),
+                          image: refImage,
+                          color: refColor,
+                          category: refCategory,
+                        },
+                      ]);
+                      refImg('');
+                      setSource('참고 사진');
+                      openPanel('closet');
+                    } catch (e) {
+                      showError(message(e));
+                    }
+                  }}
+                >
+                  참고 옷걸이에 보관
+                </button>
+              </>
+            )}
+            {panel === 'save' && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void save();
+                }}
+              >
+                <p>
+                  {items.map((g) => g.name).join(' · ') ||
+                    '아직 선택한 옷이 없어요.'}
+                </p>
+                <label>
+                  착장 이름
+                  <input
+                    autoFocus
+                    value={lookName}
+                    onChange={(e) => setLookName(e.target.value)}
+                    maxLength={80}
+                    placeholder={localDate() + ' 착장'}
+                  />
+                </label>
+                <button
+                  className="primary-room"
+                  disabled={working || !items.length || !lookName.trim()}
+                >
+                  이 착장 저장
+                </button>
+                <button type="button" onClick={() => void share()}>
+                  이미지 공유
+                </button>
+              </form>
+            )}
+            {panel === 'fit' && (
+              <RoomPhotoFitting items={items} figure={figure} />
+            )}
+            {panel === 'palette' && (
+              <>
+                {items.map((g) => (
+                  <div className="room-row" key={g.id}>
+                    <i
+                      className="pigment-chip"
+                      style={{ background: g.color }}
+                    />
+                    {g.name}
+                  </div>
+                ))}
+                <button onClick={() => go('colors')}>톤온톤·톤인톤 탐색</button>
+              </>
+            )}
+            {panel === 'menu' && (
+              <div className="room-space-list">
+                {[
+                  ['closet', '내 옷장', 'closet'],
+                  ['ai', '스타일링', 'layer'],
+                  ['fitting', '피팅룸', 'fit'],
+                  ['shop', '쇼핑', 'shop'],
+                  ['tools', '전체 기능', 'grid'],
+                  ['account', '계정과 데이터', 'user'],
+                ].map(([p, n, ic]) => (
+                  <button key={p} onClick={() => go(p)}>
+                    <Icon name={ic} />
+                    {n}
+                    <Icon name="right" size={14} />
+                  </button>
                 ))}
               </div>
-              <span className="portal-caption">
-                <b>내 옷장</b>
-                <small>{garments.length}벌</small>
-                <Icon name="diagonal" size={15} />
-              </span>
-            </button>
-            <button className="mirror-invite" onClick={() => go('model')}>
-              <div className="mirror-thumb">
-                <img
-                  src={'/media/editorial/study-' + figure.base + '.jpg'}
-                  alt=""
-                />
-              </div>
-              <span className="portal-caption">
-                <b>개인 모델</b>
-                <Icon name="diagonal" size={15} />
-              </span>
-            </button>
+            )}
+            {error && <p role="alert">{error}</p>}
           </div>
-          <div className="bench-index">
-            <button onClick={() => go('ai')}>
-              <Icon name="layer" />
-              <span>오늘의 코디 추천</span>
-              <small>{conditions.occasion}</small>
-              <Icon name="right" size={15} />
-            </button>
-            <button onClick={() => go('colors')}>
-              <Icon name="palette" />
-              <span>색상별 코디</span>
-              <Icon name="right" size={15} />
-            </button>
-          </div>
-          {pieces.length > 0 && (
-            <button className="text-link" onClick={() => send('fitting')}>
-              이 착장 피팅 보드에 담기 <Icon name="arrow" size={15} />
-            </button>
-          )}
-        </aside>
-      </div>
-      <div className="table-log">
-        <h2>나의 패션 기록</h2>
-        {[
-          ['saved', '저장한 코디', outfits.length + '개'],
-          ['calendar', '코디 캘린더', ''],
-          ['weather', '날씨와 일정', conditions.weather],
-          ['travel', '여행 코디', ''],
-        ].map(([p, n, s]) => (
-          <button key={p} onClick={() => go(p)}>
-            {n}
-            <small>{s}</small>
-            <Icon name="right" size={14} />
-          </button>
-        ))}
-      </div>
-    </section>
+        </section>
+      )}
+      {files.length > 0 && (
+        <GarmentForm
+          files={files}
+          onClose={() => {
+            setFiles([]);
+            if (imported.current) setMode('personal');
+            openPanel('closet');
+          }}
+          onSaved={(g) => {
+            imported.current = true;
+            void refresh();
+            select(g.id);
+            setSource('내 옷');
+            notify('개인 옷장에 저장했어요. 바로 입어 볼 수 있어요.');
+          }}
+        />
+      )}
+      {dragging && (
+        <div ref={ghost} className="lifted-garment">
+          <GarmentPhoto item={dragging} />
+        </div>
+      )}
+      {error && !panel && (
+        <p className="room-fault" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
