@@ -1,10 +1,10 @@
+import {budgetConfigured,isJobKey,reservePaid,recordJob} from '../server/paid-budget.js';
 import { createHmac } from 'node:crypto';
 import {
   allowed,
   readBody,
   reply,
   sameOrigin,
-  takeSlot,
 } from '../server/room-http.js';
 const image = (value) =>
   typeof value === 'string' &&
@@ -17,10 +17,12 @@ const signed = (id) =>
 export default async function fit(req, res) {
   const ready = !!(
     process.env.FASHN_API_KEY &&
-    process.env.ROOM_FITTING_ENABLED === 'true' &&
+    budgetConfigured('fashn') &&
     process.env.ROOM_ACCESS_CODE?.length >= 16
   );
-  if (req.method === 'GET') return reply(res, 200, { ready });
+  const fitEnabled=ready && process.env.ROOM_FITTING_ENABLED === 'true';
+  const modelEnabled=ready && process.env.ROOM_MODEL_ENABLED === 'true';
+  if (req.method === 'GET') return reply(res,200,{ready:fitEnabled,modelReady:modelEnabled,credits:{tryon:1,model:1}});
   if (req.method !== 'POST' || !sameOrigin(req))
     return reply(res, 403, { error: '같은 드레스룸에서 요청해 주세요.' });
   if (!ready)
@@ -66,56 +68,38 @@ export default async function fit(req, res) {
           : 'pending',
       });
     }
-    if (
-      d.action !== 'generate' ||
-      d.consent !== true ||
-      !image(d.model) ||
-      !image(d.garment)
-    )
-      return reply(res, 400, {
-        error: '모델·상품 사진과 전송 및 비용 동의를 확인해 주세요.',
-      });
-    const basic = ['상의', '하의', '원피스', '아우터'].includes(d.category);
-    if (!basic && !['신발', '가방', '기타'].includes(d.category))
-      return reply(res, 400, { error: '착용 분류를 확인해 주세요.' });
-    if (!takeSlot('fitting', 2))
-      return reply(res, 429, {
-        error: '이번 시간의 피팅 생성 한도에 도달했어요.',
-      });
-    const inputs = {
-      model_image: d.model,
-      return_base64: true,
-      output_format: 'jpeg',
-      ...(basic
-        ? {
-            garment_image: d.garment,
-            num_samples: 1,
-            category: {
-              상의: 'tops',
-              아우터: 'tops',
-              하의: 'bottoms',
-              원피스: 'one-pieces',
-            }[d.category],
-            mode: 'balanced',
-          }
-        : {
-            product_image: d.garment,
-            num_images: 1,
-            generation_mode: 'fast',
-            resolution: '1k',
-          }),
-    };
+    if(!isJobKey(d.requestId)||d.consent!==true)return reply(res,400,{error:'이번 요청의 비용 동의와 요청 ID가 필요해요.'});
+    let modelName,inputs;
+    if(d.action==='create-model'){
+      if(!modelEnabled)return reply(res,503,{error:'개인 모델 생성 설정이 필요해요.'});
+      if(typeof d.prompt!=='string'||d.prompt.trim().length<4||d.prompt.trim().length>500)return reply(res,400,{error:'모델 설명은 4~500자로 입력해 주세요.'});
+      modelName='model-create';
+      inputs={prompt:d.prompt.trim(),num_images:1,resolution:'1k',generation_mode:'fast',output_format:'jpeg',return_base64:true};
+    }else{
+      if(!fitEnabled)return reply(res,503,{error:'실사 피팅 설정이 필요해요.'});
+      if(d.action!=='generate'||!image(d.model)||!image(d.garment))return reply(res,400,{error:'선택한 모델·상품 사진을 확인해 주세요.'});
+      const category={상의:'tops',아우터:'tops',하의:'bottoms',원피스:'one-pieces'}[d.category];
+      if(!category&&!['신발','가방','기타'].includes(d.category))return reply(res,400,{error:'착용 분류를 확인해 주세요.'});
+      modelName=category?'tryon-v1.6':'tryon-max';
+      inputs={model_image:d.model,return_base64:true,output_format:'jpeg',...(category?{garment_image:d.garment,num_samples:1,category,mode:'balanced'}:{product_image:d.garment,num_images:1,generation_mode:'fast',resolution:'1k'})};
+    }
+    let reservation;
+    try{reservation=await reservePaid('fashn',d.requestId,{modelName,inputs},1);}catch{return reply(res,503,{error:'비용 한도를 확인할 수 없어 생성 요청을 보류했어요.'});}
+    if(reservation.state==='existing' && reservation.reference){const id=reservation.reference;return reply(res,202,{ticket:id+'.'+signed(id),status:'pending'});}
+    if(reservation.state==='limit')return reply(res,429,{error:'오늘의 FASHN 크레딧 한도에 도달했어요.'});
+    if(reservation.state!=='reserved')return reply(res,409,{error:'같은 요청의 접수 상태를 확인 중이에요. 새 요청 전 대시보드에서 확인해 주세요.'});
     const r = await fetch('https://api.fashn.ai/v1/run', {
       method: 'POST',
       headers,
       signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
-        model_name: basic ? 'tryon-v1.6' : 'tryon-max',
+        model_name:modelName,
         inputs,
       }),
     });
     const job = await r.json();
-    if (!r.ok || !job.id || job.error) throw Error();
+    if (!r.ok || !/^[A-Za-z0-9-]{8,120}$/.test(job.id) || job.error) throw Error();
+    await recordJob('fashn',d.requestId,job.id);
     return reply(res, 202, {
       ticket: job.id + '.' + signed(job.id),
       status: 'pending',

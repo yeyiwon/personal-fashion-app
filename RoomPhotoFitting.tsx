@@ -12,10 +12,12 @@ export default function RoomPhotoFitting({
   figure: Model;
 }) {
   const { notify } = useStudio();
+  const [attempt,setAttempt]=useScopedState<{hash:string;id:string}|null>('room.fit-attempt',null);
+  const [generatedModel]=useScopedState('room.generated-model','');
   const [refPhoto] = useScopedState('model-reference', '');
   const [ready, setReady] = useState(false),
     [itemId, setItemId] = useState(''),
-    [own, setOwn] = useState(false),
+    [base, setBase] = useState('base'),
     [approval, approve] = useState(false),
     [code, setCode] = useState('');
   const [job, setJob] = useScopedState<{ ticket: string; name: string } | null>(
@@ -99,20 +101,23 @@ export default function RoomPhotoFitting({
       if (!src) throw Error('상품 사진이 필요해요.');
       const [model, garment] = await Promise.all([
         jpegData(
-          own && refPhoto
+          base==='generated' && generatedModel ? generatedModel : base==='own' && refPhoto
             ? refPhoto
             : '/media/dressing/' + figure.base + '.webp',
         ),
         jpegData(src),
       ]);
+      const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(model+garment+item.category)))).join('-');
+      const requestId=attempt?.hash===hash?attempt.id:crypto.randomUUID();
+      setAttempt({hash,id:requestId});
       const d = await call({
-        action: 'generate',
+        action: 'generate',requestId,
         category: item.category,
         model,
         garment,
         consent: true,
       });
-      setJob({ ticket: d.ticket, name: item.name });
+      setJob({ ticket: d.ticket, name: item.name });setAttempt(null);
       if (mounted.current) {
         approve(false);
         setStatus('생성 요청을 접수했어요.');
@@ -136,10 +141,10 @@ export default function RoomPhotoFitting({
       <label>
         모델
         <Choice
-          value={own ? 'own' : 'base'}
-          onChange={(e) => setOwn(e.target.value === 'own')}
+          value={base}
+          onChange={(e) => {setBase(e.target.value);approve(false);}}
         >
-          <option value="base">현재 기본 모델</option>
+          <option value="base">현재 기본 모델</option>{generatedModel && <option value="generated">생성한 개인 모델</option>}
           {refPhoto && <option value="own">내 전신 참고 사진</option>}
         </Choice>
       </label>
@@ -147,7 +152,7 @@ export default function RoomPhotoFitting({
         착용할 한 점
         <Choice
           value={item?.id ?? ''}
-          onChange={(e) => setItemId(e.target.value)}
+          onChange={(e) => {setItemId(e.target.value);approve(false);}}
         >
           {!item && (
             <option value="">사진이 있는 의류를 먼저 선택하세요</option>
