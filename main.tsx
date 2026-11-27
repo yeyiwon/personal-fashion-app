@@ -8,6 +8,7 @@ import Looks from './Looks';
 import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
+import MySpace from './MySpace';
 import { BelloAtlas, BelloHeader, useAppearance } from './BelloAtlas';
 import './rooms.css';
 import './bello.css';
@@ -146,10 +147,18 @@ function App() {
     haptic('selection');
   }
   const props = { page, go };
-  let content = ['home', 'stylist', 'model', 'fitting'].includes(page) ? (
+  let content = page === 'home' ? (
+    <MySpace
+      key={mode}
+      {...props}
+      onMode={() => showMode(true)}
+      onAtlas={() => setAtlas(true)}
+    />
+  ) : ['dressing', 'stylist', 'model', 'fitting'].includes(page) ? (
     <Home
       key={mode + page}
-      {...props}
+      go={go}
+      page={page === 'dressing' ? 'home' : page}
       onMode={() => showMode(true)}
       onAtlas={() => setAtlas(true)}
     />
@@ -202,7 +211,7 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      {!['home', 'stylist', 'model', 'fitting'].includes(page) && (
+      {!['home', 'dressing', 'stylist', 'model', 'fitting'].includes(page) && (
         <BelloHeader
           {...props}
           mode={mode}
@@ -210,7 +219,7 @@ function App() {
           onAtlas={() => setAtlas(true)}
         />
       )}
-      {!['home', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
+      {!['home', 'dressing', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
         <RoomNavigation {...props} />
       )}
       <main

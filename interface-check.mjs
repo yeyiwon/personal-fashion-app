@@ -12,7 +12,26 @@ export async function verifyInterface(page, origin) {
   };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  // 나의 공간: real garments onto the styling slab, contextual controls, save.
   await open('home');
+  await button('크롭 트렌치 올리기').click();
+  await button('플레어 미디 스커트 올리기').click();
+  await button('크롭 트렌치 치우기').waitFor();
+  verify(
+    (await page.locator('.my-space > p[aria-live]').textContent()).includes('2점'),
+    '테이블 위 의류 수',
+  );
+  await page.locator('.my-space .space-save button', { hasText: '코디 저장' }).click();
+  await page.getByRole('textbox', { name: '코디 이름' }).fill('공간 점검 코디');
+  await page.locator('.my-space .space-save button.go').click();
+  await page.locator('.my-space .space-save button', { hasText: '코디 저장' }).waitFor();
+  await button('모델').click();
+  await button('피팅룸 열기').waitFor();
+  await button('코디').click();
+  await button('크롭 트렌치 치우기').click();
+  await button('플레어 미디 스커트 치우기').click();
+  // The dressing room continues as the fitting module.
+  await open('dressing');
   const bag = button('에스프레소 숄더백 입히기');
   const from = await bag.boundingBox();
   const dest = await page.locator('.avatar-floor canvas').first().boundingBox();

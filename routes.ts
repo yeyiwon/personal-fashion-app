@@ -31,6 +31,7 @@ export const sections: { title: string; pages: Record<string, string> }[] = [
     title: '모델과 피팅',
     pages: {
       model: '개인 모델',
+      dressing: '드레스룸 · 2D 착장',
       fitting: '가상 피팅',
       'model-study': '모델 치수와 참고 사진',
       'fitting-board': '피팅 보드',
@@ -158,6 +159,7 @@ export function activeTab(page: string) {
   if (
     [
       'model',
+      'dressing',
       'fitting',
       'fitting-result',
       'fitting-wait',

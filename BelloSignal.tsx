@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { BelloOrb } from './BelloOrb';
 export type SignalState =
   | 'waiting'
   | 'greeting'
@@ -18,7 +19,13 @@ const shapes: Record<SignalState, [number, number, number]> = {
   error: [3, 0.09, -0.7],
   limited: [2, 0.05, -0.4],
 };
+/** BELLO's state body. WebGL lens where available, the SVG trace otherwise. */
 export function BelloSignal({ state }: { state: SignalState }) {
+  const [flat, setFlat] = useState(false);
+  const fall = useCallback(() => setFlat(true), []);
+  return flat ? <SvgSignal state={state} /> : <BelloOrb state={state} onUnsupported={fall} />;
+}
+function SvgSignal({ state }: { state: SignalState }) {
   const id = useId().replace(/[^a-z0-9]/gi, ''),
     path = useRef<SVGPathElement>(null),
     inner = useRef<SVGPathElement>(null),

@@ -6,7 +6,7 @@ import { forecastCities, getForecast, type ForecastCity } from './forecast';
 import { useScopedState, useStudio } from './studio';
 import { GlassSurface } from './RoomControls';
 import { Icon } from './presentation';
-import { BelloSignal } from './BelloSignal';
+import { BelloSignal, type SignalState } from './BelloSignal';
 
 import type {BelloAdvice} from './bello-contract';
 export type Advice = BelloAdvice;
@@ -59,12 +59,15 @@ export function RoomAssistant({
   worn,
   locked,
   act,
+  onSignal,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
   worn: string[];
   locked: string[];
   act: (a: Advice) => void;
+  /** Reports BELLO's live state so the surrounding space can respond to it. */
+  onSignal?: (state: SignalState) => void;
 }) {
   const { garments, mode, outfits } = useStudio();
   const [name] = useScopedState('display-name', ''),
@@ -331,6 +334,22 @@ export function RoomAssistant({
     speechSynthesis.addEventListener('voiceschanged', update);
     return () => speechSynthesis.removeEventListener('voiceschanged', update);
   }, []);
+  const signal: SignalState = acting
+    ? 'acting'
+    : working || welcoming
+      ? 'thinking'
+      : fault
+        ? 'error'
+        : rated
+          ? 'complete'
+          : result
+            ? 'proposed'
+            : welcome
+              ? 'greeting'
+              : engine && !engine.local && !engine.cloud
+                ? 'limited'
+                : 'waiting';
+  useEffect(() => onSignal?.(signal), [signal, onSignal]);
   return (
     <aside
       className={
@@ -351,25 +370,7 @@ export function RoomAssistant({
             open ? '스타일리스트 대화 접기' : '스타일리스트에게 요청하기'
           }
         >
-          <BelloSignal
-            state={
-              acting
-                ? 'acting'
-                : working || welcoming
-                  ? 'thinking'
-                  : fault
-                    ? 'error'
-                    : rated
-                      ? 'complete'
-                      : result
-                        ? 'proposed'
-                        : welcome
-                          ? 'greeting'
-                          : engine && !engine.local && !engine.cloud
-                            ? 'limited'
-                            : 'waiting'
-            }
-          />
+          <BelloSignal state={signal} />
           <span>
             <b>BELLO</b>
             <small>
