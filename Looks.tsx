@@ -138,6 +138,7 @@ function LookBoard({
         (items.some((g) => g.category === '원피스') ? 'is-dress ' : '') +
         (items.length === 1 ? 'solo' : '')
       }
+      style={{'--outfit-light':(items.find(g=>g.id===active)??items[0])?.color} as React.CSSProperties}
       onTouchStart={(e) => {
         origin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }}

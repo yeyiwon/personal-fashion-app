@@ -21,8 +21,8 @@ export const capabilities: {
   },
   {
     page: 'recognition',
-    label: 'AI 재질 인식 · 자동 배경 제거',
-    state: '외부 API 연동 필요',
+    label: '지원 Mac의 의류 분류 · 자동 배경 제거',
+    state: '실제 구현 완료',
   },
   {
     page: 'purchases',
@@ -81,7 +81,7 @@ export const capabilities: {
   { page: 'camera', label: '연속 촬영 · 앨범 가져오기', state: '실제 구현 완료' },
   { page: 'purchases', label: '주문 캡처 · 선택한 이메일 파일 등록', state: '실제 구현 완료' },
   { page: 'purchases', label: '예시 판매처 동의 · 상품 선택', state: '샘플 데이터 기반 동작' },
-  { page: 'purchases', label: '주문 캡처 문자 자동 인식', state: '외부 API 연동 필요' },
+  { page: 'purchases', label: '지원 Mac의 주문 캡처 문자 인식', state: '실제 구현 완료' },
   { page: 'ai', label: '상황과 선호도를 반영한 규칙 기반 추천 · 랜덤 조합', state: '실제 구현 완료' },
   { page: 'direct', label: '직접 배치 · 의류 고정 · 개별 교체', state: '실제 구현 완료' },
   { page: 'palette', label: '톤온톤 · 톤인톤 등 여섯 가지 배색', state: '실제 구현 완료' },

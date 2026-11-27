@@ -1,8 +1,8 @@
 .lk-screen {
-  --lk-ink: var(--ink, #18212e);
-  --lk-blue: var(--accent, #313ecb);
-  --lk-line: var(--line, #d4d8df);
-  --lk-note: var(--muted, #56616f);
+  --lk-ink: var(--ink, var(--sys-7));
+  --lk-blue: var(--accent, var(--key-ink));
+  --lk-line: var(--line, var(--sys-2));
+  --lk-note: var(--muted, var(--sys-5));
   color: var(--lk-ink);
   padding: clamp(16px, 4vw, 34px) 0 30px;
   max-width: 100%;
@@ -22,7 +22,7 @@
   touch-action: manipulation;
 }
 .lk-screen :is(button, input, select, textarea, a):focus-visible {
-  outline: 3px solid #5058d2;
+  outline: 3px solid var(--key-ink);
   outline-offset: 3px;
 }
 .lk-screen button:disabled {
@@ -92,7 +92,7 @@
 .lk-pills button.active,
 .lk-daystrip button[aria-pressed='true'] {
   background: var(--lk-ink);
-  color: white;
+  color: var(--sys-0);
   border-color: var(--lk-ink);
 }
 .lk-screen .lk-link {
@@ -130,9 +130,9 @@
 .lk-caption {
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid #ccd3dc;
+  border: 1px solid var(--sys-2);
   border-bottom: 0;
-  background: #f4f6f8;
+  background: var(--sys-1);
 }
 .lk-caption strong {
   font-size: 15px;
@@ -148,27 +148,27 @@
   overflow: hidden;
   isolation: isolate;
   aspect-ratio: 1.1;
-  background-color: #dde3e9;
+  background-color: var(--sys-2);
   background-image:
     linear-gradient(
       132deg,
-      rgba(253, 253, 254, 0.85),
+      color-mix(in srgb,var(--sys-0) 85%,transparent),
       transparent 56%,
-      rgba(147, 163, 179, 0.24)
+      color-mix(in srgb,var(--sys-4) 24%,transparent)
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0 41px,
-      rgba(120, 134, 151, 0.11) 41px 42px
+      color-mix(in srgb,var(--sys-5) 11%,transparent) 41px 42px
     );
-  border: 1px solid #c9d0da;
+  border: 1px solid var(--sys-2);
   touch-action: pan-y;
 }
 .lk-board::before {
   content: '';
   position: absolute;
   inset: 4.5%;
-  border: 1px dashed #adb9c36b;
+  border: 1px dashed color-mix(in srgb,var(--sys-3) 42%,transparent);
   pointer-events: none;
 }
 .lk-piece {
@@ -183,7 +183,7 @@
   transition:
     transform 0.38s cubic-bezier(0.19, 1, 0.22, 1),
     filter 0.36s;
-  filter: drop-shadow(2px 7px 4px #34404c30);
+  filter: drop-shadow(2px 7px 4px color-mix(in srgb,var(--bello-midnight) 18.8%,transparent));
   border-radius: 5px;
 }
 .lk-board .lk-piece:disabled {
@@ -199,7 +199,7 @@
 .lk-piece.is-active {
   z-index: 5;
   transform: translateY(-3px) rotate(var(--rotation)) scale(1.025);
-  filter: drop-shadow(2px 10px 6px #28364448);
+  filter: drop-shadow(2px 10px 6px color-mix(in srgb,var(--bello-midnight) 28.2%,transparent));
 }
 .lk-piece.is-active:after {
   content: '';
@@ -278,7 +278,7 @@
   position: absolute;
   top: 2px;
   right: 3px;
-  color: white;
+  color: var(--sys-0);
   background: var(--lk-blue);
   border-radius: 50%;
   width: 21px;
@@ -292,10 +292,10 @@
   right: 12px;
   bottom: 10px;
   display: flex;
-  border: 1px solid #ffffffd9;
+  border: 1px solid color-mix(in srgb,var(--sys-0) 85.1%,transparent);
   padding: 2px;
   z-index: 7;
-  background: #ffffff68;
+  background: color-mix(in srgb,var(--bello-optical) 40.8%,transparent);
   pointer-events: none;
 }
 .lk-board-palette i {
@@ -338,7 +338,7 @@
 }
 .lk-tray button[aria-pressed='true'] {
   background: var(--lk-blue);
-  color: white;
+  color: var(--sys-0);
   border-color: var(--lk-blue);
 }
 .lk-alts {
@@ -364,7 +364,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  box-shadow: 0 0 0 1px #0001;
+  box-shadow: 0 0 0 1px color-mix(in srgb,var(--bello-midnight) 6.7%,transparent);
   flex-shrink: 0;
 }
 .lk-actions {
@@ -388,7 +388,7 @@
 .lk-query input {
   width: 100%;
   min-width: 0;
-  background: #fff;
+  background: var(--sys-0);
   border: 1px solid var(--lk-line);
   border-radius: 7px;
   min-height: 44px;
@@ -410,7 +410,7 @@
   padding: 10px 15px;
   border: 1px solid var(--lk-ink);
   background: var(--lk-ink);
-  color: #fff !important;
+  color: var(--sys-0) !important;
 }
 .lk-secondary {
   background: transparent;
@@ -434,7 +434,7 @@
 .lk-weather,
 .lk-tripform {
   border: 1px solid var(--lk-line);
-  background: #f3f5f8;
+  background: var(--sys-1);
   padding: 15px;
   border-radius: 9px;
   margin-bottom: 16px;
@@ -447,7 +447,7 @@
   display: flex;
   border-radius: 9px 9px 3px 3px;
   overflow: hidden;
-  background: #dedfe2;
+  background: var(--sys-2);
   perspective: 900px;
 }
 .lk-spectrum button {
@@ -468,14 +468,14 @@
   background:
     linear-gradient(
       100deg,
-      rgba(255, 255, 255, 0.25),
+      color-mix(in srgb,var(--bello-optical) 25%,transparent),
       transparent 32%,
       transparent 68%,
-      rgba(20, 25, 33, 0.2)
+      color-mix(in srgb,var(--bello-midnight) 20%,transparent)
     ),
     repeating-linear-gradient(
       112deg,
-      rgba(255, 255, 255, 0.075) 0 1px,
+      color-mix(in srgb,var(--bello-optical) 7.5%,transparent) 0 1px,
       transparent 1px 3px
     );
   z-index: -1;
@@ -493,10 +493,10 @@
   place-items: center;
 }
 .lk-spectrum button[aria-pressed='true'] span {
-  background: #fff;
+  background: var(--sys-0);
   border-radius: 50%;
-  box-shadow: 0 1px 4px #0002;
-  color: #18212e;
+  box-shadow: 0 1px 4px color-mix(in srgb,var(--bello-midnight) 13.3%,transparent);
+  color: var(--sys-7);
 }
 .lk-swatch-caption {
   display: flex;
@@ -576,7 +576,7 @@
   min-width: 0;
   border: 1px solid var(--lk-line);
   border-radius: 5px;
-  background: #f6f7f8;
+  background: var(--sys-0);
   padding: 6px;
   display: grid;
   align-content: start;
@@ -598,7 +598,7 @@
 }
 .lk-itemgrid button > i {
   background: var(--lk-blue);
-  color: white;
+  color: var(--sys-0);
   position: absolute;
   right: 4px;
   top: 4px;
@@ -633,7 +633,7 @@
 }
 .lk-concierge {
   text-align: center;
-  background: #e7ebf1;
+  background: var(--sys-1);
   padding: 20px;
   border-radius: 45% 45% 8px 8px / 17% 17% 8px 8px;
   border-bottom: 1px solid var(--lk-line);
@@ -659,11 +659,11 @@
   position: absolute;
   inset: 8% 10%;
   border-radius: 47% 53% 36% 64%;
-  background: linear-gradient(135deg, #e3eaf2 10%, #7988aa 50%, #2e3c64 77%);
+  background: linear-gradient(135deg, var(--sys-1) 10%, var(--key-ink) 50%, var(--key-ink) 77%);
   transform: rotate(18deg);
   box-shadow:
-    inset 1px 2px 2px #fff6,
-    0 4px 7px #273a501a;
+    inset 1px 2px 2px color-mix(in srgb,var(--bello-optical) 40%,transparent),
+    0 4px 7px color-mix(in srgb,var(--bello-midnight) 10.2%,transparent);
   transition:
     transform 0.5s ease,
     border-radius 0.5s ease;
@@ -743,7 +743,7 @@
   height: 65px;
   display: grid;
   place-items: center;
-  background: #ebeff2;
+  background: var(--sys-1);
   border-radius: 3px;
   min-width: 0;
 }
@@ -827,7 +827,7 @@
 }
 .lk-dates button[aria-pressed='true'] {
   background: var(--lk-ink);
-  color: white;
+  color: var(--sys-0);
 }
 .lk-dates .is-today {
   box-shadow: inset 0 0 0 1px var(--lk-line);
@@ -871,7 +871,7 @@
 }
 .lk-meter {
   height: 5px;
-  background: #dce1e5;
+  background: var(--sys-2);
   margin-top: 13px;
 }
 .lk-meter i {
@@ -886,7 +886,7 @@
   width: 48px;
   height: 54px;
   flex-shrink: 0;
-  background: #edf0f3;
+  background: var(--sys-1);
 }
 .lk-statrow img {
   width: 100%;
@@ -1015,7 +1015,7 @@
 }
 .lk-choicegroup button[aria-pressed='true'] {
   border: 1px solid var(--lk-blue);
-  background: color-mix(in srgb, var(--lk-blue) 4%, white);
+  background: color-mix(in srgb, var(--lk-blue) 4%, var(--sys-0));
 }
 .lk-choicegroup button > span:first-child {
   font-size: 12px;
@@ -1044,9 +1044,9 @@
   isolation: isolate;
   width: 40px;
   height: 40px;
-  border: 1px solid #0002;
+  border: 1px solid color-mix(in srgb,var(--bello-midnight) 13.3%,transparent);
   border-radius: 48%;
-  color: white;
+  color: var(--sys-0);
   font-size: 15px;
   font-weight: 700;
 }
@@ -1055,6 +1055,6 @@
   position: absolute;
   inset: 8px;
   z-index: -1;
-  background: #172034;
+  background: var(--sys-7);
   border-radius: 50%;
 }

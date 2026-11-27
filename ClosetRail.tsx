@@ -1,3 +1,5 @@
+import {OpticalStage} from './OpticalStage';
+import BelloSpace from './BelloSpace';
 import {
   useEffect,
   useRef,
@@ -20,12 +22,12 @@ function Hook() {
     >
       <path
         d="M75 10c-1-10 12-10 11-1-.4 5-7 5-7 10v5L15 50q-6 5 1 7h128q7-2 0-7L80 24"
-        stroke="#3d302c"
+        stroke="var(--bello-slate)"
         strokeWidth="3.8"
       />
       <path
         d="M75 9c-.6-8 10-9 10 0-.3 4-6 4-6 10v5L15 50q-6 5 1 6h127"
-        stroke="#d3bfb0"
+        stroke="var(--bello-silver)"
         strokeWidth="1.6"
       />
     </svg>
@@ -45,6 +47,9 @@ export default function ClosetRail({ page, go }: PageProps) {
     [view, setView] = useState<'rack' | 'list'>('rack');
   const [current, center] = useState<string | null>(null),
     [open, inspect] = useState(false);
+  const [objectId,setObject]=useState('');
+  const [angle,rotate]=useState(0);
+  const gesture=useRef<{x:number;angle:number}|null>(null);
   const start = useRef<{ x: number; y: number } | null>(null),
     lastSwipe = useRef(0);
   const rack = useRef<HTMLDivElement>(null);
@@ -214,7 +219,7 @@ export default function ClosetRail({ page, go }: PageProps) {
                     rack.current?.style.removeProperty('--drag');
                   }}
                 >
-                  <div className="rail-wall" />
+                  <BelloSpace kind="rail" signal={index}/><OpticalStage mode="rail" signal={index}/>
                   <div className="brass-rail" />
                   <div className="rail-track">
                     {list.map((g, i) => {
@@ -272,6 +277,12 @@ export default function ClosetRail({ page, go }: PageProps) {
                     </button>
                   </div>
                 </div>
+                {selected.id==='sample-bag' && open && <div className="object-inspection">
+                  <button className="woven-btn" aria-expanded={objectId===selected.id} onClick={()=>{setObject(objectId===selected.id?'':selected.id);rotate(0);}}>숄더백 3D 형태 살펴보기</button>
+                  {objectId===selected.id && <div className="bag-view"><div className="bag-turntable" role="group" aria-label="숄더백 3D 회전" onPointerDown={e=>{gesture.current={x:e.clientX,angle};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(gesture.current)rotate(gesture.current.angle+(e.clientX-gesture.current.x)*.018);}} onPointerUp={()=>gesture.current=null} onPointerCancel={()=>gesture.current=null}>
+                    <GarmentPhoto item={selected}/><OpticalStage mode="garment" turn={angle}/></div>
+                    <button aria-label="왼쪽으로 회전" onClick={()=>rotate(v=>v-.5)}>↶</button><small>샘플 형태 모델 · 드래그로 회전</small><button aria-label="오른쪽으로 회전" onClick={()=>rotate(v=>v+.5)}>↷</button>
+                  </div>}</div>}
                 <div className={'cloth-tag' + (open ? ' open-tag' : '')}>
                   <button aria-expanded={open} onClick={() => inspect(!open)}>
                     <i style={{ background: selected.color }} />

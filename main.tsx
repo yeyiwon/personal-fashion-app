@@ -7,12 +7,13 @@ import Looks from './Looks';
 import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
-import { RoomDock, RoomHeader } from './RoomControls';
+import { BelloAtlas,BelloHeader,useAppearance } from './BelloAtlas';
 import './rooms.css';
+import './bello.css';
 import Space from './Space';
 import Lookbook from './Lookbook';
 import { capabilities } from './featureStatus';
-import { providerDirectory } from './provider-contracts';
+import BelloConnections from './BelloConnections';
 import { StudioProvider, useStudio, type PageProps } from './studio';
 import { Icon, Sheet, haptic } from './presentation';
 import {
@@ -129,6 +130,8 @@ function Onboarding({ go }: Pick<PageProps, 'go'>) {
   );
 }
 function App() {
+  useAppearance();
+  const [atlas,setAtlas]=useState(false);
   const { mode, setMode } = useStudio();
   const [page, setPage] = useState(route),
     [modeOpen, showMode] = useState(false);
@@ -138,7 +141,7 @@ function App() {
     const update = () => {
       const next = route();
       setPage(next);
-      showMode(false);
+      setAtlas(false);showMode(false);
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', update);
@@ -149,7 +152,7 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    document.title = (titles[page] ?? '페이지') + ' · Wardrobe';
+    document.title = (titles[page] ?? '나의 공간') + ' · BELLO';
   }, [page]);
   function go(next: string) {
     if (next === page) {
@@ -196,35 +199,10 @@ function App() {
   }
   const props = { page, go };
   let content =
-    ['home','stylist'].includes(page) ? (
-      <Home key={mode+page} {...props} onMode={() => showMode(true)} />
+    ['home','stylist','model','fitting'].includes(page) ? (
+      <Home key={mode+page} {...props} onMode={() => showMode(true)} onAtlas={()=>setAtlas(true)} />
     ) : page === 'connections' ? (
-      <section className="connections">
-        <h1>외부 서비스 연결</h1>
-        <p>
-          현재 옷장에서 할 수 있는 일과 실제 서비스 연결에 필요한 권한을
-          확인하세요.
-        </p>
-        <div>
-          {Object.values(providerDirectory).map((provider) => (
-            <details key={provider.name}>
-              <summary>
-                <b>{provider.name}</b>
-                <small>외부 API 연동 필요</small>
-              </summary>
-              <dl>
-                <dt>필요한 권한</dt>
-                <dd>{provider.requires}</dd>
-                <dt>현재 이용 가능</dt>
-                <dd>{provider.local}</dd>
-              </dl>
-              <button className="quiet" onClick={() => go(provider.page)}>
-                기능 열기 <Icon name="arrow" size={15} />
-              </button>
-            </details>
-          ))}
-        </div>
-      </section>
+      <BelloConnections go={go} />
     ) : page === 'lookbook' ? (
       <Lookbook {...props} />
     ) : page === 'space' ? (
@@ -238,7 +216,7 @@ function App() {
     ) : lookPages.includes(page) ? (
       <Looks key={mode + ':looks'} {...props} />
     ) : atelierPages.includes(page) ? (
-      <Atelier key={mode + ':atelier'} {...props} />
+      <Atelier key={mode + ':atelier'} {...props} page={page === 'model-study' ? 'model' : page === 'fitting-board' ? 'fitting' : page} />
     ) : ['account', 'preferences', 'data', 'privacy'].includes(page) ? (
       <Settings {...props} />
     ) : (
@@ -261,16 +239,7 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      {!['home','stylist'].includes(page) && <RoomHeader
-        page={page}
-        go={go}
-        mode={mode}
-        onMode={() => showMode(true)}
-        back={() => {
-          if (history.state?.wardrobe) history.back();
-          else go('home');
-        }}
-      />}
+      {!['home','stylist','model','fitting'].includes(page) && <BelloHeader {...props} mode={mode} onMode={()=>showMode(true)} onAtlas={()=>setAtlas(true)} />}
       <main
         id="main-content"
         tabIndex={-1}
@@ -279,7 +248,7 @@ function App() {
       >
         {content}
       </main>
-      {!['home','stylist'].includes(page) && <RoomDock page={page} go={go} />}
+      <BelloAtlas page={page} go={go} open={atlas} close={()=>setAtlas(false)}/>
       {modeOpen && (
         <Sheet title="사용할 옷장" onClose={() => showMode(false)}>
           {(

@@ -1,5 +1,5 @@
 body:has(.live-room) {
-  background: #514638;
+  background: var(--sys-6);
 }
 main.page-frame.page-home:has(.live-room) {
   margin: 0;
@@ -9,9 +9,9 @@ main.page-frame.page-home:has(.live-room) {
   min-height: 0;
 }
 .live-room {
-  --paper-room: #f7f6f2;
-  --room-ink: #272c27;
-  --sage: #586649;
+  --paper-room: var(--sys-1);
+  --room-ink: var(--sys-6);
+  --sage: var(--sys-5);
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
@@ -23,7 +23,7 @@ main.page-frame.page-home:has(.live-room) {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic',
     sans-serif;
-  background: #8e8971;
+  background: var(--sys-5);
 }
 .live-room button,
 .live-room input,
@@ -36,7 +36,7 @@ main.page-frame.page-home:has(.live-room) {
 .live-room button:focus-visible,
 .live-room input:focus-visible,
 .live-room select:focus-visible {
-  outline: 3px solid #315a64;
+  outline: 3px solid var(--key-ink);
   outline-offset: 2px;
 }
 .live-room button:disabled {
@@ -56,7 +56,7 @@ main.page-frame.page-home:has(.live-room) {
   inset: 0 0 130px;
   isolation: isolate;
   overflow: hidden;
-  background: #99967f;
+  background: var(--sys-4);
 }
 .alcove-plate,
 .alcove-bounce {
@@ -65,7 +65,7 @@ main.page-frame.page-home:has(.live-room) {
   pointer-events: none;
 }
 .alcove-plate {
-  background: url('/media/dressing/alcove.webp') center 58%/100% 100% no-repeat;
+  background: linear-gradient(125deg,var(--sys-3),var(--sys-1) 45%,var(--key-tint)) center 58%/100% 100% no-repeat;
   animation: room-awake 0.85s ease-out both;
 }
 .alcove-bounce {
@@ -87,7 +87,7 @@ main.page-frame.page-home:has(.live-room) {
   justify-content: space-between;
   align-items: center;
   z-index: 3;
-  color: #fbfaf1;
+  color: var(--sys-0);
 }
 .room-sign,
 .mode-pin {
@@ -95,7 +95,7 @@ main.page-frame.page-home:has(.live-room) {
   align-items: center;
   gap: 6px;
   color: inherit;
-  text-shadow: 0 1px 5px #30271899;
+  text-shadow: 0 1px 5px color-mix(in srgb,var(--bello-midnight) 60%,transparent);
   min-height: 42px;
 }
 .room-sign span {
@@ -111,9 +111,9 @@ main.page-frame.page-home:has(.live-room) {
   font-weight: 600 !important;
   padding: 0 10px;
   border-radius: 24px;
-  background: #393b3188;
-  color: #fff;
-  box-shadow: inset 0 0 0 1px #fffffd44;
+  background: color-mix(in srgb,var(--bello-midnight) 53.3%,transparent);
+  color: var(--sys-0);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--bello-optical) 26.7%,transparent);
   backdrop-filter: blur(8px);
   min-height: 32px;
 }
@@ -135,12 +135,12 @@ main.page-frame.page-home:has(.live-room) {
   flex-direction: column;
   align-items: center;
   border-radius: 31px;
-  color: #282e29;
+  color: var(--sys-6);
   padding: 2px 6px 9px;
   box-shadow:
-    0 6px 22px #30292021,
-    inset 0 1px 1px #fff9;
-  background: #f3f3eecd;
+    0 6px 22px color-mix(in srgb,var(--bello-midnight) 12.9%,transparent),
+    inset 0 1px 1px color-mix(in srgb,var(--bello-optical) 60%,transparent);
+  background: color-mix(in srgb,var(--sys-1) 80.4%,transparent);
   backdrop-filter: blur(8px);
   transition:
     border-radius 0.38s,
@@ -170,7 +170,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .assistant-peek small {
   font-size: 9px;
-  color: #475143;
+  color: var(--sys-6);
   white-space: nowrap;
 }
 .assistant-peek em {
@@ -178,7 +178,7 @@ main.page-frame.page-home:has(.live-room) {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: #738164;
+  background: var(--sys-5);
   vertical-align: middle;
   margin: 0 1px;
 }
@@ -201,8 +201,8 @@ main.page-frame.page-home:has(.live-room) {
   position: absolute;
   inset: 3px 7px;
   border-radius: 62% 38% 55% 43%;
-  border: 1.8px solid #55604b;
-  box-shadow: inset 1px 0 #fff;
+  border: 1.8px solid var(--sys-5);
+  box-shadow: inset 1px 0 var(--sys-0);
   transform: rotate(-42deg);
   transition:
     transform 0.48s,
@@ -210,11 +210,11 @@ main.page-frame.page-home:has(.live-room) {
 }
 .silk-knot i:nth-child(2) {
   transform: rotate(28deg);
-  border-color: #839079;
+  border-color: var(--sys-4);
 }
 .silk-knot i:nth-child(3) {
   transform: rotate(88deg);
-  border-color: #58684f;
+  border-color: var(--sys-5);
 }
 .expanded .silk-knot i {
   transform: rotate(-66deg);
@@ -241,7 +241,7 @@ main.page-frame.page-home:has(.live-room) {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  color: #394438;
+  color: var(--sys-6);
 }
 .room-assistant.expanded {
   width: min(430px, calc(100% - 24px));
@@ -249,7 +249,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .expanded .assistant-shell {
   border-radius: 25px;
-  background: #f7f8f2f5;
+  background: color-mix(in srgb,var(--sys-0) 96.1%,transparent);
   padding: 4px 12px 10px;
 }
 .assistant-dialog {
@@ -273,7 +273,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .room-context {
   justify-content: space-between;
-  color: #576350;
+  color: var(--sys-5);
   font-size: 11px;
 }
 .room-context button {
@@ -290,8 +290,8 @@ main.page-frame.page-home:has(.live-room) {
 }
 .assistant-dialog form {
   display: flex;
-  border: 1px solid #78836a66;
-  background: #fffffc;
+  border: 1px solid color-mix(in srgb,var(--sys-5) 40%,transparent);
+  background: var(--sys-0);
   border-radius: 20px;
   padding: 2px 6px 2px 12px;
   margin: 10px 0 3px;
@@ -309,8 +309,8 @@ main.page-frame.page-home:has(.live-room) {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: white;
-  background: #46563f;
+  color: var(--sys-0);
+  background: var(--sys-6);
 }
 .assistant-actions {
   justify-content: space-between;
@@ -326,7 +326,7 @@ main.page-frame.page-home:has(.live-room) {
 .room-unavailable,
 .assistant-config small {
   font-size: 11px;
-  color: #535f50;
+  color: var(--sys-5);
   line-height: 1.5;
 }
 .advice-result > div {
@@ -334,7 +334,7 @@ main.page-frame.page-home:has(.live-room) {
   gap: 4px;
 }
 .advice-result > div span {
-  background: #efefe9;
+  background: var(--sys-1);
   border-left: 4px solid;
   padding: 4px 7px;
   font-size: 11px;
@@ -344,7 +344,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .assistant-config {
   padding-top: 8px;
-  border-top: 1px solid #c5c9bd;
+  border-top: 1px solid var(--sys-3);
 }
 .assistant-dialog [role='status'] {
   font-size: 12px;
@@ -372,7 +372,7 @@ main.page-frame.page-home:has(.live-room) {
   object-fit: contain;
   position: relative;
   z-index: 1;
-  filter: drop-shadow(2px 3px 2px #4b412b24);
+  filter: drop-shadow(2px 3px 2px color-mix(in srgb,var(--bello-midnight) 14.1%,transparent));
 }
 .avatar-floor canvas[hidden] {
   display: none;
@@ -390,7 +390,7 @@ main.page-frame.page-home:has(.live-room) {
   left: 29%;
   right: 27%;
   height: 2.7%;
-  background: #56483b65;
+  background: color-mix(in srgb,var(--bello-midnight) 39.6%,transparent);
   filter: blur(5px);
   border-radius: 50%;
 }
@@ -413,19 +413,19 @@ main.page-frame.page-home:has(.live-room) {
   align-content: center;
   min-width: 46px;
   min-height: 46px;
-  border: 1px solid #f4efdc9c;
+  border: 1px solid color-mix(in srgb,var(--bello-optical) 61.2%,transparent);
   border-radius: 15px;
-  background: #fcf9eda8;
-  color: #343c2e;
-  box-shadow: 0 2px 9px #31291c20;
+  background: color-mix(in srgb,var(--bello-optical) 65.9%,transparent);
+  color: var(--sys-6);
+  box-shadow: 0 2px 9px color-mix(in srgb,var(--bello-midnight) 12.5%,transparent);
   backdrop-filter: blur(6px);
 }
 .mirror-tool small {
   font-size: 9px;
 }
 .mirror-tool[aria-pressed='true'] {
-  background: #454c3c;
-  color: #fff;
+  background: var(--sys-6);
+  color: var(--sys-0);
 }
 .room-caption {
   position: absolute;
@@ -436,14 +436,14 @@ main.page-frame.page-home:has(.live-room) {
   align-items: center;
   font-size: 10px;
   letter-spacing: 0.025em;
-  color: white;
-  text-shadow: 0 1px 4px #201c11;
+  color: var(--sys-0);
+  text-shadow: 0 1px 4px var(--sys-7);
   z-index: 2;
 }
 .room-caption i {
   width: 5px;
   height: 5px;
-  background: #f1f5ce;
+  background: var(--sys-1);
   border-radius: 50%;
 }
 .room-caption button {
@@ -460,7 +460,7 @@ main.page-frame.page-home:has(.live-room) {
   background: var(--paper-room);
   border-radius: 23px 23px 0 0;
   padding: 4px 14px max(6px, env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 15px #40382d1f;
+  box-shadow: 0 -4px 15px color-mix(in srgb,var(--bello-midnight) 12.2%,transparent);
   transition:
     height 0.35s cubic-bezier(0.21, 0.8, 0.22, 1),
     transform 0.35s;
@@ -473,7 +473,7 @@ main.page-frame.page-home:has(.live-room) {
   height: 3px;
   min-height: 3px;
   border-radius: 20px;
-  background: #c9c7bc;
+  background: var(--sys-3);
   align-self: center;
   margin: 3px auto 0;
 }
@@ -502,7 +502,7 @@ main.page-frame.page-home:has(.live-room) {
 .tray-heading > button small,
 .tray-heading > button span {
   font-size: 11px;
-  color: #53614b;
+  color: var(--sys-5);
 }
 .tray-heading > button:first-child > svg:last-child {
   transform: rotate(180deg);
@@ -538,15 +538,15 @@ main.page-frame.page-home:has(.live-room) {
   position: relative;
   display: grid;
   place-items: center;
-  border-bottom: 1px solid #c9c9bc;
-  background: linear-gradient(transparent 58%, #e4e4db88);
+  border-bottom: 1px solid var(--sys-3);
+  background: linear-gradient(transparent 58%, color-mix(in srgb,var(--sys-2) 53.3%,transparent));
   border-radius: 2px;
 }
 .hanger-piece img {
   width: 100%;
   height: 51px;
   object-fit: contain;
-  filter: drop-shadow(1px 2px 1px #34372d26);
+  filter: drop-shadow(1px 2px 1px color-mix(in srgb,var(--bello-midnight) 14.9%,transparent));
   -webkit-user-drag: none;
 }
 .hanger-piece small {
@@ -561,15 +561,15 @@ main.page-frame.page-home:has(.live-room) {
   bottom: 2px;
   right: 2px;
   border-radius: 50%;
-  background: #43583d;
-  color: #fff;
+  background: var(--sys-6);
+  color: var(--sys-0);
   display: grid;
   place-items: center;
   width: 15px;
   height: 15px;
 }
 .hanger-piece.wearing > span {
-  border-color: #65765b;
+  border-color: var(--sys-5);
 }
 .hanger-piece .photoFallback {
   font-size: 9px;
@@ -580,7 +580,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .room-bottom-line {
   justify-content: space-between;
-  border-top: 1px solid #d9d9ce;
+  border-top: 1px solid var(--sys-2);
   margin-top: 3px;
 }
 .room-bottom-line button {
@@ -604,13 +604,13 @@ main.page-frame.page-home:has(.live-room) {
   padding: 0 10px;
   font-size: 12px;
   white-space: nowrap;
-  background: #e7e9e0;
+  background: var(--sys-1);
 }
 .source-tabs button[aria-pressed='true'],
 .slot-strip button[aria-pressed='true'],
 .dressing-actions button[aria-pressed='true'] {
-  background: #46513f;
-  color: white;
+  background: var(--sys-6);
+  color: var(--sys-0);
 }
 .slot-strip {
   overflow: auto;
@@ -627,13 +627,13 @@ main.page-frame.page-home:has(.live-room) {
 .room-drawer select,
 .assistant-config select,
 .assistant-config input:not([type='checkbox']) {
-  border: 1px solid #bcbeae;
+  border: 1px solid var(--sys-3);
   border-radius: 9px;
   min-height: 37px;
   padding: 5px 9px;
   max-width: 100%;
-  color: #25301f;
-  background: #fffefa;
+  color: var(--sys-6);
+  background: var(--sys-0);
   box-sizing: border-box;
   font-size: 13px;
 }
@@ -703,19 +703,19 @@ main.page-frame.page-home:has(.live-room) {
 .drawer-scroll > button:not(.room-row),
 .room-photo-fit > a {
   border-radius: 18px;
-  background: #e4e9db;
+  background: var(--sys-1);
   padding: 10px 15px;
   margin: 4px 5px 2px 0;
   font-size: 13px;
 }
 .drawer-scroll .primary-room {
-  background: #3e5039;
-  color: white;
+  background: var(--sys-6);
+  color: var(--sys-0);
 }
 .drawer-scroll details {
   font-size: 12px;
   padding: 8px 0;
-  border-top: 1px solid #d5d7cc;
+  border-top: 1px solid var(--sys-2);
 }
 .drawer-scroll summary {
   cursor: pointer;
@@ -730,7 +730,7 @@ main.page-frame.page-home:has(.live-room) {
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid #daddd0;
+  border-bottom: 1px solid var(--sys-2);
   padding: 5px 0;
   width: 100%;
   text-align: left;
@@ -752,7 +752,7 @@ main.page-frame.page-home:has(.live-room) {
 }
 .worn-row small {
   font-size: 10px;
-  color: #5d6757;
+  color: var(--sys-5);
 }
 .worn-row button {
   font-size: 11px;
@@ -760,7 +760,7 @@ main.page-frame.page-home:has(.live-room) {
   min-width: 36px;
 }
 .worn-row button[aria-pressed='true'] {
-  color: #30603e;
+  color: var(--key-ink);
   font-weight: bold;
 }
 .skin-row {
@@ -774,7 +774,7 @@ main.page-frame.page-home:has(.live-room) {
   border: 4px solid var(--paper-room);
 }
 .skin-row button[aria-pressed='true'] {
-  box-shadow: 0 0 0 1px #495a40;
+  box-shadow: 0 0 0 1px var(--sys-5);
 }
 .room-drawer .tape-instrument {
   height: 52px;
@@ -794,7 +794,7 @@ main.page-frame.page-home:has(.live-room) {
   min-height: 44px;
   font-size: 13px;
   text-align: left;
-  border-bottom: 1px solid #d6d8cf;
+  border-bottom: 1px solid var(--sys-2);
 }
 .room-space-list button > svg:last-child {
   margin-left: auto;
@@ -821,7 +821,7 @@ main.page-frame.page-home:has(.live-room) {
   width: 64px;
   height: 74px;
   transform: translate(-50%, -62%);
-  filter: drop-shadow(4px 8px 3px #3336);
+  filter: drop-shadow(4px 8px 3px color-mix(in srgb,var(--bello-midnight) 40%,transparent));
 }
 .lifted-garment img {
   width: 100%;
@@ -833,7 +833,7 @@ main.page-frame.page-home:has(.live-room) {
   left: 10%;
   right: 10%;
   bottom: 30%;
-  background: #fffbf0;
+  background: var(--sys-0);
   padding: 10px;
   font-size: 12px;
   z-index: 6;
@@ -855,10 +855,10 @@ main.page-frame.page-home:has(.live-room) {
   .live-room {
     background: linear-gradient(
       90deg,
-      #443d34,
-      #8b8374 22%,
-      #878173 78%,
-      #453f34
+      var(--sys-6),
+      var(--sys-5) 22%,
+      var(--sys-5) 78%,
+      var(--sys-6)
     );
   }
   .room-scene {
@@ -972,8 +972,8 @@ main.page-frame.page-home:has(.live-room) {
   .assistant-shell,
   .mirror-tool,
   .mode-pin {
-    background: #f4f3e9;
-    color: #222c22;
+    background: var(--sys-1);
+    color: var(--sys-6);
     backdrop-filter: none;
   }
 }

@@ -41,12 +41,17 @@ function executable() {
 export async function localAvailable() {
   return Boolean(await executable());
 }
-let active = false;
+let queued = 0;
+let tail = Promise.resolve();
 export async function localAdvice(input) {
   const bin = await executable();
-  if (!bin || active)
+  if (!bin || queued >= 3)
     throw Error('기기 모델이 준비 중이에요. 잠시 뒤 다시 요청해 주세요.');
-  active = true;
+  queued++;
+  const previous=tail;
+  let release;
+  tail = new Promise(resolve => {release=resolve;});
+  await previous;
   try {
     return await new Promise((resolve, reject) => {
       const child = spawn(bin, [], {
@@ -76,6 +81,7 @@ export async function localAdvice(input) {
       child.stdin.end(JSON.stringify(input));
     });
   } finally {
-    active = false;
+    queued--;
+    release();
   }
 }

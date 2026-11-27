@@ -53,7 +53,7 @@ export async function vision(req, res, local) {
   active++;
   try {
     const result = await new Promise((resolve, reject) => {
-      const child = spawn(executablePath, [], {
+      const child = spawn(executablePath, data.task === 'receipt' ? ['--receipt'] : [], {
         stdio: ['pipe', 'pipe', 'ignore'],
         timeout: 35000,
       });

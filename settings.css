@@ -46,8 +46,8 @@
   height: 64px;
   display: grid;
   place-items: center;
-  background: #dce5f1;
-  color: #294f78;
+  background: var(--sys-2);
+  color: var(--key-ink);
   border-radius: 44% 56% 49% 51%;
   font-family: Georgia, serif;
   font-style: italic;
@@ -176,7 +176,7 @@
   width: 44px;
   height: 44px;
   margin: 0;
-  box-shadow: inset 0 0 0 1px #0001;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--bello-midnight) 6.7%,transparent);
 }
 .settings-choices .color-pick[aria-pressed='true'] {
   outline: 2px solid var(--ink);
@@ -208,8 +208,8 @@
   font-size: 0.82rem;
 }
 .settings-danger {
-  border: 1px solid #9b4f4e;
-  color: #863734;
+  border: 1px solid var(--key-ink);
+  color: var(--key-ink);
   background: var(--paper);
   border-radius: 6px;
   padding: 10px 14px;
@@ -232,7 +232,7 @@
   font-weight: 600;
 }
 .settings-error {
-  color: #90352b;
+  color: var(--key-ink);
 }
 .settings-privacy {
   margin: 0;

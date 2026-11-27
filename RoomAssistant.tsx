@@ -73,7 +73,7 @@ export function RoomAssistant({
   const [voice, setVoice] = useScopedState('room.voice', false),
     [city, setCity] = useScopedState<ForecastCity | ''>(
       'room.forecast-city',
-      '',
+      mode==='sample'?'seoul':'',
     );
   const [trip] = useScopedState<{
     destination: string;
@@ -307,11 +307,13 @@ export function RoomAssistant({
     act(answer);
     setOpen(false);
   };
-  const voiceSupported =
-    typeof speechSynthesis !== 'undefined' &&
-    speechSynthesis
-      .getVoices()
-      .some((v) => v.localService && v.lang.startsWith('ko'));
+  const [voiceSupported, supportVoice] = useState(false);
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return;
+    const update = () => supportVoice(speechSynthesis.getVoices().some(v => v.localService && v.lang.startsWith('ko')));
+    update(); speechSynthesis.addEventListener('voiceschanged', update);
+    return () => speechSynthesis.removeEventListener('voiceschanged', update);
+  }, []);
   return (
     <aside
       className={
@@ -319,7 +321,7 @@ export function RoomAssistant({
         (open ? 'expanded ' : '') +
         (working ? 'thinking' : '')
       }
-      aria-label="드레스룸 스타일리스트"
+      aria-label="AI 스타일리스트 벨로"
     >
       <div className="assistant-shell">
         <GlassSurface morph={open} />
@@ -338,7 +340,7 @@ export function RoomAssistant({
             <i />
           </span>
           <span>
-            <b>{name ? name + '님의 ' : ''}드레스룸</b>
+            <b>BELLO</b>
             <small>
               {engine?.local
                 ? '기기 내 AI'
@@ -469,7 +471,7 @@ export function RoomAssistant({
                 onClick={() => setSettings(!settings)}
                 aria-expanded={settings}
               >
-                비서 설정
+                벨로 설정
               </button>
             </div>
             {settings && (

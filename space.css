@@ -36,7 +36,7 @@
 }
 .rail-filters button[aria-pressed='true'] {
   background: var(--ink);
-  color: white;
+  color: var(--sys-0);
 }
 .dressing-space {
   --rack-w: clamp(130px, 39vw, 265px);
@@ -44,7 +44,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: color-mix(in srgb, var(--fabric) 18%, #ccd3d9);
+  background: color-mix(in srgb, var(--fabric) 18%, var(--sys-2));
   border-radius: 7px;
   transition: background 0.4s;
 }
@@ -54,21 +54,21 @@
   background:
     linear-gradient(
       117deg,
-      #fff9 6%,
+      color-mix(in srgb,var(--bello-optical) 60%,transparent) 6%,
       transparent 21%,
-      #fff6 37%,
+      color-mix(in srgb,var(--bello-optical) 40%,transparent) 37%,
       transparent 51%
     ),
-    linear-gradient(0deg, #27314620, transparent 74%);
+    linear-gradient(0deg, color-mix(in srgb,var(--bello-midnight) 12.5%,transparent), transparent 74%);
   pointer-events: none;
 }
 .room-floor {
   position: absolute;
   inset: 76% 0 0;
   background:
-    linear-gradient(165deg, #fff6, transparent 58%),
-    color-mix(in srgb, var(--fabric) 20%, #a9b4c1);
-  box-shadow: inset 0 8px 28px #424d6521;
+    linear-gradient(165deg, color-mix(in srgb,var(--bello-optical) 40%,transparent), transparent 58%),
+    color-mix(in srgb, var(--fabric) 20%, var(--sys-3));
+  box-shadow: inset 0 8px 28px color-mix(in srgb,var(--bello-midnight) 12.9%,transparent);
 }
 .room-track {
   position: absolute;
@@ -76,8 +76,8 @@
   left: 0;
   right: 0;
   top: 12%;
-  background: linear-gradient(#667383, #ecf2f8 40%, #64707d);
-  box-shadow: 0 9px 16px #27344637;
+  background: linear-gradient(var(--sys-5), var(--sys-1) 40%, var(--sys-5));
+  box-shadow: 0 9px 16px color-mix(in srgb,var(--bello-midnight) 21.6%,transparent);
 }
 .garment-rail {
   position: absolute;
@@ -114,12 +114,12 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(5px 14px 8px #25262c35);
+  filter: drop-shadow(5px 14px 8px color-mix(in srgb,var(--bello-midnight) 20.8%,transparent));
 }
 .rack-hook {
   width: 14px;
   height: 28px;
-  border: 2px solid #576372;
+  border: 2px solid var(--sys-5);
   border-bottom: none;
   position: absolute;
   top: -2px;
@@ -134,14 +134,14 @@
   left: 50%;
   transform: translateX(-50%);
   width: min(92%, 430px);
-  border: 1px solid #ffffffc2;
+  border: 1px solid color-mix(in srgb,var(--bello-optical) 76.1%,transparent);
   border-radius: 40px;
-  background: #eff3f9c9;
+  background: color-mix(in srgb,var(--bello-optical) 78.8%,transparent);
   backdrop-filter: blur(21px) saturate(1.25);
   box-shadow:
-    inset 0 1.5px 2px white,
-    inset 0 -1px 2px #79859550,
-    0 6px 20px #2a354322;
+    inset 0 1.5px 2px var(--sys-0),
+    inset 0 -1px 2px color-mix(in srgb,var(--sys-5) 31.4%,transparent),
+    0 6px 20px color-mix(in srgb,var(--bello-midnight) 13.3%,transparent);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -164,7 +164,7 @@
 }
 .lens-name small {
   grid-column: 1;
-  color: #58636f;
+  color: var(--sys-5);
   font-size: 10px;
   letter-spacing: 0.05em;
 }
@@ -176,7 +176,7 @@
 .lens-name span {
   grid-column: 2;
   grid-row: 1/3;
-  border-left: 1px solid #acb3bc;
+  border-left: 1px solid var(--sys-3);
   padding-left: 9px;
   font-size: 12px;
 }
@@ -195,7 +195,7 @@
   z-index: 2;
   left: 14px;
   top: 14px;
-  background: #f5f7fabd;
+  background: color-mix(in srgb,var(--bello-optical) 74.1%,transparent);
   border-radius: 25px;
   display: flex;
   align-items: center;
@@ -210,7 +210,7 @@
   display: block;
 }
 .lens-tools small {
-  color: #505b68;
+  color: var(--sys-5);
   font-size: 11px;
 }
 .lens-tools h2 {
@@ -230,13 +230,13 @@
   flex: 1;
   min-height: 39px;
   border-radius: 15px;
-  background: #fff9;
+  background: color-mix(in srgb,var(--bello-optical) 60%,transparent);
   font-size: 12px;
   font-weight: 650;
 }
 .lens-actions button:first-child {
   background: var(--ink);
-  color: white;
+  color: var(--sys-0);
 }
 .lens-actions button:last-child {
   flex: 0 0 40px;
@@ -247,7 +247,7 @@
   align-content: center;
   gap: 12px;
   height: 380px;
-  background: #e4e8ed;
+  background: var(--sys-1);
 }
 .space-empty h2 {
   margin: 0;
@@ -289,7 +289,7 @@
   width: 50%;
   height: clamp(40px, 7.3vh, 75px);
   fill: none;
-  stroke: #596572;
+  stroke: var(--sys-5);
   stroke-width: 2;
   z-index: -1;
 }
@@ -302,7 +302,7 @@
   margin-top: 0;
 }
 .rack-piece:has(.photoFallback) {
-  background: #ffffff22;
+  background: color-mix(in srgb,var(--bello-optical) 13.3%,transparent);
 }
 .rack-piece img[src*='bangle'],
 .rack-piece img[src*='scarf'],
@@ -314,7 +314,7 @@
 }
 .dressing-space {
   --rack-w: clamp(155px, 52vw, 295px);
-  background-image: url('/media/editorial/room.webp');
+  background-image: linear-gradient(125deg,var(--sys-3),var(--sys-1) 45%,var(--key-tint));
   background-size: cover;
   background-position: var(--rail-view, 50%) center;
   transition: background-position 0.55s ease;
@@ -329,17 +329,17 @@
 }
 .room-floor {
   box-shadow: none;
-  background: linear-gradient(0deg, #24314935, transparent);
+  background: linear-gradient(0deg, color-mix(in srgb,var(--bello-midnight) 20.8%,transparent), transparent);
   inset: 65% 0 0;
 }
 .rack-piece {
-  filter: drop-shadow(7px 13px 8px #29344218);
+  filter: drop-shadow(7px 13px 8px color-mix(in srgb,var(--bello-midnight) 9.4%,transparent));
 }
 .rack-piece.front {
   filter: none;
 }
 .room-track {
-  box-shadow: 0 5px 9px #212a3929;
+  box-shadow: 0 5px 9px color-mix(in srgb,var(--bello-midnight) 16.1%,transparent);
 }
 .room-light:after {
   content: '';

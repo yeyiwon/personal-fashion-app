@@ -32,6 +32,8 @@ export const sections: { title: string; pages: Record<string, string> }[] = [
     pages: {
       model: '개인 모델',
       fitting: '가상 피팅',
+      'model-study': '모델 치수와 참고 사진',
+      'fitting-board': '피팅 보드',
       'fitting-result': '착장 비교',
     },
   },
@@ -121,6 +123,7 @@ export const lookPages = [
   'weather',
 ];
 export const atelierPages = [
+  'model-study', 'fitting-board',
   'model',
   'fitting',
   'fitting-result',

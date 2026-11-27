@@ -37,7 +37,7 @@ async function renderPoster(
   ctx.fillRect(0, 0, width, canvas.height);
   ctx.fillStyle = '#232d39';
   ctx.font = '54px Instrument, Georgia';
-  ctx.fillText('Wardrobe.', 34, 64);
+  ctx.fillText('BELLO', 34, 64);
   ctx.font = 'bold 32px sans-serif';
   ctx.fillText(look.name, 34, 128, width - 68);
   ctx.font = '18px sans-serif';
@@ -159,7 +159,7 @@ export default function Lookbook({ go }: PageProps) {
             </select>
           </label>
           <div className="look-print">
-            <strong>Wardrobe.</strong>
+            <strong>BELLO</strong>
             <h2>{look.name}</h2>
             <p>
               {mode === 'sample' ? '샘플 옷장' : '내 옷장'} / {items.length}벌

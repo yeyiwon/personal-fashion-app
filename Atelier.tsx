@@ -1113,16 +1113,9 @@ function Shopping({ page, go }: PageProps) {
             : '옷장에 있는 옷과 함께 입을 구매 후보를 살펴보세요.'}
         </Heading>
         {!wish && (
-          <div className="at-shop-feature">
-            <img src={photoPath('trench')} alt="샌드 컬러 크롭 트렌치" />
-            <div>
-              <span>샘플 셀렉션</span>
-              <h2>크롭 트렌치</h2>
-              <button onClick={() => open('trench')}>
-                내 옷과 맞춰보기 <Icon name="right" size={16} />
-              </button>
-            </div>
-          </div>
+          <section className="shop-pairing"><div className="purchase-objects"><button className="candidate-object" onClick={()=>open(product.id)}><img src={photoPath(product.id)} alt={product.name}/><small>구매 후보</small></button><i aria-hidden="true">+</i>{selected.pairs[0]?<button className="owned-object" onClick={()=>go('closet')}><GarmentPhoto item={selected.pairs[0]}/><small>내 옷장</small></button>:<button onClick={()=>go('register')}>내 옷 등록</button>}</div>
+          <div><small>샘플 상품 · 내 옷과 조합</small><h2>{product.name}</h2><p>{selected.pairs[0]?selected.pairs[0].name+'와 함께 입어 보기':'첫 번째 구매 후보를 입혀 보세요.'}</p><button className="action" onClick={()=>{setCandidateId(product.id);go('home');}}>아바타에 입히기 <Icon name="arrow" size={15}/></button><button className="quiet" onClick={()=>go('compare')}>옵션·가격 비교</button></div>
+          <div className="pairing-rail" aria-label="구매 후보 선택">{products.map(p=><button key={p.id} aria-pressed={p.id===product.id} onClick={()=>select(p.id)}><img src={photoPath(p.id)} alt={p.name}/></button>)}</div></section>
         )}
         <div className="at-sectiontitle">
           <h2>{wish ? '저장한 후보' : '샘플 상품'}</h2>

@@ -26,7 +26,7 @@ def ident(n):
     return f"{n:024X}"
 
 info = {
-    "CFBundleDevelopmentRegion":"ko", "CFBundleDisplayName":"내 옷장",
+    "CFBundleDevelopmentRegion":"ko", "CFBundleDisplayName":"BELLO",
     "CFBundleExecutable":"$(EXECUTABLE_NAME)", "CFBundleIdentifier":"$(PRODUCT_BUNDLE_IDENTIFIER)",
     "CFBundleInfoDictionaryVersion":"6.0", "CFBundleName":"$(PRODUCT_NAME)",
     "CFBundlePackageType":"APPL", "CFBundleShortVersionString":"0.2.0", "CFBundleVersion":"2",

@@ -8,7 +8,7 @@ import {
   type PointerEvent,
 } from 'react';
 import { useStudio, useScopedState, type PageProps } from './studio';
-import { GarmentPhoto, Icon, Sheet, haptic, message } from './presentation';
+import { GarmentPhoto, Icon, haptic, message } from './presentation';
 import {
   initialFigure,
   products,
@@ -17,7 +17,7 @@ import {
   type Figure,
 } from './atelierData';
 import { RoomAssistant, type Advice } from './RoomAssistant';
-import { GlassSurface, ThreadMark } from './RoomControls';
+import { GlassSurface } from './RoomControls';
 import {
   arrange,
   firstConditions,
@@ -42,6 +42,9 @@ import { prepareImage } from './images';
 import { CATEGORIES, type Category } from './domain';
 import RoomPhotoFitting from './RoomPhotoFitting';
 import './dressing.css';
+import { OpticalStage } from './OpticalStage';
+import BelloSpace from './BelloSpace';
+import {BelloMark} from './BelloAtlas';
 
 type Panel =
   | 'closet'
@@ -50,7 +53,6 @@ type Panel =
   | 'camera'
   | 'save'
   | 'fit'
-  | 'menu'
   | 'palette'
   | 'reference'
   | null;
@@ -99,9 +101,9 @@ function SmallButton({
 }
 export default function Home({
   go,
-  onMode,
+  onMode,onAtlas,
   page,
-}: { onMode: () => void } & PageProps) {
+}: { onMode: () => void; onAtlas:()=>void } & PageProps) {
   const studio = useStudio();
   const {
     mode,
@@ -131,7 +133,7 @@ export default function Home({
   >('avatar.looks', []);
   const [conditions] = useScopedState('look.conditions', firstConditions),
     [prefs] = useScopedState('look.preferences', firstPreferences);
-  const [panel, setPanel] = useState<Panel>(null),
+  const [panel, setPanel] = useState<Panel>(page === 'model' ? 'model' : page === 'fitting' ? 'current' : null),
     [assistant, setAssistant] = useState(page === 'stylist'),
     [group, setGroup] = useState('전체'),
     [source, setSource] = useState('내 옷'),
@@ -318,7 +320,7 @@ export default function Home({
       setGroup('전체');
       openPanel('closet');
     } else if (a.tool === 'save') {
-      openPanel('save');
+      void save(true);
     } else if (a.tool === 'palette') {
       openPanel('palette');
     } else if (a.tool === 'fitting') {
@@ -334,11 +336,10 @@ export default function Home({
   function move(e: PointerEvent<HTMLButtonElement>) {
     const p = pointer.current;
     if (!p || p.id !== e.pointerId) return;
-    // Horizontal swipes browse, vertical drags lift a garment off the rail.
+    // A vertical swipe browses the rail. Pull a piece inward to dress the avatar.
     if (
       !dragged.current &&
-      p.y - e.clientY > 9 &&
-      Math.abs(e.clientX - p.x) < p.y - e.clientY
+      e.clientX-p.x > 9 && Math.abs(e.clientY-p.y) < e.clientX-p.x
     ) {
       dragged.current = true;
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -353,7 +354,7 @@ export default function Home({
     const p = pointer.current;
     pointer.current = null;
     if (!p) return;
-    const b = stage.current?.getBoundingClientRect();
+    const b = avatar.current?.getBoundingClientRect();
     if (
       dragged.current &&
       b &&
@@ -367,22 +368,26 @@ export default function Home({
     }
     drag(null);
   }
-  async function save() {
+  const [savedKey,markSaved]=useState('');
+  const snapshotKey=JSON.stringify([ids,figure,skin]);
+  async function save(quick=false) {
     if (working) return;
     busy(true);
     try {
-      if (!lookName.trim()) throw Error('착장 이름을 입력해 주세요.');
+      const title=quick ? (items.find(g=>['상의','원피스','아우터'].includes(g.category))?.name??items[0]?.name??'오늘')+' 착장' : lookName.trim();
+      if (!title) throw Error('착장 이름을 입력해 주세요.');
       if (!ids.length) throw Error('먼저 옷을 입혀 주세요.');
-      if (items.every((g) => !g.source)) await saveLook(lookName, ids);
+      if (items.every((g) => !g.source)) await saveLook(title, ids);
       setFavs((f) =>
         [
-          { name: lookName.trim(), ids, figure: { ...figure }, skin },
+          { name: title, ids, figure: { ...figure }, skin },
           ...f,
         ].slice(0, 30),
       );
       setLookName('');
-      notify('착장을 저장했어요.');
-      openPanel('current');
+      markSaved(snapshotKey);haptic('success');
+      notify(title+'을 저장했어요.');
+      openPanel(null);
     } catch (e) {
       showError(message(e));
     } finally {
@@ -479,18 +484,17 @@ export default function Home({
         } as CSSProperties
       }
     >
-      <h1 className="visually-hidden">나의 드레스룸</h1>
+      <h1 className="visually-hidden">{page === 'model' ? '개인 모델' : page === 'fitting' ? '가상 피팅' : '나의 드레스룸'}</h1>
       <div className="room-scene" ref={stage}>
-        <div className="alcove-plate" />
+        <BelloSpace signal={items.length+selection.length} /><OpticalStage mode="mirror" focus={panel ? 1 : 0} signal={items.length+selection.length}/>
         <div className="alcove-bounce" />
         <header className="dressing-head">
           <button
-            onClick={() => openPanel('menu')}
+            onClick={onAtlas}
             className="room-sign"
-            aria-label="공간 메뉴"
+            aria-label="공간 이동"
           >
-            <ThreadMark size={25} />
-            <span>Wardrobe</span>
+            <BelloMark size={25} /><span>BELLO</span><Icon name="grid" size={13}/>
           </button>
           <button className="mode-pin" onClick={onMode}>
             {mode === 'sample' ? '샘플 옷장' : '개인 옷장'}{' '}
@@ -659,21 +663,11 @@ export default function Home({
             </p>
           )}
         </div>
-        <div className="room-bottom-line">
-          <button onClick={() => openPanel('current')}>
-            <Icon name="layer" size={15} />
-            착장 {items.length}점
-          </button>
-          <button onClick={() => openPanel('save')} disabled={!items.length}>
-            <Icon name="save" size={15} />
-            저장
-          </button>
-          <button onClick={() => openPanel('menu')}>
-            <Icon name="grid" size={15} />
-            공간
-          </button>
-        </div>
       </div>
+      {!panel&&!assistant&&<div className="look-stamp">
+        <button className="look-label" onClick={()=>openPanel('current')} aria-label={'착장 '+items.length+'점'}><span>나의 피팅룸</span><small>착장 {items.length}점 <Icon name="right" size={12}/></small></button>
+        <button className={'stamp-save '+(savedKey===snapshotKey?'stamped':'')} onClick={()=>void save(true)} disabled={!items.length||working||savedKey===snapshotKey}><GlassSurface/><Icon name={savedKey===snapshotKey?'check':'save'} size={17}/>{savedKey===snapshotKey?'저장됨':'착장 저장'}</button>
+      </div>}
       {panel && panel !== 'closet' && (
         <section className="room-drawer" aria-label="드레스룸 도구">
           <div className="tray-grip" />
@@ -686,7 +680,6 @@ export default function Home({
                   camera: '내 옷 촬영',
                   save: '착장 저장',
                   fit: '피팅 엔진',
-                  menu: '공간 이동',
                   palette: '착장 팔레트',
                   reference: '참고 사진',
                 }[panel]
@@ -748,6 +741,8 @@ export default function Home({
                 {!items.length && <p>옷장에서 한 벌을 골라 입혀 주세요.</p>}
                 <div className="dressing-actions">
                   <button onClick={() => openPanel('closet')}>옷 고르기</button>
+                  <button onClick={() => openPanel('save')} disabled={!items.length}>이름 지정해 저장</button>
+                  <button onClick={() => go('fitting-board')}>피팅 보드</button>
                   <button onClick={() => void share()}>착장 이미지 공유</button>
                 </div>
                 {(outfits.length > 0 || favs.length > 0) && (
@@ -783,6 +778,7 @@ export default function Home({
             )}
             {panel === 'model' && (
               <>
+                <button className="room-row" onClick={() => go('model-study')}>모델 치수와 참고 사진 <Icon name="arrow" size={15}/></button>
                 <div className="dressing-actions">
                   {(['f', 'm'] as const).map((base) => (
                     <button
@@ -1047,24 +1043,6 @@ export default function Home({
                 ))}
                 <button onClick={() => go('colors')}>톤온톤·톤인톤 탐색</button>
               </>
-            )}
-            {panel === 'menu' && (
-              <div className="room-space-list">
-                {[
-                  ['closet', '내 옷장', 'closet'],
-                  ['ai', '스타일링', 'layer'],
-                  ['fitting', '피팅룸', 'fit'],
-                  ['shop', '쇼핑', 'shop'],
-                  ['tools', '전체 기능', 'grid'],
-                  ['account', '계정과 데이터', 'user'],
-                ].map(([p, n, ic]) => (
-                  <button key={p} onClick={() => go(p)}>
-                    <Icon name={ic} />
-                    {n}
-                    <Icon name="right" size={14} />
-                  </button>
-                ))}
-              </div>
             )}
             {error && <p role="alert">{error}</p>}
           </div>

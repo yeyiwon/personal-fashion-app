@@ -1,8 +1,8 @@
 .wc {
-  --wc-ink: var(--ink, #1d2435);
-  --wc-muted: var(--muted, #586272);
-  --wc-border: var(--line, #d3d7df);
-  --wc-blue: var(--accent, #354eb2);
+  --wc-ink: var(--ink, var(--sys-6));
+  --wc-muted: var(--muted, var(--sys-5));
+  --wc-border: var(--line, var(--sys-2));
+  --wc-blue: var(--accent, var(--key-ink));
   color: var(--wc-ink);
   width: 100%;
   min-width: 0;
@@ -38,7 +38,7 @@
   margin: 8px 0 0;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--wc-muted, #596171);
+  color: var(--wc-muted, var(--sys-5));
   word-break: keep-all;
 }
 .wc-title p span {
@@ -85,16 +85,16 @@
   padding: 0 19px;
 }
 .wc-solid {
-  color: #fff;
-  background: var(--ink, #22293b);
+  color: var(--sys-0);
+  background: var(--ink, var(--sys-6));
 }
 .wc-solid.light {
-  background: #fff;
-  color: #1c2234;
+  background: var(--sys-0);
+  color: var(--sys-7);
 }
 .wc-outline,
 .wc-icon {
-  border: 1px solid var(--line, #cfd6dd);
+  border: 1px solid var(--line, var(--sys-2));
 }
 .wc-icon {
   padding: 0;
@@ -109,7 +109,7 @@
 .wc-back {
   padding-inline: 0;
   font-weight: 550;
-  color: var(--wc-muted, #536074);
+  color: var(--wc-muted, var(--sys-5));
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -122,7 +122,7 @@
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  background: #e9edf2;
+  background: var(--sys-1);
   border-radius: 30px;
   margin: 0 0 6px;
 }
@@ -132,14 +132,14 @@
   border: 0;
   background: transparent;
   font-weight: 600;
-  color: #505d70;
+  color: var(--sys-5);
   border-radius: 24px;
   font-size: 13px;
 }
 .wc-switch button[aria-pressed='true'] {
-  color: #212839;
-  background: #fff;
-  box-shadow: 0 1px 7px #18233420;
+  color: var(--sys-6);
+  background: var(--sys-0);
+  box-shadow: 0 1px 7px color-mix(in srgb,var(--bello-midnight) 12.5%,transparent);
 }
 .wc-search {
   margin: 14px 0 4px;
@@ -217,7 +217,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #eef0f3;
+  background: var(--sys-1);
 }
 .wc-piece-photo {
   aspect-ratio: 4/4.6;
@@ -257,7 +257,7 @@
   height: 22px;
   border-radius: 50%;
   background: var(--wc-blue);
-  color: white;
+  color: var(--sys-0);
 }
 .wc-piece-type {
   display: flex;
@@ -274,7 +274,7 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  border: 1px solid #0002;
+  border: 1px solid color-mix(in srgb,var(--bello-midnight) 13.3%,transparent);
   display: inline-block;
 }
 .wc-piece strong {
@@ -348,11 +348,11 @@
   margin: 0 0 18px;
   border: 0;
   border-radius: 11px;
-  background: #273348;
-  color: #fff;
+  background: var(--sys-6);
+  color: var(--sys-0);
 }
 .wc-camera-entry small {
-  color: #d9e0ed;
+  color: var(--sys-2);
 }
 .wc-camera-entry > svg {
   margin-left: auto;
@@ -365,10 +365,10 @@
   aspect-ratio: 1;
   border-radius: 50%;
   box-shadow:
-    inset 0 0 0 1px #7e8a9e,
-    inset 0 0 0 5px #263347,
-    inset 0 0 0 6px #536074;
-  color: #e7ebf0;
+    inset 0 0 0 1px var(--sys-5),
+    inset 0 0 0 5px var(--sys-6),
+    inset 0 0 0 6px var(--sys-5);
+  color: var(--sys-1);
 }
 .wc-empty {
   text-align: center;
@@ -411,8 +411,8 @@
   border-radius: 20px;
   font-size: 12px;
   padding: 6px 10px;
-  background: #fff;
-  color: #303747;
+  background: var(--sys-0);
+  color: var(--sys-6);
 }
 .wc-detail .wc-title {
   margin: 16px 0;
@@ -449,11 +449,11 @@
 .wc-viewfinder {
   position: relative;
   overflow: hidden;
-  background: #202733;
+  background: var(--sys-6);
   width: 100%;
   aspect-ratio: 4/4.1;
   border-radius: 14px;
-  color: #f4f7fb;
+  color: var(--sys-0);
 }
 .wc-viewfinder video {
   width: 100%;
@@ -478,7 +478,7 @@
 .wc-reticle i {
   width: 20px;
   height: 20px;
-  border: 1.5px solid #fff8;
+  border: 1.5px solid color-mix(in srgb,var(--bello-optical) 53.3%,transparent);
   position: absolute;
 }
 .wc-reticle i:nth-child(1) {
@@ -509,8 +509,8 @@
   position: absolute;
   bottom: 12px;
   right: 16px;
-  color: white;
-  background: #111722b3;
+  color: var(--sys-0);
+  background: color-mix(in srgb,var(--bello-midnight) 70.2%,transparent);
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -561,8 +561,8 @@
   position: absolute;
   right: 1px;
   top: 1px;
-  background: #222b;
-  color: #fff;
+  background: color-mix(in srgb,var(--bello-midnight) 73.3%,transparent);
+  color: var(--sys-0);
   width: 19px;
   height: 19px;
 }
@@ -604,7 +604,7 @@
   font-weight: 650;
 }
 .wc-fields label small {
-  color: var(--wc-muted, #647083);
+  color: var(--wc-muted, var(--sys-5));
   font-weight: 400;
 }
 .wc-fields input,
@@ -617,9 +617,9 @@
   min-height: 46px;
   max-width: 100%;
   padding: 8px 10px;
-  background: #fff;
-  color: #202535;
-  border: 1px solid #c4cbd5;
+  background: var(--sys-0);
+  color: var(--sys-6);
+  border: 1px solid var(--sys-3);
   border-radius: 6px;
   font: inherit;
   font-size: 16px;
@@ -636,8 +636,8 @@
 .wc-alert,
 .sheet .error {
   padding: 12px 14px;
-  color: #843b29;
-  background: #fae9e5;
+  color: var(--key-ink);
+  background: var(--sys-1);
   border-radius: 5px;
   font-size: 14px;
   line-height: 1.5;
@@ -646,7 +646,7 @@
   width: 100%;
   height: 185px;
   object-fit: contain;
-  background: #eceff3;
+  background: var(--sys-1);
 }
 .wc-editor section {
   min-width: 0;
@@ -659,8 +659,8 @@
   aspect-ratio: 4/4.45;
   max-height: 560px;
   border-radius: 6px;
-  background-color: #e1e6ee;
-  background-image: radial-gradient(#b6bfcd 0.7px, transparent 0.75px);
+  background-color: var(--sys-2);
+  background-image: radial-gradient(var(--sys-3) 0.7px, transparent 0.75px);
   background-size: 11px 11px;
 }
 .wc-board-label {
@@ -673,9 +673,9 @@
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  background: #fff;
+  background: var(--sys-0);
   border-radius: 20px;
-  color: #414957;
+  color: var(--sys-6);
   font-size: 12px;
 }
 .wc-cutout {
@@ -693,18 +693,18 @@
   cursor: grab !important;
 }
 .wc-cutout img {
-  filter: drop-shadow(1px 5px 5px #28334928);
+  filter: drop-shadow(1px 5px 5px color-mix(in srgb,var(--bello-midnight) 15.7%,transparent));
   pointer-events: none;
 }
 .wc-cutout.active {
   z-index: 40;
-  border: 1px dashed #535f7c;
+  border: 1px dashed var(--key-ink);
 }
 .wc-cutout:active {
   cursor: grabbing !important;
 }
 .wc-board-empty {
-  color: #59677e;
+  color: var(--sys-5);
 }
 .wc-selected {
   flex-wrap: wrap;
@@ -716,7 +716,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  background: #e8edf4;
+  background: var(--sys-1);
   border-radius: 6px;
 }
 .wc-look-photos {
@@ -770,16 +770,16 @@ dialog:has(.sheet) {
   max-height: 90dvh;
   overflow: auto;
   border-radius: 16px;
-  color: var(--ink, #212b37);
-  background: #fafbfc;
-  box-shadow: 0 10px 70px #232f4d38;
+  color: var(--ink, var(--sys-6));
+  background: var(--sys-0);
+  box-shadow: 0 10px 70px color-mix(in srgb,var(--bello-midnight) 22%,transparent);
 }
 dialog:has(.sheet)::backdrop {
-  background: #141b2b75;
+  background: color-mix(in srgb,var(--bello-midnight) 45.9%,transparent);
 }
 .sheet {
-  background: #fafbfc;
-  color: var(--ink, #212b37);
+  background: var(--sys-0);
+  color: var(--ink, var(--sys-6));
   padding: 20px 22px max(22px, env(safe-area-inset-bottom));
 }
 .sheet > header {
@@ -807,7 +807,7 @@ dialog:has(.sheet)::backdrop {
   display: grid;
   place-items: center;
   height: 126px;
-  background: #e9edf2;
+  background: var(--sys-1);
   border-radius: 4px;
 }
 .sheet .formPreview img {
@@ -834,11 +834,11 @@ dialog:has(.sheet)::backdrop {
 }
 .sheet .primary {
   border: 0;
-  background: var(--ink, #222d41);
-  color: white;
+  background: var(--ink, var(--sys-6));
+  color: var(--sys-0);
 }
 .sheet .plain {
-  border: 1px solid #c4cbd5;
+  border: 1px solid var(--sys-3);
   background: transparent;
   color: inherit;
 }
@@ -938,7 +938,7 @@ dialog:has(.sheet)::backdrop {
   padding: 7px 14px;
   min-height: 44px;
   width: 100%;
-  background: #fff;
+  background: var(--sys-0);
   color: var(--wc-ink);
   font: inherit;
 }
@@ -947,8 +947,8 @@ dialog:has(.sheet)::backdrop {
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  background: #e9edf4;
-  color: #30394b;
+  background: var(--sys-1);
+  color: var(--sys-6);
   padding: 12px;
   font-size: 12px;
 }

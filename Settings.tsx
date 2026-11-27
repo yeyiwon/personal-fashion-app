@@ -1,3 +1,4 @@
+import {ThemeChoice} from './BelloAtlas';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useStudio, useScopedState, type PageProps } from './studio';
 import { exportData, clearData } from './storage';
@@ -198,6 +199,7 @@ function Account({ go }: Pick<PageProps, 'go'>) {
           </button>
         </div>
       </form>
+      <section className="settings-bello"><h2>BELLO 환경</h2><ThemeChoice/><button className="quiet" onClick={()=>go('stylist')}>벨로 음성·일정 설정</button></section>
       <div className="settings-mode">
         <h2>사용 중인 옷장</h2>
         <div className="settings-segment">
