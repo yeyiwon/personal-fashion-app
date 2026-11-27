@@ -296,6 +296,8 @@ export default function Home({
   }
   function action(a: Advice) {
     const valid = a.ids.filter((id) => garments.some((g) => g.id === id));
+    if (valid.length !== a.ids.length) {notify('제안 이후 옷장이 바뀌었어요. 현재 옷으로 다시 요청해 주세요.');return;}
+    if (a.tool === 'none') return;
     if (a.tool === 'outfit' && valid.length) {
       whole(valid);
       openPanel('current');

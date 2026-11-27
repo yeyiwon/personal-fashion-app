@@ -6,12 +6,8 @@ import { useScopedState, useStudio } from './studio';
 import { GlassSurface } from './RoomControls';
 import { Icon } from './presentation';
 
-export type Advice = {
-  tool: string;
-  ids: string[];
-  message: string;
-  source: string;
-};
+import type {BelloAdvice} from './bello-contract';
+export type Advice = BelloAdvice;
 type Weather = Awaited<ReturnType<typeof getForecast>>;
 const greetings = new Map<string, Advice>();
 const pendingWelcome = new Map<string, Promise<Advice>>();
@@ -24,12 +20,13 @@ async function api(
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json', 'X-Room-Access': code },
-    body: JSON.stringify(data),
+    body: JSON.stringify({...data,requestId:crypto.randomUUID()}),
   });
   if (!res.headers.get('content-type')?.includes('application/json'))
     throw Error('이 환경에서는 언어 모델을 열 수 없어요.');
   const json = await res.json();
   if (!res.ok) throw Error(json.error || '다시 요청해 주세요.');
+  if(json.version!==1||json.state!=='proposed'||!Array.isArray(json.ui?.garmentIds))throw Error('벨로의 응답 형식을 확인하지 못했어요.');
   return json;
 }
 function say(message: string) {
@@ -197,7 +194,7 @@ export function RoomAssistant({
     payload.schedule,
     payload.preferences,
     payload.recent,
-    payload.garments.map((g) => [g.id, g.affinity]),
+    payload.worn,payload.locked,payload.garments.map((g) => [g.id,g.name,g.category,g.color,g.material,g.purchased,g.affinity]),
   ]);
   const lastWelcomeKey = useRef('');
   useEffect(() => {
