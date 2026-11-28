@@ -9,6 +9,7 @@ import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
 import MySpace from './MySpace';
+import { SpaceFlow, flowGate } from './SpaceFlow';
 import { BelloAtlas, BelloHeader, useAppearance } from './BelloAtlas';
 import './rooms.css';
 import './bello.css';
@@ -147,12 +148,16 @@ function App() {
     haptic('selection');
   }
   const props = { page, go };
+  // Pointer presses open the liquid flow; keyboard activation opens the list dialog.
+  const openAtlas = () => {
+    if (!flowGate.busy()) setAtlas(true);
+  };
   let content = page === 'home' ? (
     <MySpace
       key={mode}
       {...props}
       onMode={() => showMode(true)}
-      onAtlas={() => setAtlas(true)}
+      onAtlas={openAtlas}
     />
   ) : ['dressing', 'stylist', 'model', 'fitting'].includes(page) ? (
     <Home
@@ -160,7 +165,7 @@ function App() {
       go={go}
       page={page === 'dressing' ? 'home' : page}
       onMode={() => showMode(true)}
-      onAtlas={() => setAtlas(true)}
+      onAtlas={openAtlas}
     />
   ) : page === 'connections' ? (
     <BelloConnections go={go} />
@@ -216,7 +221,7 @@ function App() {
           {...props}
           mode={mode}
           onMode={() => showMode(true)}
-          onAtlas={() => setAtlas(true)}
+          onAtlas={openAtlas}
         />
       )}
       {!['home', 'dressing', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
@@ -230,6 +235,12 @@ function App() {
       >
         {content}
       </main>
+      <SpaceFlow
+        page={page}
+        go={go}
+        openIndex={() => setAtlas(true)}
+        blocked={atlas || page === 'tools'}
+      />
       <BelloAtlas
         page={page}
         go={go}

@@ -1,0 +1,118 @@
+/* 공간 이동 flow. The liquid is one SVG body (threshold + specular lighting on
+   its own blurred height), so merging and splitting are computed, not drawn. */
+button[aria-label='공간 이동'] {
+  touch-action: none;
+}
+.space-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.flow-veil {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: color-mix(in srgb, var(--bello-optical) 34%, transparent);
+  backdrop-filter: blur(5px) saturate(0.85);
+  -webkit-backdrop-filter: blur(5px) saturate(0.85);
+  transition: opacity 0.28s;
+}
+.space-flow.on .flow-veil {
+  opacity: 1;
+  pointer-events: auto;
+}
+.space-flow[data-focus='true'] .flow-veil {
+  background: color-mix(in srgb, var(--bello-optical) 58%, transparent);
+}
+.flow-liquid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--bello-slate);
+}
+#root .flow-drop,
+.flow-drop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--bello-optical);
+  font: 650 10.5px/1.1 var(--type-ui, system-ui);
+  letter-spacing: -0.03em;
+  opacity: 0;
+  will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
+}
+.flow-drop > span {
+  white-space: nowrap;
+}
+.flow-drop[data-here]::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--bello-hologram);
+}
+.flow-drop.hot,
+.flow-drop[aria-expanded='true'] {
+  color: var(--bello-hologram);
+}
+.flow-pod {
+  position: absolute;
+  left: 14px;
+  width: min(360px, calc(100vw - 28px));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 15px;
+}
+.flow-mark {
+  position: absolute;
+  display: grid;
+  transform: translate(-50%, -50%);
+  color: var(--bello-optical);
+  pointer-events: none;
+}
+#root .flow-pill,
+.flow-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 21px;
+  background: none;
+  color: var(--bello-optical);
+  font: 600 13.5px/1 var(--type-ui, system-ui);
+  letter-spacing: -0.025em;
+  opacity: 0;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.flow-pill.hot,
+.flow-pill[aria-current='page'] {
+  color: var(--bello-hologram);
+}
+.flow-drop:focus-visible,
+.flow-pill:focus-visible {
+  outline: 2px solid var(--bello-hologram);
+  outline-offset: 2px;
+}

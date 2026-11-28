@@ -89,12 +89,23 @@ export async function verifyInterface(page, origin) {
   await page.getByRole('img', { name: '남성형 기본 모델 착장 예시' }).waitFor();
   await button('허리 너비 조절').click();
   verify((await waist.inputValue()) === '70', '치수 다시 열기');
+  // Flow menu: a tap keeps the droplets open; a space buds its functions.
   await button('공간 이동').click();
+  await button('스타일링').click();
+  await page.getByRole('group', { name: '스타일링 기능' }).getByRole('button', { name: '직접 코디' }).waitFor();
+  await page.keyboard.press('Escape');
+  await button('기능 검색').click();
   const atlas = page.getByRole('dialog', { name: '공간 이동' });
   await atlas.getByRole('searchbox').fill('내 옷장');
   await atlas.getByRole('button', { name: '내 옷장', exact: true }).click();
   await page.getByRole('heading', { name: '내 옷장', exact: true }).waitFor();
   await button('공간 이동').click();
+  await button('옷장').waitFor();
+  await page.keyboard.press('Escape');
+  await button('옷장').waitFor({ state: 'detached' });
+  await button('공간 이동').focus();
+  await page.keyboard.press('Enter');
+  await atlas.waitFor();
   await page.keyboard.press('Escape');
   verify(!(await atlas.isVisible()), '공간 닫기');
   await open('shop');

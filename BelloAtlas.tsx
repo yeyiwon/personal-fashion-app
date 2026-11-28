@@ -1,7 +1,8 @@
 import { Control, Field, Segment } from './LiquidControls';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './presentation';
-import { SpaceCarousel } from './SpaceCarousel';
+import { SpaceFold } from './SpaceFold';
+import './atlas-fold.css';
 import { GlassSurface } from './RoomControls';
 import type { ReactNode } from 'react';
 import { titles } from './routes';
@@ -38,7 +39,8 @@ export function BelloMark({ size = 26 }: { size?: number }) {
     </svg>
   );
 }
-function Relic({ i }: { i: number }) {
+/** Sculpted room objects from the earlier orbit menu; kept for reuse. */
+export function Relic({ i }: { i: number }) {
   const uid = useId().replace(/[^a-z0-9]/gi, ''),
     fill = 'url(#op' + uid + ')',
     hollow = 'url(#h' + uid + ')';
@@ -189,7 +191,7 @@ export function BelloAtlas({
             { clipPath: clip },
             { clipPath: 'inset(0px 0px 0px 0px round 0px)' },
           ],
-          { duration: 365, easing: 'cubic-bezier(.19,.8,.22,1)' },
+          { duration: 440, easing: 'cubic-bezier(.19,.8,.22,1)' },
         );
       }
     } else {
@@ -213,8 +215,9 @@ export function BelloAtlas({
   return (
     <dialog
       ref={element}
-      className="bello-atlas gallery-atlas"
+      className="bello-atlas fold-atlas"
       aria-label="공간 이동"
+      onClick={(e) => e.target === e.currentTarget && close()}
       onCancel={(e) => {
         e.preventDefault();
         close();
@@ -264,14 +267,7 @@ export function BelloAtlas({
         ) : index ? (
           <div className="atlas-index">{indexContent}</div>
         ) : (
-          open && (
-            <SpaceCarousel
-              rooms={atlasRooms}
-              initial={spaceFor(page)}
-              go={travel}
-              relic={(i) => <Relic i={i} />}
-            />
-          )
+          <SpaceFold key={String(open)} page={page} go={travel} />
         )}
         <footer>
           <Control
