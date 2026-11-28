@@ -56,18 +56,23 @@ export async function verifyInterface(page, origin) {
   await button('드레스룸 도구 닫기').click();
   await button('착장 저장').click();
   await button('저장됨').waitFor();
+  // 내 옷장 archive: search → detail, multi-select → styling table, space view.
   await open('closet');
-  await button('크롭 트렌치').click();
-  await button('상세').waitFor();
-  await button('다음 의류').click();
-  await button('와인 슬립 드레스').click();
-  await button('직접 코디').filter({ visible: true }).first().click();
-  await button('와인 슬립 드레스 코디에서 빼기').waitFor();
-  await open('closet');
-  await button('목록').click();
   await page.getByRole('searchbox', { name: '의류 검색' }).fill('로퍼');
   await button('블랙 페니 로퍼').click();
   await page.getByRole('heading', { name: '블랙 페니 로퍼' }).waitFor();
+  await open('closet');
+  await button('여러 벌 선택').click();
+  await button('크롭 트렌치').click();
+  await button('와인 슬립 드레스').click();
+  await button('코디 공간으로 2').click();
+  await button('크롭 트렌치 치우기').click();
+  await button('와인 슬립 드레스 치우기').click();
+  await open('closet');
+  await button('공간').click();
+  await button('코디 공간으로').waitFor();
+  await button('컬렉션').click();
+  await button('여러 벌 선택').waitFor();
 
   await open('model-study');
   await button('남성형').click();

@@ -9,6 +9,7 @@ import Atelier from './Atelier';
 import Settings from './Settings';
 import Home from './Home';
 import MySpace from './MySpace';
+import Archive from './Archive';
 import { SpaceFlow, flowGate } from './SpaceFlow';
 import { BelloAtlas, BelloHeader, useAppearance } from './BelloAtlas';
 import './rooms.css';
@@ -160,6 +161,8 @@ function App() {
       onMode={() => showMode(true)}
       onAtlas={openAtlas}
     />
+  ) : page === 'closet' ? (
+    <Archive {...props} onAtlas={openAtlas} />
   ) : ['dressing', 'stylist', 'model', 'fitting'].includes(page) ? (
     <Home
       key={mode + page}
@@ -217,7 +220,7 @@ function App() {
       >
         본문으로 건너뛰기
       </a>
-      {!['home', 'dressing', 'stylist', 'model', 'fitting'].includes(page) && (
+      {!['home', 'closet', 'dressing', 'stylist', 'model', 'fitting'].includes(page) && (
         <BelloHeader
           {...props}
           mode={mode}
@@ -225,7 +228,7 @@ function App() {
           onAtlas={openAtlas}
         />
       )}
-      {!['home', 'dressing', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
+      {!['home', 'closet', 'dressing', 'model', 'stylist', 'fitting', 'tools'].includes(page) && (
         <RoomNavigation {...props} />
       )}
       <main

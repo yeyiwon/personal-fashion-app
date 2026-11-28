@@ -1,0 +1,402 @@
+#root .page-frame.page-closet {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+/* 내 옷장 — digital archive. No hangers, rails, cards or capsules: garment
+   photographs, type and space. Collection is light; the space view is Midnight. */
+.archive {
+  --pad: clamp(18px, 5.2vw, 40px);
+  --ink: var(--bello-slate);
+  --paper: var(--bello-optical);
+  --soft: color-mix(in srgb, var(--ink) 62%, transparent);
+  position: relative;
+  margin: 0;
+  overflow-x: clip;
+  min-height: 100dvh;
+  padding: max(10px, env(safe-area-inset-top)) var(--pad) calc(120px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  color: var(--ink);
+  transition:
+    background 0.5s,
+    color 0.5s;
+}
+.archive[data-view='space'] {
+  --ink: var(--bello-optical);
+  --paper: var(--bello-midnight);
+  --soft: color-mix(in srgb, var(--bello-silver) 78%, transparent);
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+.archive button {
+  -webkit-tap-highlight-color: transparent;
+}
+.arch-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 48px;
+  margin: 0 -6px;
+}
+#root .archive .arch-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.arch-top nav {
+  display: flex;
+  gap: 18px;
+  padding-right: 6px;
+}
+#root .archive .arch-link {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  font: 640 15px/1 var(--room-font);
+  letter-spacing: -0.03em;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 6px;
+  text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
+}
+#root .archive .arch-link[aria-pressed='true'] {
+  text-decoration-color: var(--bello-hologram);
+  text-decoration-thickness: 2.5px;
+}
+
+/* Title: the count is a graphic, the name is the headline. */
+.arch-title {
+  position: relative;
+  margin: clamp(18px, 6vw, 44px) 0 clamp(20px, 5vw, 34px);
+}
+.arch-title > span {
+  display: block;
+  font: 200 clamp(96px, 31vw, 190px) / 0.8 var(--room-font);
+  letter-spacing: -0.07em;
+  margin-left: -0.05em;
+  color: color-mix(in srgb, var(--ink) 16%, transparent);
+}
+#root .page-frame .archive .arch-title h1 {
+  margin: -0.42em 0 0;
+  font: 780 clamp(44px, 13.5vw, 84px) / 0.98 var(--room-font);
+  letter-spacing: -0.065em;
+  color: var(--ink);
+}
+.arch-title p {
+  margin: 12px 0 0;
+  font: 520 15px/1.4 var(--room-font);
+  letter-spacing: -0.02em;
+  color: var(--soft);
+}
+.archive[data-view='space'] .arch-title {
+  margin: 4px 0 10px;
+}
+.archive[data-view='space'] .arch-title > span,
+.archive[data-view='space'] .arch-title p {
+  display: none;
+}
+#root .page-frame .archive[data-view='space'] .arch-title h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.045em;
+}
+
+/* Filters are words. */
+.arch-groups,
+.arch-views {
+  display: flex;
+  gap: 4px 18px;
+}
+.arch-groups {
+  flex-wrap: wrap;
+}
+#root .archive .arch-word {
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--ink) 36%, transparent);
+  font: 700 19px/1 var(--room-font);
+  letter-spacing: -0.045em;
+  transition: color 0.25s;
+}
+#root .archive .arch-word[aria-pressed='true'] {
+  color: var(--ink);
+}
+.arch-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 86%, transparent);
+}
+.arch-row input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--ink);
+  font: 560 16px/1 var(--room-font);
+  letter-spacing: -0.02em;
+  appearance: none;
+}
+.arch-row input::placeholder {
+  color: color-mix(in srgb, var(--ink) 42%, transparent);
+}
+#root .archive .arch-views .arch-word {
+  font-size: 15px;
+  min-height: 44px;
+}
+.arch-pick {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.arch-empty {
+  margin: 64px 0;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  font: 600 19px/1.3 var(--room-font);
+  letter-spacing: -0.04em;
+}
+
+/* Collection: an uneven rhythm so pieces read as a set, not as cells. */
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 8vw, 54px) clamp(14px, 5vw, 40px);
+  margin-top: 14px;
+}
+#root .archive .arch-item {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: start;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: left;
+  transition:
+    opacity 0.3s,
+    transform 0.5s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+#root .archive .arch-item:nth-child(5n + 1) {
+  grid-column: span 2;
+}
+#root .archive .arch-item:nth-child(4n + 3) {
+  margin-top: clamp(26px, 9vw, 70px);
+}
+.arch-item img {
+  width: 100%;
+  height: clamp(150px, 46vw, 300px);
+  object-fit: contain;
+  object-position: 50% 100%;
+  margin-bottom: 10px;
+  border-radius: 0;
+  filter: drop-shadow(0 18px 14px color-mix(in srgb, var(--bello-midnight) 20%, transparent));
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.arch-item:nth-child(5n + 1) img {
+  height: clamp(250px, 78vw, 460px);
+}
+.arch-item:active img {
+  transform: translateY(-8px) scale(1.03);
+}
+.arch-item b {
+  font: 680 16px/1.25 var(--room-font);
+  letter-spacing: -0.035em;
+}
+.arch-item:nth-child(5n + 1) b {
+  font-size: 24px;
+  font-weight: 760;
+  letter-spacing: -0.055em;
+}
+.arch-item small {
+  font: 500 13px/1.3 var(--room-font);
+  color: var(--soft);
+}
+.arch-item[data-on] b::after {
+  content: ' ●';
+  font-size: 0.5em;
+  vertical-align: middle;
+  color: var(--bello-hologram);
+}
+.arch-grid.picking .arch-item[aria-pressed='false'] {
+  opacity: 0.38;
+}
+.arch-grid.picking .arch-item[aria-pressed='true'] b {
+  box-shadow: inset 0 -0.42em 0 var(--bello-hologram);
+}
+.arch-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px var(--pad) calc(14px + env(safe-area-inset-bottom));
+  background: var(--bello-midnight);
+  --ink: var(--bello-optical);
+  animation: arch-rise 0.45s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+@keyframes arch-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+#root .archive .arch-go {
+  min-height: 52px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bello-optical);
+  color: var(--bello-midnight);
+  box-shadow: none;
+  font: 740 16px/1 var(--room-font);
+  letter-spacing: -0.035em;
+}
+
+/* Space: one piece in front, the archive receding behind it. */
+.arch-space {
+  margin: 0 calc(-1 * var(--pad));
+}
+.arch-track {
+  display: flex;
+  align-items: center;
+  height: min(54dvh, 480px);
+  padding: 0 19vw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  perspective: 900px;
+}
+.arch-track::-webkit-scrollbar {
+  display: none;
+}
+#root .archive .arch-piece {
+  position: relative;
+  flex: none;
+  width: 62vw;
+  max-width: 420px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  scroll-snap-align: center;
+  touch-action: pan-x;
+  will-change: transform;
+}
+.arch-piece img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 34px 26px color-mix(in srgb, #000 62%, transparent));
+  transform: translateY(var(--pull, 0px)) scale(calc(1 - var(--pull, 0px) / 520px));
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.arch-piece[data-pull] img {
+  transition: none;
+}
+.arch-piece[data-pull='go'] img {
+  filter: drop-shadow(0 0 22px var(--bello-hologram));
+}
+.arch-lead {
+  padding: 0 var(--pad);
+}
+.arch-lead > span {
+  font: 300 15px/1 var(--room-font);
+  letter-spacing: 0.02em;
+  color: var(--bello-hologram);
+}
+.arch-lead > span i {
+  font-style: normal;
+  color: var(--soft);
+}
+#root .page-frame .archive .arch-lead h2 {
+  margin: 10px 0 6px;
+  font: 780 clamp(34px, 10.5vw, 60px) / 1.02 var(--room-font);
+  letter-spacing: -0.065em;
+  color: var(--bello-optical);
+  text-wrap: balance;
+}
+.arch-lead p {
+  margin: 0;
+  font: 500 15px/1.4 var(--room-font);
+  color: var(--soft);
+}
+.arch-lead > div {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 20px;
+}
+.arch-lead > small {
+  display: block;
+  margin-top: 12px;
+  font: 500 13px/1.4 var(--room-font);
+  color: var(--soft);
+}
+.archive button:focus-visible,
+.archive input:focus-visible {
+  outline: 2px solid var(--bello-hologram);
+  outline-offset: 3px;
+}
+@media (min-width: 760px) {
+  .arch-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  #root .archive .arch-piece {
+    width: 30vw;
+  }
+  .arch-track {
+    padding: 0 35vw;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .archive *,
+  .archive {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+  }
+}
+
+#root .archive .arch-mode {
+  display: flex;
+  gap: 16px;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+#root .archive .arch-mode .arch-word {
+  font-size: 15px;
+  min-height: 44px;
+}
+.archive[data-view='space'] .arch-mode {
+  display: none;
+}
