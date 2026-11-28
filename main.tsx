@@ -14,6 +14,7 @@ import { BelloAtlas, BelloHeader, useAppearance } from './BelloAtlas';
 import './rooms.css';
 import './bello.css';
 import './liquid.css';
+import './direction.css';
 import { RoomNavigation, FeatureIndex } from './RoomNavigation';
 import { CommonLens } from './RoomControls';
 import { useControlLight } from './LiquidControls';

@@ -546,3 +546,87 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Art direction pass: crisp plates, slate anchors, a real type hierarchy. ── */
+.my-space {
+  --lens-fill: #fff;
+  --lens-edge:
+    inset 0 0 0 1px color-mix(in srgb, var(--bello-slate) 10%, transparent),
+    0 14px 28px -18px color-mix(in srgb, var(--bello-midnight) 55%, transparent);
+  --lens-blur: none;
+}
+.my-space .space-hint {
+  color: color-mix(in srgb, var(--ink) 74%, transparent);
+  font-size: 14px;
+  font-weight: 560;
+}
+.my-space .space-capsule > div {
+  background: var(--bello-slate);
+  box-shadow: 0 16px 30px -16px var(--bello-midnight);
+}
+.my-space .space-capsule > div::before {
+  display: none;
+}
+#root .my-space .space-capsule button {
+  color: var(--bello-optical);
+}
+#root .my-space .space-capsule button[aria-pressed='true'],
+#root .my-space .space-capsule button[aria-expanded='true'] {
+  background: none;
+  color: var(--bello-hologram);
+}
+.my-space .space-capsule > b {
+  background: none;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  padding: 0;
+}
+.my-space .space-dial::before {
+  top: 0;
+  background: var(--bello-optical);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--bello-slate) 12%, transparent),
+    0 -18px 40px -22px color-mix(in srgb, var(--bello-midnight) 42%, transparent);
+}
+#root .my-space .dial-groups button {
+  padding: 0 9px;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 620;
+  color: color-mix(in srgb, var(--ink) 56%, transparent);
+}
+#root .my-space .dial-groups button[aria-pressed='true'] {
+  background: none;
+  color: var(--ink);
+  font-weight: 760;
+  box-shadow: inset 0 -2px 0 var(--bello-slate);
+}
+.my-space .dial-lead {
+  margin-top: -6px;
+  gap: 2px;
+}
+.my-space .dial-lead b {
+  font-size: 19px;
+  font-weight: 760;
+  letter-spacing: -0.05em;
+}
+.my-space .dial-lead span {
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--ink) 70%, transparent);
+}
+.my-space .dial-track img {
+  filter: drop-shadow(0 8px 7px color-mix(in srgb, var(--bello-midnight) 26%, transparent));
+}
+.my-space .space-note strong {
+  font-size: 26px;
+  font-weight: 760;
+  letter-spacing: -0.055em;
+}
+.my-space .space-note span {
+  color: color-mix(in srgb, var(--ink) 76%, transparent);
+  font-size: 13px;
+}

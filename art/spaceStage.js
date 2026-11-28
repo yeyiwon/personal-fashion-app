@@ -61,10 +61,11 @@ const backdrop = {
     varying vec3 vDir; uniform vec3 uLow; uniform vec3 uHigh; uniform vec3 uTint; uniform float uGlow;
     void main(){
       vec3 d = normalize(vDir);
-      float h = smoothstep(-0.12, 0.72, d.y);
+      float h = smoothstep(-0.04, 0.46, d.y);
       vec3 c = mix(uLow, uHigh, h);
+      c *= 1.0 - 0.16 * smoothstep(0.25, 1.0, abs(d.x) * 1.5 + d.y * 0.4);
       // Light pooling behind the aperture, slightly off axis.
-      float pool = exp(-pow(length(vec2(d.x - 0.07, (d.y - 0.16) * 0.55)) * 3.1, 2.0));
+      float pool = exp(-pow(length(vec2(d.x, (d.y - 0.16) * 0.55)) * 3.4, 2.0));
       c = mix(c, mix(vec3(1.0), uTint, 0.22), pool * (0.5 + uGlow * 0.25));
       gl_FragColor = vec4(c, 1.0);
     }`,
@@ -77,8 +78,8 @@ const floor = {
       float dist = length(vWorld.xz - vec2(0.0, 1.0));
       vec3 c = mix(uNear, uFar, smoothstep(2.0, 11.0, dist));
       // Reflection of the aperture: a long soft streak running toward the viewer.
-      float streak = exp(-pow((vWorld.x - 0.42) * 1.25, 2.0)) * smoothstep(3.4, -4.6, vWorld.z) * smoothstep(-5.4, -4.0, vWorld.z);
-      c += mix(vec3(1.0), uTint, 0.5) * streak * (0.10 + uGlow * 0.06);
+      float streak = exp(-pow(vWorld.x * 1.25, 2.0)) * smoothstep(3.4, -4.6, vWorld.z) * smoothstep(-5.4, -4.0, vWorld.z);
+      c += mix(vec3(1.0), uTint, 0.35) * streak * (0.16 + uGlow * 0.06);
       // Contact occlusion where the slab meets the floor.
       float seat = smoothstep(0.9, 0.0, abs(vWorld.z - 1.24)) * smoothstep(0.9, 0.54, abs(vWorld.x));
       c *= 1.0 - seat * 0.07;
@@ -100,7 +101,7 @@ const sheet = {
       float band = exp(-pow((along - uScan) * 5.5, 2.0)) * step(-1.2, uScan) * step(uScan, 1.2);
       float pool = exp(-dot(vP - uPool.xy, vP - uPool.xy) * 9.0) * uPool.z;
       vec3 c = mix(vec3(1.0), uTint, 0.55);
-      float a = edge * (0.55 + uGlow * 0.35) + inner * (0.18 + uGlow * 0.3) + band * 0.42 + pool * 0.3;
+      float a = edge * (0.1 + uGlow * 0.6) + inner * uGlow * 0.4 + band * 0.5 + pool * 0.22;
       gl_FragColor = vec4(c, a * 0.9);
     }`,
 };
@@ -199,7 +200,7 @@ export class SpaceStage {
         depthWrite: false,
         uniforms: {
           uLow: { value: BRAND.optical.clone() },
-          uHigh: { value: BRAND.silver.clone().lerp(BRAND.optical, 0.25) },
+          uHigh: { value: BRAND.silver.clone().lerp(BRAND.lavender, 0.22) },
           uTint: { value: this.tint },
           uGlow: { value: 0 },
         },
@@ -212,7 +213,7 @@ export class SpaceStage {
       new T.PlaneGeometry(60, 60).rotateX(-Math.PI / 2),
       new T.ShaderMaterial({
         uniforms: {
-          uNear: { value: new T.Color('#EEF2F9') },
+          uNear: { value: new T.Color('#E4EAF4') },
           uFar: { value: BRAND.optical.clone() },
           uTint: { value: this.tint },
           uGlow: { value: 0 },
@@ -224,7 +225,7 @@ export class SpaceStage {
     scene.add(this.floor);
     const ground = new T.Mesh(
       new T.PlaneGeometry(9, 9).rotateX(-Math.PI / 2),
-      new T.ShadowMaterial({ color: BRAND.slate, opacity: 0.2 }),
+      new T.ShadowMaterial({ color: BRAND.slate, opacity: 0.34 }),
     );
     ground.position.y = 0.002;
     ground.receiveShadow = true;
@@ -234,11 +235,11 @@ export class SpaceStage {
       new T.ShapeGeometry(rounded(0.92, 3.5, 0.46), 24),
       new T.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }),
     );
-    aperture.position.set(0.42, 1.75, -5.4);
+    aperture.position.set(0, 1.75, -5.4);
     scene.add(aperture);
     scene.add(new T.HemisphereLight('#ffffff', '#c6d2e4', 0.75));
-    const key = new T.DirectionalLight('#ffffff', 1.9);
-    key.position.set(1.3, 5.2, 0.6);
+    const key = new T.DirectionalLight('#ffffff', 2.6);
+    key.position.set(1.6, 4.6, 1.4);
     key.target.position.set(0, 0.8, -2.2);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -246,7 +247,7 @@ export class SpaceStage {
     key.shadow.radius = 7;
     key.shadow.bias = -0.0004;
     scene.add(key, key.target);
-    this.rim = new T.DirectionalLight('#ffffff', 1.5);
+    this.rim = new T.DirectionalLight('#ffffff', 3.2);
     this.rim.position.set(0.9, 2.4, -6.5);
     this.rim.target.position.set(0, 1.1, -2.2);
     scene.add(this.rim, this.rim.target);
@@ -265,16 +266,24 @@ export class SpaceStage {
         bevelSegments: 4,
         curveSegments: 20,
       }),
-      new T.MeshPhysicalMaterial({
-        color: '#ffffff',
-        emissive: '#F4F7FC',
-        emissiveIntensity: 0.46,
-        roughness: 0.36,
-        clearcoat: 1,
-        clearcoatRoughness: 0.18,
-        reflectivity: 0.5,
-        envMapIntensity: 0.6,
-      }),
+      [
+        new T.MeshPhysicalMaterial({
+          color: '#ffffff',
+          emissive: '#ffffff',
+          emissiveIntensity: 0.62,
+          roughness: 0.42,
+          clearcoat: 1,
+          clearcoatRoughness: 0.2,
+          envMapIntensity: 0.5,
+        }),
+        new T.MeshPhysicalMaterial({
+          color: BRAND.slate,
+          roughness: 0.3,
+          clearcoat: 1,
+          clearcoatRoughness: 0.15,
+          envMapIntensity: 1.2,
+        }),
+      ],
     );
     body.position.z = -0.064;
     this.slab.add(body);
@@ -345,14 +354,14 @@ export class SpaceStage {
         if (this.gone) return;
         const root = gltf.scene;
         const skin = new T.MeshPhysicalMaterial({
-          color: '#E3E8F1',
-          roughness: 0.44,
-          clearcoat: 0.3,
-          clearcoatRoughness: 0.55,
-          sheen: 0.5,
-          sheenRoughness: 0.5,
-          sheenColor: BRAND.lavender.clone().lerp(BRAND.optical, 0.4),
-          envMapIntensity: 0.9,
+          color: BRAND.slate.clone().lerp(new T.Color('#101520'), 0.25),
+          roughness: 0.52,
+          clearcoat: 0.22,
+          clearcoatRoughness: 0.5,
+          sheen: 0.7,
+          sheenRoughness: 0.45,
+          sheenColor: BRAND.lavender.clone(),
+          envMapIntensity: 0.7,
         });
         root.traverse((o) => {
           if (o.isMesh) {
@@ -904,7 +913,7 @@ export class SpaceStage {
       item.shadow.rotation.z = item.r.v;
       item.shadow.scale.set(item.w * item.s.v * 1.18, item.h * item.s.v * 1.18, 1);
       item.shadow.material.uniforms.uBlur.value = Math.min(1, lift * 9);
-      item.shadow.material.uniforms.uAlpha.value = item.o.v * (0.34 - Math.min(0.16, lift * 1.6));
+      item.shadow.material.uniforms.uAlpha.value = item.o.v * (0.46 - Math.min(0.2, lift * 1.8));
     }
 
     this.renderer.render(this.scene, this.camera);

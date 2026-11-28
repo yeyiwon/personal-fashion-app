@@ -54,3 +54,12 @@ MakeHuman HM08 베이스 메시(MPFB2 2.0.18 번들, CC0 1.0). `art/mannequin/bu
 - 이전 궤도형 메뉴(`SpaceCarousel.tsx`, `Relic`)는 파일을 남겼고 더 이상 화면에 쓰지 않는다.
 - `main.tsx`의 `openAtlas`는 포인터 누름이 흐름 메뉴에서 처리 중이면 대화상자를 열지 않는다(`flowGate`).
 - `interface-check.mjs`에 흐름 메뉴 탭 경로·Escape·키보드 경로를 추가했다. 한 획 이동(누름→끌기→놓기)은 헤드리스 마우스로 `#/wishlist`, `#/closet` 도착을 확인했다. 실제 터치 기기에서는 미확인.
+
+## 아트 디렉션 (3차)
+
+`direction.css`가 마지막에 로드되어 전 화면의 톤·타이포·조작부 재질을 하나로 정리한다.
+- 두 톤 구조: Optical White 바탕 + Deep Slate 주체. Silver Blue는 면, Lavender·Hologram은 신호.
+- 제목은 31–42px, 자간 -0.058em. 보조 글자는 Slate 70% 아래로 내려가지 않는다.
+- 주 동작 하나만 Slate 채움, 나머지는 테두리 또는 밑줄 텍스트. 분류 선택은 채움 알약.
+- 홈: 그래파이트 마네킹을 밝은 개구부 앞 실루엣으로 세우고, 테이블은 흰 면 + Slate 옆면.
+- 각 화면의 레이아웃 구조 자체는 이 단계에서 바꾸지 않았다(토큰·재질·타이포만 적용). 다크 테마 토큰은 건드리지 않았다.
